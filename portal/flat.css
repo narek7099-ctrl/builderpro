@@ -460,3 +460,13 @@
 #bpx#bpx#bpx#bpx#bpx#bpx .ctp3-head{padding:0 !important;min-height:0 !important;background:none !important;border:0 !important;box-shadow:none !important}
 /* the lead page stretches across the whole page (2026-11-20) */
 #bpx#bpx#bpx#bpx#bpx .ctp3{max-width:none !important;width:100%}
+
+/* Calculator leads: the four numbers, like every other number tile (2026-11-20) */
+#bpx#bpx#bpx#bpx#bpx .cl-tile{padding:18px 20px !important;border-radius:14px !important;display:flex;flex-direction:column}
+#bpx#bpx#bpx#bpx#bpx .cl-tile>.ms{display:none}
+#bpx#bpx#bpx#bpx#bpx .cl-tile small{font-size:13.5px !important;font-weight:500 !important;color:#64748b !important;text-transform:none !important;letter-spacing:0 !important}
+#bpx#bpx#bpx#bpx#bpx .cl-tile b{display:block;margin-top:8px;font-size:clamp(24px,2.2vw,32px) !important;font-weight:650 !important;line-height:1.1;letter-spacing:-.03em;color:#0b1526;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx#bpx#bpx#bpx#bpx .cl-tile em{display:block;margin-top:8px;font-style:normal;font-size:13px !important;color:#64748b !important}
+#bpx#bpx#bpx#bpx#bpx.bpx-dark .cl-tile b{color:#e9eef6}
+#bpx#bpx#bpx#bpx#bpx .cl-chart{padding:18px 20px !important}
+#bpx#bpx#bpx#bpx#bpx .cl-tile.txt b{font-size:clamp(18px,1.6vw,22px) !important;white-space:normal;line-height:1.25}
