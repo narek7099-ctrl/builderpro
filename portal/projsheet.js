@@ -77,6 +77,56 @@
       + '</div></div></header>';
   }
 
+
+  /* ---------- on a phone, the project is a screen in an app (2026-11-21) ----------
+     A top bar with "‹ Jobs" and Save, the title fading into it as the header scrolls away;
+     round action buttons like a contact card; the form as label-and-value rows; Delete as a
+     red row at the end; swipe from the left edge to go back. Going back saves what changed. */
+  function appify(card, j) {
+    var m = document.getElementById('bpx-modal'); if (!m || card.querySelector('.pjs-nav')) return;
+    m.classList.add('pjs-app');
+    var form = card.querySelector('[data-pj-pane="details"]');
+    var snap = function () { return form ? Array.prototype.map.call(form.querySelectorAll('input,textarea,select'), function (e) { return e.value; }).join('\u0001') : ''; };
+    var start = snap();
+    window.bpPjsBack = function () {
+      if (form && snap() !== start && window.bpProjSave) { bpProjSave(); if (window.bpToast) bpToast('Saved'); }
+      else if (window.bpCloseModal) bpCloseModal();
+    };
+    var nav = document.createElement('div'); nav.className = 'pjs-nav';
+    nav.innerHTML = '<button type="button" class="pjs-nb" onclick="bpPjsBack()" aria-label="Back to jobs"><span class="ms">chevron_left</span>Jobs</button>'
+      + '<b class="pjs-nt">' + esc(j.name || 'Project') + '</b>'
+      + '<button type="button" class="pjs-ns" onclick="bpProjSave()">Save</button>';
+    card.insertBefore(nav, card.firstChild);
+    /* the title shows in the bar once the name has scrolled up under it */
+    var h2 = card.querySelector('#pjs-title');
+    card.addEventListener('scroll', function () { nav.classList.toggle('t', !!h2 && h2.getBoundingClientRect().bottom < nav.getBoundingClientRect().bottom); }, { passive: true });
+    /* a Directions button beside Call and Text */
+    var acts = card.querySelector('.pjs-acts');
+    if (acts && j.addr && !acts.querySelector('.pjs-dir')) {
+      var a = document.createElement('a'); a.className = 'pjs-act pjs-dir'; a.target = '_blank'; a.rel = 'noopener';
+      a.href = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(j.addr);
+      a.innerHTML = '<span class="ms">near_me</span>Directions';
+      var done = acts.querySelector('.primary'); acts.insertBefore(a, done || null);
+    }
+    if (acts) Array.prototype.forEach.call(acts.querySelectorAll('.pjs-act'), function (b) { if (/Mark done/.test(b.textContent)) b.lastChild.textContent = 'Done'; });
+    if (form) Array.prototype.forEach.call(form.querySelectorAll('label'), function (l) { if (/^\s*Customer name\s*$/.test(l.textContent)) l.textContent = 'Name'; });
+    /* Delete becomes the last row of the Overview */
+    if (form && !form.querySelector('.pjs-delrow')) {
+      var d = document.createElement('button'); d.type = 'button'; d.className = 'pjs-delrow'; d.textContent = 'Delete project';
+      d.onclick = function () { if (window.bpProjDelete) bpProjDelete(); };
+      form.appendChild(d);
+    }
+    /* swipe from the left edge to go back */
+    var x0 = null, y0 = 0;
+    card.addEventListener('touchstart', function (e) { var t = e.touches[0]; x0 = t.clientX < 28 ? t.clientX : null; y0 = t.clientY; }, { passive: true });
+    card.addEventListener('touchmove', function (e) { if (x0 == null) return; var t = e.touches[0], dx = t.clientX - x0; if (Math.abs(t.clientY - y0) > 60) { x0 = null; card.style.transform = ''; return; } if (dx > 0) card.style.transform = 'translateX(' + dx + 'px)'; }, { passive: true });
+    card.addEventListener('touchend', function (e) {
+      if (x0 == null) return; var dx = e.changedTouches[0].clientX - x0; x0 = null;
+      if (dx > 90) { card.style.transition = 'transform .2s ease-out'; card.style.transform = 'translateX(100%)'; setTimeout(function () { bpPjsBack(); }, 180); }
+      else { card.style.transition = 'transform .2s ease-out'; card.style.transform = ''; setTimeout(function () { card.style.transition = ''; }, 220); }
+    });
+  }
+
   /* group a pane's top-level nodes into card sections; a label with its own
      top margin was already a section heading in the old layout */
   function cardify(pane, key) {
@@ -262,6 +312,7 @@
       if (!crewPane.hidden) bpCeoReco(j);
     }
     viewMode(body);
+    if ((window.innerWidth || 1000) <= 760) appify(card, j);
     if (window.bpPermitsReset) bpPermitsReset();
     if (window.bpPermitsRender) bpPermitsRender(j);
     if (!isCrew() && window.bpSubsTabOpen) bpSubsTabOpen(j);

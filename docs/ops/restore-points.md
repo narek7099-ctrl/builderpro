@@ -422,3 +422,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the one-scroll project sheet on phones (2026-11-21)
 - Live site (main): `1a9a46b`
 - Changes (phones): an open project scrolls as one page: the header (name, address, money, Call/Text/Mark done) scrolls away, the tab row sticks to the top at full width, the Delete/Cancel/Save bar stays at the bottom; switching tabs jumps to just under the header. Overview drops the phone/email rows (the form under it has them); fields 44px tall. The More panel hangs off the backdrop so it stays put while the sheet scrolls (portal/projsheet.js, portal/flat.css). To undo: revert those and app.html to the SHA above.
+
+## Before the app-style project screen on phones (2026-11-21)
+- Live site (main): `66b8708`
+- Changes (phones, under 760px): an open project is a full-screen app screen that slides in from the right: a frosted top bar with "‹ Jobs" (goes back, saving anything changed) and Save, the name appearing in the bar once it scrolls up; a large title; money in one rounded group; round action buttons Call / Text / Directions / Done; tabs as plain words with a blue underline, stuck under the bar; the Overview form as grouped label-and-value rows like iPhone Settings; Delete project as a red row at the end; no bottom button bar; swipe from the left edge to go back; light grey page, black in dark mode (portal/projsheet.js appify, portal/flat.css). iPad and computer unchanged. To undo: revert portal/projsheet.js, portal/flat.css and app.html to the SHA above.
