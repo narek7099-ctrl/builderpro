@@ -398,3 +398,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the one-column lead page (2026-11-20)
 - Live site (main): `5538b5f`
 - Changes: The contact (lead) page is one column, in the order a contractor uses it: name, stage and Edit; three big buttons (Call in blue, Text, Email); a "Next step" card with one line and one or two buttons for where they are; Details (phone, email, address with Directions, "Add" when missing); Jobs and estimates; Equipment folded closed; Delete contact at the bottom (portal/contact.js, portal/flat.css). Equipment's "Scan a nameplate" and "Add by hand" buttons are the same size now. To undo: revert portal/contact.js, portal/flat.css and app.html to the SHA above.
+
+## Before the full-width lead page (2026-11-20)
+- Live site (main): `b62f745`
+- Changes: The contact (lead) page fills the whole width of the page instead of stopping at 820px (portal/flat.css .ctp3). To undo: revert portal/flat.css and app.html to the SHA above.
