@@ -370,3 +370,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the number-only top cards (2026-11-20)
 - Live site (main): `8d65efc`
 - Changes: The four cards at the top of the dashboard (Projects won, New leads, Active projects, Quotes out) lose their mini graphs and icons; the number is the main point (about 36 to 46px, bold), with the label above and one line under it (portal/dash.js sparkTiles, leadsCard, statCard; portal/dash4.css). To undo: revert portal/dash.js, portal/dash4.css and app.html to the SHA above.
+
+## Before smaller top-card numbers (2026-11-20)
+- Live site (main): `97a54ce`
+- Changes: The four top dashboard numbers come down from 36 to 46px to 28 to 34px (portal/dash4.css). To undo: revert portal/dash4.css and app.html to the SHA above.
