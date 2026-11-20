@@ -519,3 +519,49 @@
   #bpx#bpx#bpx#bpx#bpx#bpx .pjs-card .pjs-tabs{margin:8px 12px 4px !important}
   #bpx#bpx#bpx#bpx#bpx#bpx .pjs-card .pjs-tabs .pjs-tab:not(.pjs-menu .pjs-tab){height:36px !important}
 }
+
+/* An open project's More menu on a phone: a panel from the bottom of the sheet (2026-11-20) */
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-menu.pjs-menu-sheet{position:absolute !important;left:10px !important;right:10px !important;bottom:84px !important;top:auto !important;min-width:0 !important;max-height:70% !important;z-index:60 !important;
+  padding:8px !important;border-radius:16px !important;background:#fff !important;border:1px solid #e3e8ef !important;box-shadow:0 18px 40px -12px rgba(0,21,48,.35),0 2px 6px rgba(16,24,40,.08) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-menu.pjs-menu-sheet[hidden]{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-menu.pjs-menu-sheet .pjs-tab{height:48px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-menu.pjs-menu-sheet{background:#111824 !important;border-color:#222d3d !important}
+
+/* =====================================================================
+   The phone home, simpler (2026-11-20)
+   ===================================================================== */
+#bpx#bpx#bpx#bpx .mh3{display:flex;flex-direction:column;gap:12px;padding:14px 16px 24px}
+#bpx#bpx#bpx#bpx .mh3-hi h2{margin:0;font-size:22px;font-weight:650;letter-spacing:-.02em;color:var(--ink,#0b1526)}
+#bpx#bpx#bpx#bpx .mh3-hi small{display:block;margin-top:2px;font-size:13.5px;color:#64748b}
+#bpx#bpx#bpx#bpx .mh3-money{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:4px;width:100%;padding:16px 18px;border-radius:16px;background:#fff;border:1px solid #e3e8ef;box-shadow:0 1px 2px rgba(16,24,40,.05);cursor:pointer}
+#bpx#bpx#bpx#bpx .mh3-ml{font-size:13.5px;font-weight:500;color:#64748b}
+#bpx#bpx#bpx#bpx .mh3-money b{font-size:32px;font-weight:700;letter-spacing:-.03em;line-height:1.1;color:#0b1526;font-variant-numeric:tabular-nums}
+#bpx#bpx#bpx#bpx .mh3-ms{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:#64748b}
+#bpx#bpx#bpx#bpx .mh3-ms span+span::before{content:"·";margin-right:12px;color:#cbd5e1}
+#bpx#bpx#bpx#bpx .mh3-qs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+#bpx#bpx#bpx#bpx .mh3-q{all:unset;box-sizing:border-box;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:68px;border-radius:14px;background:#fff;border:1px solid #e3e8ef;box-shadow:0 1px 2px rgba(16,24,40,.05);cursor:pointer;font-size:13.5px;font-weight:600;color:#0b1526}
+#bpx#bpx#bpx#bpx .mh3-q .ms{font-size:22px;color:#006fff}
+#bpx#bpx#bpx#bpx .mh3-q:first-child{background:#006fff;border-color:#006fff;color:#fff}
+#bpx#bpx#bpx#bpx .mh3-q:first-child .ms{color:#fff}
+#bpx#bpx#bpx#bpx .mh3-q .bp-lk{position:absolute;top:6px;right:6px;font-size:14px;color:#94a3b8}
+#bpx#bpx#bpx#bpx .mh3-setup{all:unset;box-sizing:border-box;display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:10px;width:100%;padding:11px 14px;border-radius:12px;background:#ebf4ff;color:#0b3a7a;font-size:13px;cursor:pointer}
+#bpx#bpx#bpx#bpx .mh3-setup>span:nth-child(2){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx#bpx#bpx#bpx .mh3-sb{display:block;height:5px;border-radius:9px;background:#cfe0fb;overflow:hidden}
+#bpx#bpx#bpx#bpx .mh3-sb i{display:block;height:100%;background:#006fff;border-radius:9px}
+#bpx#bpx#bpx#bpx .mh3-setup .ms{font-size:18px}
+#bpx#bpx#bpx#bpx .mh3 .mh2-card{margin:0 !important;padding:14px 16px !important;border-radius:16px !important}
+#bpx#bpx#bpx#bpx .mh3 .mh2-n{font-size:12px}
+/* apps: smaller circles */
+#bpx#bpx#bpx#bpx .mh3 .mh2-apps .bp-apps{gap:10px 6px !important}
+#bpx#bpx#bpx#bpx .mh3 .mh2-apps .bp-app-c{width:48px !important;height:48px !important}
+#bpx#bpx#bpx#bpx .mh3 .mh2-apps .bp-app-c .hl-i{width:21px !important;height:21px !important}
+#bpx#bpx#bpx#bpx .mh3 .mh2-apps .bp-app{font-size:12px !important;gap:6px !important}
+/* dark */
+#bpx#bpx#bpx#bpx.bpx-dark :is(.mh3-money,.mh3-q:not(:first-child)){background:#111824;border-color:#222d3d;color:#e9eef6}
+#bpx#bpx#bpx#bpx.bpx-dark .mh3-money b,#bpx#bpx#bpx#bpx.bpx-dark .mh3-hi h2{color:#e9eef6}
+#bpx#bpx#bpx#bpx.bpx-dark .mh3-setup{background:#0f2340;color:#cfe1ff}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx .mh3>:is(.mh3-hi,.mh3-qs){padding:0 !important;margin:0 !important;min-height:0 !important;background:none !important;border:0 !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx .mh3>*{margin-top:0 !important;margin-bottom:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx .mh3>.mh3-hi{padding:4px 2px 0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .bp-tabbar .bp-slide{background:#1b2433 !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .bp-tabbar .bp-tab.on{color:#fff !important}

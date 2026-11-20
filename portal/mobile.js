@@ -248,32 +248,24 @@
     var tileB = function (fnq, ic, label, pri) { var lk = /quick\('(\w+)'/.exec(fnq); return '<button type="button" class="mh2-tile' + (pri ? ' pri' : '') + '" onclick="' + fnq + '"><span class="ms">' + ic + '</span><b>' + label + '</b>' + (lk && locked(lk[1]) ? '<span class="ms bp-lk" aria-label="Not on your plan">lock</span>' : '') + '</button>'; };
     var row = function (go, dot, t, sub) { return '<button type="button" class="mh2-row" onclick="bpNav(\'' + esc(go) + '\')"><i class="mh2-dot ' + dot + '"></i><span class="mh2-rt"><b>' + t + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span><span class="ms">chevron_right</span></button>'; };
     setTimeout(function () { if (window.bpCountUp) bpCountUp(el); }, 0);
-    el.innerHTML = '<div class="mh2">'
-      + '<section class="mh2-hero">'
-        + '<small>' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + '</small>'
-        + '<h2>' + (hiH < 12 ? 'Morning' : hiH < 17 ? 'Afternoon' : 'Evening') + (name ? ', ' + esc(name) : '') + '</h2>'
-        + '<button type="button" class="mh2-owed" onclick="bpNav(\'invoices\')"><span>Customers owe you</span><b data-cu>' + money(owed) + '</b>'
-          + '<small>on ' + act.length + (act.length === 1 ? ' job' : ' jobs') + (got ? ' · ' + money(got) + ' collected so far' : '') + '</small></button>'
+    /* 2026-11-20: simpler. A small greeting, one money card, three quick buttons in a row, one
+       "Today" card (what needs you, then what's booked), a one-line setup bar, the apps. */
+    var qb = function (go, fn, ic, label) { if (!allows(go)) return ''; return '<button type="button" class="mh3-q" onclick="bpMobile.quick(\'' + go + '\',\'' + fn + '\')"><span class="ms">' + ic + '</span><span>' + label + '</span>' + (locked(go) ? '<span class="ms bp-lk" aria-label="Not on your plan">lock</span>' : '') + '</button>'; };
+    var todayList = needs.slice(0, 3).map(function (r) { return row(r.go, r.tone || '', r.t, ''); }).join('')
+      + todayRows.map(function (r) { return '<button type="button" class="mh2-today" onclick="bpNav(\'' + r.go + '\')"><span class="mh2-tt">' + (r.t || '') + '</span><span class="mh2-rt"><b>' + r.w + '</b><small>' + r.s + '</small></span></button>'; }).join('');
+    el.innerHTML = '<div class="mh2 mh3">'
+      + '<section class="mh3-hi"><h2>' + (hiH < 12 ? 'Good morning' : hiH < 17 ? 'Good afternoon' : 'Good evening') + (name ? ', ' + esc(name) : '') + '</h2>'
+        + '<small>' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + '</small></section>'
+      + '<button type="button" class="mh3-money" onclick="bpNav(\'invoices\')"><span class="mh3-ml">Customers owe you</span><b data-cu>' + money(owed) + '</b>'
+        + '<span class="mh3-ms"><span>' + act.length + (act.length === 1 ? ' active job' : ' active jobs') + '</span>' + (got ? '<span>' + money(got) + ' collected</span>' : '') + '</span></button>'
+      + '<section class="mh3-qs">' + qb('estimates', 'bpEstOpen', 'request_quote', 'Estimate') + qb('activejobs', 'bpAddJobOpen', 'add_business', 'Job') + qb('invoices', 'bpInvOpen', 'receipt_long', 'Invoice') + '</section>'
+      + setupCard()
+      + '<section class="mh2-card mh3-today"><div class="mh2-h"><b>Today</b>' + (needs.length ? '<span class="mh2-n">' + needs.length + ' to do</span>' : '') + '</div>'
+        + (todayList || '<div class="mh2-empty"><span class="ms">check_circle</span>' + (d.appts === undefined ? 'Loading today…' : 'All caught up. Nothing booked today.') + '</div>')
+        + (needs.length > 3 ? '<button type="button" class="mh2-more" onclick="bpShell.notes&&bpShell.notes(document.getElementById(\'hlBell\'))">See all ' + needs.length + '</button>' : '')
       + '</section>'
-      + '<div class="mh2-body">'
-        + '<section class="mh2-tiles">'
-          + (allows('estimates') ? tileB("bpMobile.quick('estimates','bpEstOpen')", 'request_quote', 'New estimate', 1) : '')
-          + (allows('activejobs') ? tileB("bpMobile.quick('activejobs','bpAddJobOpen')", 'add_business', 'Add job') : '')
-          + (allows('invoices') ? tileB("bpMobile.quick('invoices','bpInvOpen')", 'receipt_long', 'Send invoice') : '')
-          + (allows('calendar') ? tileB("bpMobile.quick('calendar','bpCrewBookOpen')", 'groups', 'Schedule crew') : '')
-        + '</section>'
-        + setupCard()
-        + '<section class="mh2-card"><div class="mh2-h"><b>Needs you</b>' + (needs.length ? '<span class="mh2-n">' + needs.length + '</span>' : '') + '</div>'
-          + (needs.length ? needs.slice(0, 3).map(function (r) { return row(r.go, r.tone || '', r.t, ''); }).join('')
-            + (needs.length > 3 ? '<button type="button" class="mh2-more" onclick="bpShell.notes&&bpShell.notes(document.getElementById(\'hlBell\'))">See all ' + needs.length + '</button>' : '')
-            : '<div class="mh2-empty"><span class="ms">check_circle</span>You’re all caught up.</div>')
-        + '</section>'
-        + '<section class="mh2-card"><div class="mh2-h"><b>Today</b></div>'
-          + (todayRows.length ? todayRows.map(function (r) { return '<button type="button" class="mh2-today" onclick="bpNav(\'' + r.go + '\')"><span class="mh2-tt">' + (r.t || '') + '</span><span class="mh2-rt"><b>' + r.w + '</b><small>' + r.s + '</small></span></button>'; }).join('')
-            : '<div class="mh2-empty"><span class="ms">event_available</span>' + (d.appts === undefined ? 'Loading today…' : 'Nothing booked today.') + '</div>')
-        + '</section>'
-        + appsCard()
-      + '</div></div>';
+      + appsCard()
+      + '</div>';
   }
   /* the first week decides whether a new account sticks: the same setup steps as the computer
      dashboard (portal/dash.js), so a phone-only owner sees what is left and can tap straight to it */
@@ -288,6 +280,7 @@
     try { if (localStorage.getItem('bpSetupHidden') === '1') return ''; } catch (e) {}
     var next = list.filter(function (x) { return x.done === false; })[0];
     var step = function (x) { return '<button type="button" class="mh2-row" onclick="bpNav(\'' + esc(x.go) + '\')"><span class="ms mh2-sk' + (x.done ? ' ok' : '') + '">' + (x.done ? 'check_circle' : 'radio_button_unchecked') + '</span><span class="mh2-rt"><b>' + esc(x.t) + '</b>' + (x.done ? '' : '<small>' + esc(x.s) + '</small>') + '</span></button>'; };
+    if (!setupOpen) return '<button type="button" class="mh3-setup" onclick="bpMobile.setupToggle()"><span class="mh3-sb"><i style="width:' + pct + '%"></i></span><span><b>Setup ' + done + ' of ' + list.length + '</b>' + (next ? ' · next: ' + esc(next.t) : '') + '</span><span class="ms">chevron_right</span></button>';
     return '<section class="mh2-card mh2-setup"><div class="mh2-h"><b>Finish setting up</b><span class="mh2-n">' + done + ' of ' + list.length + '</span></div>'
       + '<div class="mh2-bar"><i style="width:' + pct + '%"></i></div>'
       + (setupOpen ? list.map(step).join('') : (next ? step(next) : ''))
