@@ -331,8 +331,20 @@
   }
   window.bpPjsMore = function (e) {
     e.stopPropagation();
-    var b = e.currentTarget, m = b.parentNode.querySelector('.pjs-menu'); if (!m) return;
+    var b = e.currentTarget, m = b.parentNode.querySelector('.pjs-menu') || b._menu; if (!m) return;
+    b._menu = m;
+    /* 2026-11-20: iPhone Safari clipped the menu because it lived inside the sideways-scrolling tab
+       row; it now opens from the sheet itself (and on a phone, as a panel from the bottom) */
+    var host = b.closest('.pjs-card') || b.closest('#bpx-modal') || document.body;
+    if (m.parentNode !== host) host.appendChild(m);
+    var phoneW = (window.innerWidth || 1000) <= 760;
+    m.classList.toggle('pjs-menu-sheet', phoneW);
     m.hidden = !m.hidden; b.setAttribute('aria-expanded', String(!m.hidden));
+    if (!m.hidden && phoneW) {
+      m.style.top = m.style.left = m.style.maxHeight = '';
+      setTimeout(function () { document.addEventListener('click', function off(ev) { if (!m.contains(ev.target)) { m.hidden = true; b.setAttribute('aria-expanded', 'false'); } document.removeEventListener('click', off, true); }, true); }, 0);
+      return;
+    }
     if (!m.hidden) {
       var r = b.getBoundingClientRect();
       /* the sheet is animated, so 'fixed' is measured from the sheet, not the window: find that origin first */
