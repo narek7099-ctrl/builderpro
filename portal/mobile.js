@@ -171,13 +171,14 @@
     var today = iso(), onSite = j.sched && (j.sched.dates || []).indexOf(today) >= 0;
     var pill = !pr ? ['Not planned', 'gray'] : pr.late.length ? ['Behind', 'red'] : pr.complete ? ['Ready to close', 'green'] : onSite ? ['Crew there today', 'green'] : [pr.pct + '% built', 'blue'];
     var pct = pr ? pr.pct : (e ? Math.round(c / e * 100) : 0);
-    var nxt = pr && pr.next ? 'Next: <b>' + esc(pr.next.name) + '</b>' : pr && pr.complete ? '<b>All steps done</b>' : 'No plan yet';
     var addr = String(j.addr || '').split(',')[0];
-    return '<button type="button" class="mj" onclick="bpProjOpen(\'' + esc(j.id) + '\')">'
-      + '<span class="mj-top"><span class="mj-who"><b>' + esc(j.name || 'Job') + '</b><small>' + esc(j.title || 'Job') + (addr ? ' · ' + esc(addr) : '') + '</small></span>'
-      + '<span class="mj-pill ' + pill[1] + '">' + pill[0] + '</span></span>'
-      + '<span class="mj-bar"><i style="width:' + Math.max(pct, 3) + '%"></i></span>'
-      + '<span class="mj-ft"><span>' + nxt + '</span><span>' + (owe ? '<b>' + money(owe) + '</b> to collect' : '<b>Paid in full</b>') + '</span></span></button>';
+    /* 2026-11-20: compact, so more jobs fit on the screen: name and what's left on one line,
+       the job and street under it, a thin bar. A status only when it says something. */
+    var tag = !pr ? '' : '<span class="mj-pill ' + pill[1] + '">' + pill[0] + '</span>';
+    return '<button type="button" class="mj mj2" onclick="bpProjOpen(\'' + esc(j.id) + '\')">'
+      + '<span class="mj-r1"><b>' + esc(j.name || 'Job') + '</b><span class="mj-amt">' + (owe ? money(owe) + '<small> left</small>' : '<small>Paid in full</small>') + '</span></span>'
+      + '<span class="mj-r2"><small>' + esc(j.title || 'Job') + (addr ? ' · ' + esc(addr) : '') + '</small>' + tag + '</span>'
+      + '<span class="mj-bar"><i style="width:' + Math.max(pct, 3) + '%"></i></span></button>';
   }
   function jobsHook() {
     var o = window.bpPjRow; if (typeof o !== 'function' || o._m) return;
