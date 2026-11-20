@@ -166,3 +166,164 @@
 #bpx#bpx#bpx#bpx .bpx-ctable .bpx-cstage{white-space:nowrap}
 /* phones: the calendar comes first, the four numbers stay on bigger screens */
 #bpx#bpx#bpx#bpx#bpx.bp-m .cal-stats{display:none !important}
+
+/* =====================================================================
+   Finances: the Income and Expenses lists (2026-11-20), one entry a line,
+   grouped by month: what it was, then who / when / where it came from in
+   grey, the amount on the right. A bin only on entries added by hand.
+   ===================================================================== */
+#bpx .fl-list{display:flex;flex-direction:column}
+#bpx .fl-mon{display:flex;justify-content:space-between;align-items:center;padding:16px 4px 8px;font-size:12.5px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #e9edf3}
+#bpx .fl-mon:first-child{padding-top:4px}
+#bpx .fl-mon span:last-child{text-transform:none;letter-spacing:0;font-variant-numeric:tabular-nums;color:#334155}
+#bpx .fl-row{display:grid;grid-template-columns:36px minmax(0,1fr) auto 32px;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid #f0f3f7}
+#bpx .fl-row:last-child{border-bottom:0}
+#bpx .fl-row:hover{background:#fafbfd}
+#bpx .fl-ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:#f1f4f8;color:#475569}
+#bpx .fl-ic.in{background:#e8f9f4;color:#087F61}
+#bpx .fl-ic .ms{font-size:19px}
+#bpx .fl-t{min-width:0;display:flex;flex-direction:column;gap:2px}
+#bpx .fl-t b{font-size:14px;font-weight:600;color:#0b1526;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .fl-t small{font-size:12.5px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .fl-a{font-size:14.5px;font-weight:650;color:#0b1526;font-variant-numeric:tabular-nums;white-space:nowrap}
+#bpx .fl-a.in{color:#087F61}
+#bpx#bpx#bpx#bpx .fl-del{width:32px;height:32px;min-height:0 !important;padding:0 !important;display:grid;place-items:center;border:0 !important;border-radius:8px !important;background:transparent !important;color:#94a3b8 !important;cursor:pointer;box-shadow:none !important;opacity:.0;transition:opacity .15s,background .15s,color .15s}
+#bpx#bpx#bpx#bpx .fl-row:hover .fl-del,#bpx#bpx#bpx#bpx .fl-del:focus-visible{opacity:1}
+@media (any-hover:none){ #bpx#bpx#bpx#bpx .fl-del{opacity:1} }
+#bpx#bpx#bpx#bpx .fl-del:hover{background:#fdecec !important;color:#c62828 !important}
+#bpx .fl-del .ms{font-size:18px}
+#bpx .fl-empty{padding:28px 8px;text-align:center;font-size:13.5px;color:#64748b}
+@media (max-width:640px){ #bpx .fl-row{grid-template-columns:32px minmax(0,1fr) auto 28px;gap:10px} #bpx .fl-ic{width:32px;height:32px} }
+#bpx.bpx-dark .fl-mon{border-color:#222d3d;color:#8b9ab0}#bpx.bpx-dark .fl-mon span:last-child{color:#cbd5e1}
+#bpx.bpx-dark .fl-row{border-color:#1c2533}#bpx.bpx-dark .fl-row:hover{background:#151d2a}
+#bpx.bpx-dark .fl-ic{background:#1b2433;color:#cbd5e1}#bpx.bpx-dark .fl-ic.in{background:#0b2e26;color:#3FE0B6}
+#bpx.bpx-dark .fl-t b,#bpx.bpx-dark .fl-a{color:#e9eef6}#bpx.bpx-dark .fl-a.in{color:#3FE0B6}
+
+/* =====================================================================
+   Jobs (2026-11-20): number tiles like the rest, flat filter buttons,
+   and one clean line per job.
+   ===================================================================== */
+#bpx#bpx#bpx#bpx#bpx .pjk-stat{padding:18px 20px !important;gap:0 !important}
+#bpx#bpx#bpx#bpx#bpx .pjk-stat span{font-size:13.5px;font-weight:500;color:#64748b}
+#bpx#bpx#bpx#bpx#bpx .pjk-stat b{font-size:clamp(24px,2.2vw,32px);font-weight:650;letter-spacing:-.03em;line-height:1.1;margin-top:8px;color:#0b1526}
+#bpx#bpx#bpx#bpx#bpx .pjk-stat.good b{color:#087F61}#bpx#bpx#bpx#bpx#bpx .pjk-stat.owe b{color:#0b1526}
+#bpx#bpx#bpx#bpx#bpx .pjk-stat small{font-size:13px;color:#64748b;margin-top:8px}
+#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjk-stat b{color:#e9eef6}#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjk-stat.good b{color:#3FE0B6}
+
+#bpx#bpx#bpx#bpx .pjk-chips{gap:4px;padding:3px;border:1px solid #e3e8ef;border-radius:10px;background:#f1f4f8}
+#bpx#bpx#bpx#bpx .pjk-chip{border:0;background:transparent;border-radius:7px;padding:6px 12px;font-weight:500;color:#5b6b82}
+#bpx#bpx#bpx#bpx .pjk-chip:hover{background:rgba(255,255,255,.6);color:#0b1526}
+#bpx#bpx#bpx#bpx .pjk-chip.on{background:#fff;color:#0b1526;font-weight:600;box-shadow:0 1px 2px rgba(16,24,40,.1),0 0 0 1px rgba(16,24,40,.04)}
+#bpx#bpx#bpx#bpx .pjk-chip em{display:inline-block;min-width:18px;margin-left:4px;padding:0 6px;border-radius:999px;background:#e3e8ef;color:#475569;font-size:11.5px;line-height:18px;text-align:center}
+#bpx#bpx#bpx#bpx .pjk-chip.on em{background:#ebf4ff;color:#006fff}
+#bpx#bpx#bpx#bpx.bpx-dark .pjk-chips{background:#0c121c;border-color:#222d3d}
+#bpx#bpx#bpx#bpx.bpx-dark .pjk-chip{background:transparent;color:#9fb0c8}#bpx#bpx#bpx#bpx.bpx-dark .pjk-chip.on{background:#1b2433;color:#fff;box-shadow:none}
+#bpx#bpx#bpx#bpx.bpx-dark .pjk-chip em{background:#222d3d;color:#cbd5e1}
+
+#bpx#bpx#bpx#bpx .pjl-r.pjl2{grid-template-columns:40px minmax(0,2.4fr) minmax(96px,.8fr) minmax(0,1.2fr) minmax(0,1.1fr) auto;gap:16px;padding:14px 18px;border-top:1px solid #eef1f5}
+#bpx#bpx#bpx#bpx .pjl-r.pjl2:first-child{border-top:0}
+#bpx#bpx#bpx#bpx .pjl2 .pjk-av{border-radius:10px;background:#ebf4ff;color:#0853B5;font-weight:600}
+#bpx#bpx#bpx#bpx .pjl2 .pjl-id b{font-size:14.5px;font-weight:600;color:#0b1526}
+#bpx#bpx#bpx#bpx .pjl2 .pjl-id span{display:block;margin-top:2px;font-size:12.5px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-line-clamp:unset}
+#bpx .pjl-mute{font-size:12.5px;color:#94a3b8}
+#bpx#bpx#bpx#bpx .pjl2 .pjl-m b{font-size:14.5px;font-weight:650}
+#bpx#bpx#bpx#bpx .pjl2 .pjk-pay{height:5px;border-radius:9px;background:#eef1f5}
+#bpx#bpx#bpx#bpx .pjl2 .pjk-pay i{background:#16C79A;border-radius:9px}
+#bpx#bpx#bpx#bpx .pjl2 .pjl-m small{font-size:12px;color:#64748b}
+#bpx#bpx#bpx#bpx .pjl2 .pjl-w{font-size:13px;color:#334155}#bpx#bpx#bpx#bpx .pjl2 .pjl-w.mut{color:#94a3b8}
+#bpx#bpx#bpx#bpx .pjl2 .pjl-w>span:last-child{overflow:hidden;text-overflow:ellipsis}
+#bpx#bpx#bpx#bpx .pjl2 .pjk-star{color:#cbd5e1}#bpx#bpx#bpx#bpx .pjl2 .pjk-star.on{color:#006fff}
+#bpx#bpx#bpx#bpx .pjl2 .pjl-b{border:1px solid #e3e8ef !important;background:#fff !important;border-radius:8px !important;padding:7px 12px !important;font-size:13px !important;font-weight:600 !important;color:#0b1526 !important;box-shadow:0 1px 2px rgba(16,24,40,.05) !important}
+#bpx#bpx#bpx#bpx .pjl2 .pjl-b:hover{border-color:#16C79A !important;color:#087F61 !important}
+@media (max-width:1100px){ #bpx#bpx#bpx#bpx .pjl-r.pjl2{grid-template-columns:40px minmax(0,2fr) minmax(0,1.1fr) minmax(0,1fr) auto} #bpx#bpx#bpx#bpx .pjl2 .pjl-w{display:none} }
+@media (max-width:820px){ #bpx#bpx#bpx#bpx .pjl-r.pjl2{grid-template-columns:40px minmax(0,1fr) auto} }
+#bpx#bpx#bpx#bpx.bpx-dark .pjl-r.pjl2{border-color:#1c2533}
+#bpx#bpx#bpx#bpx.bpx-dark .pjl2 .pjk-av{background:#0f2340;color:#9cc4ff}
+#bpx#bpx#bpx#bpx.bpx-dark .pjl2 .pjl-id b{color:#e9eef6}#bpx#bpx#bpx#bpx.bpx-dark .pjl2 .pjl-w{color:#cbd5e1}
+#bpx#bpx#bpx#bpx.bpx-dark .pjl2 .pjl-b{background:#111824 !important;border-color:#222d3d !important;color:#e9eef6 !important}
+#bpx#bpx#bpx#bpx.bpx-dark .pjl2 .pjk-pay{background:#1c2533}
+
+/* =====================================================================
+   Calendar, full width (2026-11-20): the side column is gone. Anything
+   that needs a tap (projects with no work days, a Google Calendar to
+   connect) sits over the calendar only while it applies; to-dos and
+   what's coming up sit under it, side by side.
+   ===================================================================== */
+#bpx#bpx#bpx#bpx#bpx#bpx .cal-one{grid-template-columns:minmax(0,1fr) !important}
+#bpx#bpx#bpx#bpx .cal-notes{display:flex;flex-direction:column;gap:10px;margin:0 0 14px}
+#bpx#bpx#bpx#bpx .cal-notes:not(:has(> :not([hidden]))){display:none}
+#bpx#bpx#bpx#bpx .cal-notes>.cal-unsched{margin:0 !important;padding:12px 16px;border-radius:12px;background:#ebf4ff;color:#0b3a7a}
+#bpx#bpx#bpx#bpx .cal-notes>.cal-unsched b{display:inline;margin-right:6px}
+#bpx#bpx#bpx#bpx .cal-notes>.cal-sec[hidden]{display:none !important}
+#bpx#bpx#bpx#bpx .cal-notes>.cal-sec{background:#fff;border:1px solid #e3e8ef;border-radius:12px;padding:12px 16px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+/* the Google box as one line: name, why, the button */
+#bpx#bpx#bpx#bpx .cal-notes>.cal-gcal:has(.gc-go){display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+#bpx#bpx#bpx#bpx .cal-notes>.cal-gcal:has(.gc-go) .cal-side-h{margin:0 !important;flex:0 0 auto}
+#bpx#bpx#bpx#bpx .cal-notes>.cal-gcal:has(.gc-go) .gc-p{flex:1 1 280px;margin:0 !important;font-size:13px}
+#bpx#bpx#bpx#bpx .cal-notes>.cal-gcal .gc-go{margin:0 !important;flex:0 0 auto}
+#bpx#bpx#bpx#bpx .cal-below{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin:14px 0 0}
+#bpx#bpx#bpx#bpx .cal-below>.cal-sec{padding:18px 20px !important;margin:0 !important;min-width:0}
+#bpx#bpx#bpx#bpx .cal-below .cal-side-h{margin-bottom:10px}
+#bpx#bpx#bpx#bpx .cal-below .cal-side-h b{font-size:14.5px;font-weight:600;color:#0b1526}
+#bpx#bpx#bpx#bpx .cal-below .cal-empty{font-size:13px;color:#64748b}
+#bpx#bpx#bpx#bpx .cal-below .cal-up-d{background:#f1f4f8}
+#bpx#bpx#bpx#bpx.bpx-dark .cal-notes>.cal-sec{background:#111824;border-color:#222d3d}
+#bpx#bpx#bpx#bpx.bpx-dark .cal-notes>.cal-unsched{background:#0f2340;color:#cfe1ff}
+#bpx#bpx#bpx#bpx.bpx-dark .cal-below .cal-side-h b{color:#e9eef6}
+#bpx#bpx#bpx#bpx.bpx-dark .cal-below .cal-up-d{background:#1b2433}
+
+/* =====================================================================
+   The contact page (2026-11-20): one plain card on top with the person,
+   their stage, ways to reach them and their numbers in a line; a quieter
+   progress line; details and jobs side by side.
+   ===================================================================== */
+#bpx#bpx#bpx#bpx .ctp-hero2{border:1px solid #e3e8ef !important;border-radius:14px !important;box-shadow:0 1px 2px rgba(16,24,40,.05) !important;background:#fff !important}
+#bpx#bpx#bpx#bpx .ctp-hero2 .ctp-hbody{align-items:center;padding:20px 22px;gap:16px}
+#bpx#bpx#bpx#bpx .ctp-hero2 .ctp-av{margin-top:0}
+#bpx#bpx#bpx#bpx .ctp-hero2 .ctp-av .bpx-av{border:0;box-shadow:none;font-size:20px !important;font-weight:650}
+#bpx#bpx#bpx#bpx .ctp-hero2 .ctp-who{padding-top:0}
+#bpx#bpx#bpx#bpx .ctp-hero2 .ctp-who h2{font-size:21px;font-weight:650;letter-spacing:-.02em}
+#bpx#bpx#bpx#bpx .ctp-hero2 .ctp-meta{margin-top:6px}
+#bpx#bpx#bpx#bpx .ctp-hero2 .ctp-stage{height:24px;font-weight:600;border:0}
+#bpx#bpx#bpx#bpx .ctp-hero2 .ctp-tags{margin-top:6px}
+#bpx#bpx#bpx#bpx .ctp-hero2 .ctp-tags span{border:0;background:#f1f4f8;color:#475569;font-weight:500}
+#bpx#bpx#bpx#bpx .ctp-hero2 .ctp-acts{margin-top:0;gap:6px}
+#bpx#bpx#bpx#bpx .ctp-hero2 .ctp-act{height:36px;padding:0 12px;border-color:#e3e8ef;font-size:13px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+#bpx#bpx#bpx#bpx .ctp-hero2 .ctp-act:hover{background:#f7f9fc;border-color:#cdd8e6}
+#bpx#bpx#bpx#bpx .ctp-hero2 .ctp-act.pri{background:#006fff;border-color:#006fff;color:#fff}
+#bpx#bpx#bpx#bpx .ctp-figs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid #eef1f5}
+#bpx#bpx#bpx#bpx .ctp-figs>div{padding:14px 22px;border-left:1px solid #eef1f5;min-width:0}
+#bpx#bpx#bpx#bpx .ctp-figs>div:first-child{border-left:0}
+#bpx#bpx#bpx#bpx .ctp-figs small{display:block;font-size:12.5px;font-weight:500;color:#64748b}
+#bpx#bpx#bpx#bpx .ctp-figs b{display:block;margin-top:4px;font-size:20px;font-weight:650;letter-spacing:-.02em;color:#0b1526;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:700px){ #bpx#bpx#bpx#bpx .ctp-figs{grid-template-columns:repeat(2,minmax(0,1fr))} #bpx#bpx#bpx#bpx .ctp-figs>div:nth-child(3){border-left:0} #bpx#bpx#bpx#bpx .ctp-figs>div:nth-child(n+3){border-top:1px solid #eef1f5} }
+/* tabs, cards, the progress line */
+/* tab rows inside a contact or an open project: the same flat track as everywhere else */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-tabs{padding:3px !important;gap:2px !important;border:1px solid #e3e8ef !important;border-radius:10px !important;background:#f1f4f8 !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-tabs .pjs-tab:not(.pjs-menu .pjs-tab){height:32px !important;border-radius:7px !important;padding:0 13px !important;background:transparent !important;color:#5b6b82 !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-tabs .pjs-tab:not(.pjs-menu .pjs-tab):is(.on,[aria-selected=true]){background:#fff !important;color:#0b1526 !important;font-weight:600 !important;box-shadow:0 1px 2px rgba(16,24,40,.1),0 0 0 1px rgba(16,24,40,.04) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-tabs .pjs-tab:not(.pjs-menu .pjs-tab):is(.on,[aria-selected=true]) .ms{color:#006fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .insp-ctabs{margin:16px 0 12px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-tabs{background:#0c121c !important;border-color:#222d3d !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-tabs .pjs-tab:not(.pjs-menu .pjs-tab):is(.on,[aria-selected=true]){background:#1b2433 !important;color:#fff !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx .ctp-card{border:1px solid #e3e8ef !important;border-radius:14px !important;padding:18px 20px !important;background:#fff !important;box-shadow:0 1px 2px rgba(16,24,40,.05) !important}
+#bpx#bpx#bpx#bpx .ctp-ch b{font-size:14.5px;font-weight:600}
+#bpx#bpx#bpx#bpx .ctp-pipe ol{margin-top:10px}
+#bpx#bpx#bpx#bpx .ctp-dot{width:28px;height:28px;background:#f1f4f8;border:0}
+#bpx#bpx#bpx#bpx .ctp-dot .ms{font-size:15px}
+#bpx#bpx#bpx#bpx .ctp-pipe li:not(:last-child)::after{top:13px;left:calc(50% + 16px);right:calc(-50% + 16px);background:#e9edf3}
+#bpx#bpx#bpx#bpx .ctp-pipe li.now .ctp-dot{border:2px solid var(--st);box-shadow:none}
+#bpx#bpx#bpx#bpx .ctp-pipe small{font-weight:500}
+#bpx#bpx#bpx#bpx .ctp-ri{background:#f1f4f8;border-radius:9px}
+#bpx#bpx#bpx#bpx .ctp-row{border-top-color:#eef1f5}
+#bpx#bpx#bpx#bpx .ctp-rv small{font-weight:500;color:#64748b}
+/* dark */
+#bpx#bpx#bpx#bpx.bpx-dark .ctp-hero2,#bpx#bpx#bpx#bpx.bpx-dark .ctp-card{background:#111824 !important;border-color:#222d3d !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx.bpx-dark .ctp-figs,#bpx#bpx#bpx#bpx.bpx-dark .ctp-figs>div{border-color:#222d3d}
+#bpx#bpx#bpx#bpx.bpx-dark .ctp-figs b{color:#e9eef6}
+#bpx#bpx#bpx#bpx.bpx-dark .ctp-hero2 .ctp-act{background:#111824;border-color:#222d3d;color:#e9eef6}
+#bpx#bpx#bpx#bpx.bpx-dark .ctp-hero2 .ctp-act.pri{background:#006fff;border-color:#006fff;color:#fff}
+#bpx#bpx#bpx#bpx.bpx-dark .ctp-hero2 .ctp-tags span,#bpx#bpx#bpx#bpx.bpx-dark .ctp-dot,#bpx#bpx#bpx#bpx.bpx-dark .ctp-ri{background:#1b2433}
+#bpx#bpx#bpx#bpx#bpx.bpx-dark .ctp-pipe li:not(:last-child)::after{background:#222d3d}
+#bpx#bpx#bpx#bpx#bpx.bpx-dark .ctp-pipe li.done:not(:last-child)::after{background:var(--st)}
+#bpx#bpx#bpx#bpx#bpx.bpx-dark .ctp-row,#bpx#bpx#bpx#bpx#bpx.bpx-dark .ctp-foot{border-top-color:#222d3d}

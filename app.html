@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="format-detection" content="telephone=no,address=no,email=no,date=no">
 <script>/* inside the app (signed-in portal, installed to the home screen, the store app, or a
    customer's project / estimate / contract page) the page doesn't pinch- or tap-zoom
    and doesn't jump when a field is tapped, so it feels like an app, not a website */
@@ -93,9 +94,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261120-20261120g">
-<link rel="stylesheet" href="site/present.css?v=20261120-20261120g">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261120-20261120g"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261120-20261120j">
+<link rel="stylesheet" href="site/present.css?v=20261120-20261120j">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261120-20261120j"}}</script>
 
 
 <style id="bpi-icons">
@@ -4183,6 +4184,12 @@ function bpCalUnsched(){
              :'<button class="bpx-btn" onclick="bpOpenBook()"><span class=ms>add</span> '+(jobs?'Book job':'Book inspection')+'</button>')
       +'</div></div>'
       +'<div class="bpx-stats cal-stats" id="bpx-calstats"></div>'
+      /* things that need a tap (projects with no days, a calendar to connect) sit over the calendar, only when there is one */
+      +'<div class="cal-notes">'
+      +((all||jobs)?bpCalUnsched():'')
+      +(insp?'<div class="cal-sec cal-link" id="bpx-callink" hidden></div>':'')
+      +((all||insp)?'<div class="cal-sec cal-gcal" id="bpx-gcal" hidden></div>':'')
+      +'</div>'
       +'<div class="bpx-panel cal-panel cal-one cal-v-'+_bpCalView+(_bpCalView==='week'?' cw-panel':'')+'"><div class="cal-main">'
       +(_bpCalView==='day'
         ? '<div id="bpx-dayview" class="cd-wrap"></div>'
@@ -4190,13 +4197,12 @@ function bpCalUnsched(){
         ? '<div id="bpx-weekview" class="cw-wrap"></div>'
         : '<div class="cal-head"><div class="cal-month" id="bpx-calmonth"></div><div class="cal-nav"><button onclick="bpCalMove(-1)" aria-label="Previous month"><span class=ms>chevron_left</span></button><button onclick="bpCalMove(1)" aria-label="Next month"><span class=ms>chevron_right</span></button></div></div><div id="bpx-calgrid"><div class="bpx-cempty">Loading your calendar\u2026</div></div>')
       +(all?'<div class="cal-legend cal-key"><span><i class="lg-insp"></i>Inspections</span><span><i class="lg-job"></i>Jobs</span><span><i class="lg-crew"></i>Crew days</span><span><i class="lg-todo"></i>To-dos</span><span><i class="lg-note"></i>Notes</span><span class="bpx-mut cal-hint">'+(_bpCalView==='week'?'Drag a box to move it. Click an empty slot to add a note or to-do.':_bpCalView==='day'?'Tap a block to open it.':'Tap any day to see it or add to it.')+'</span></div>':'')
-      +'</div><aside class="cal-rail">'
-      +((all||jobs)?bpCalUnsched():'')
-      +(insp?'<div class="cal-sec cal-link" id="bpx-callink" hidden></div>':'')
-      +((all||insp)?'<div class="cal-sec cal-gcal" id="bpx-gcal" hidden></div>':'')
-      +(all?'<div class="cal-sec cal-sec-todo"><div class="cal-side-h"><b>To-dos</b><span id="bpx-todocount" class="bpx-badge" style="display:none !important"></span></div><div id="bpx-todos"></div></div>':'')
-      +'<div class="cal-sec"><div class="cal-side-h"><b>Upcoming '+(all?'':(insp?'inspections':'jobs'))+'</b><span id="bpx-upcount" class="bpx-badge" style="display:none !important"></span></div><div id="bpx-upnext"></div></div>'
-      +'</aside></div>';
+      +'</div></div>'
+      /* the calendar takes the whole width (2026-11-20): to-dos and what's coming up sit under it */
+      +'<div class="cal-below">'
+      +(all?'<div class="bpx-panel cal-sec cal-sec-todo"><div class="cal-side-h"><b>To-dos</b><span id="bpx-todocount" class="bpx-badge" style="display:none !important"></span></div><div id="bpx-todos"></div></div>':'')
+      +'<div class="bpx-panel cal-sec cal-sec-up"><div class="cal-side-h"><b>Upcoming '+(all?'':(insp?'inspections':'jobs'))+'</b><span id="bpx-upcount" class="bpx-badge" style="display:none !important"></span></div><div id="bpx-upnext"></div></div>'
+      +'</div>';
     bpLoadCalendar();
     if((all||insp)&&window.bpGcalPanel) bpGcalPanel();
     if(insp){ bpCalLinkRender(); bpClosedLoad().then(function(){ if(q('bpx-calgrid')) bpDrawCalendar(); }); }
@@ -6801,7 +6807,8 @@ function bpActiveJobs(){
   }
   var starred=active.filter(function(j){return j.starred;}).slice(0,4);
   q('bpxViewArea').innerHTML=
-    (_bpJobTab==='active'&&window.bpPlanCheckin?bpPlanCheckin():'')
+    /* the 'job steps to check off' banner left this page (2026-11-20); steps are checked off on each project's Schedule */
+    ''
     +(_bpJobTab==='active'&&window.bpProjCards?'<div class="dash-projs pj-starred"><div class="dash-sec"><h3>Marked</h3><span class="bpx-mut" style="font-size:12.5px">'
       +(starred.length?starred.length+' of 4 · tap Mark on a project to pin it here':'Tap Mark on up to four projects to keep them here, and first on your dashboard')+'</span></div>'
       +(starred.length?bpProjCards(starred,!!(window.bpTeamIsCrew&&bpTeamIsCrew())):'')+'</div>':'')
@@ -6831,7 +6838,7 @@ function bpPjCardsView(active,done){
     '<div class="bpx-chead"><div class="bpx-jobtabs"><button class="bpx-jt on" onclick="bpJobTab(\'active\')">Active · '+active.length+'</button>'
       +'<button class="bpx-jt" onclick="bpJobTab(\'done\')">Completed · '+done.length+'</button></div>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+bpCsvBtn('bpCsvProjects()')+'<button class="bpx-addbtn" onclick="bpAddJobOpen()">+ Add job</button></div></div>'
-    +(window.bpPlanCheckin?bpPlanCheckin():'')
+    +''
     +bpPjApproved()
     +'<div class="pjk-stats">'
       +stat('Active projects',active.length,late?late+' behind schedule':'all on schedule')
@@ -6907,16 +6914,20 @@ window.bpPjGrid=function(){
     +'<div class="pjl-ft"><span class="bpx-mut">'+((_pjP-1)*10+1)+'–'+Math.min(_pjP*10,list.length)+' of '+list.length+'</span>'+bpPager10(n,_pjP,'bpPjPage')+'</div>';
 };
 function bpPjRow(j){
+  /* one clean line per job (2026-11-20): who and what, the street only, a status only when it
+     says something (behind, ready to close, how far along), the price with what's been paid,
+     the crew, and Mark done */
   var k=pjKState(j), pr=k.pr, e=+j.estimate||0, c=+j.collected||0, pct=e>0?Math.min(100,Math.round(c/e*100)):0;
   var who=window.bpJobWhoLbl?bpJobWhoLbl(j):'';
-  var stage=!pr?'<span class="pjk-tag">Not planned</span>':k.late?'<span class="pjk-tag late">Behind</span>':pr.complete?'<span class="pjk-tag ok">Ready to close</span>':'<span class="pjk-tag on">'+pr.pct+'% done</span>';
-  return '<div class="pjl-r" onclick="bpProjOpen(\''+j.id+'\')">'
+  var street=String(j.addr||'').split(',')[0].trim();
+  var stage=!pr?'<span class="pjl-mute">No plan yet</span>':k.late?'<span class="pjk-tag late">Behind</span>':pr.complete?'<span class="pjk-tag ok">Ready to close</span>':'<span class="pjk-tag on">'+pr.pct+'% done</span>';
+  return '<div class="pjl-r pjl2'+(j.starred?' star':'')+'" onclick="bpProjOpen(\''+j.id+'\')">'
     +'<span class="pjk-av">'+bpEsc(pjInit(j.name))+'</span>'
-    +'<div class="pjl-id"><b>'+bpEsc(j.name||'Project')+'</b><span>'+bpEsc(j.title||'Job')+(j.addr?' · '+bpEsc(j.addr):'')+'</span></div>'
+    +'<div class="pjl-id"><b>'+bpEsc(j.name||'Project')+'</b><span>'+bpEsc(j.title||'Job')+(street?' · '+bpEsc(street):'')+'</span></div>'
     +'<div class="pjl-st">'+stage+'</div>'
-    +'<div class="pjl-m"><b>'+bpMoneyFmt(e)+'</b><span class="pjk-pay"><i style="width:'+pct+'%"></i></span><small>'+pct+'% paid</small></div>'
-    +'<div class="pjl-w'+(who?'':' mut')+'"><span class="ms">groups</span>'+(who?bpEsc(who):'Nobody')+'</div>'
-    +'<div class="pjl-a"><button class="pjk-star" title="Mark it" onclick="event.stopPropagation();bpProjStar(\''+j.id+'\')"><span class="ms">star</span></button>'
+    +'<div class="pjl-m"><b>'+bpMoneyFmt(e)+'</b><span class="pjk-pay"><i style="width:'+pct+'%"></i></span><small>'+(c?bpMoneyFmt(c)+' paid':'Nothing paid yet')+'</small></div>'
+    +'<div class="pjl-w'+(who?'':' mut')+'"><span class="ms">groups</span><span>'+(who?bpEsc(who):'No crew yet')+'</span></div>'
+    +'<div class="pjl-a"><button class="pjk-star'+(j.starred?' on':'')+'" title="'+(j.starred?'Unmark':'Mark it: keep it first here and on the dashboard')+'" onclick="event.stopPropagation();bpProjStar(\''+j.id+'\')"><span class="ms">star</span></button>'
       +'<button class="pjl-b" onclick="event.stopPropagation();bpJobDoneOpen(\''+j.id+'\')">Mark done</button></div></div>';
 }
 function bpPjCard(j){
@@ -8332,6 +8343,27 @@ function bpFinances(){
   }).join(''):'<tr><td colspan="6" class="bpx-empty2">Mark a job done under Jobs and it shows up here — tap it to add what you collected and your costs.</td></tr>';
 
   var vp=function(k,html){return '<div data-fin-pane="'+k+'"'+(_bpFinView===k?'':' hidden')+'>'+html+'</div>';};
+  /* one entry a line (2026-11-20): what it was and who for, then where it came from and the
+     date in grey, the amount on the right; grouped under the month it landed in. Only entries
+     logged by hand can be deleted here (the rest belong to a job). */
+  var FIN_ICO={'Job':'work','Manual':'edit_note','Materials':'inventory_2','Labor / crew':'groups','Subcontractor':'handshake','Ads':'campaign','Fuel':'local_gas_station','Tools':'construction','Permits':'description','Overhead':'home_work'};
+  var finRows=function(items,inc){
+    if(!items.length) return '<div class="fl-empty">'+(inc?'No payments yet. Mark a job done with what you collected, or use + Add income.':'No costs yet. Add them on a job, match a supply bill, or use + Add expense.')+'</div>';
+    var out='', mk='', mons={};
+    items.forEach(function(x){ var d=x.w?new Date(x.w):null, k=d?d.getFullYear()+'-'+d.getMonth():'none'; mons[k]=(mons[k]||0)+x.a; });
+    items.forEach(function(x){
+      var d=x.w?new Date(x.w):null, k=d?d.getFullYear()+'-'+d.getMonth():'none';
+      if(k!==mk){ mk=k; out+='<div class="fl-mon"><span>'+(d?d.toLocaleDateString('en-US',{month:'long',year:'numeric'}):'No date')+'</span><span>'+(inc?'+ ':'\u2212 ')+bpMoneyFmt(mons[k])+'</span></div>'; }
+      var parts=String(x.n||'').split(/\s+\u2014\s+/), what=parts[0]||(inc?'Income':'Expense'), who=parts.slice(1).join(' \u2014 ');
+      var src=x.fi==null?'from a job':(x.rec?BP_RECUR[x.rec]:'added by hand');
+      var sub=[who,(!inc&&x.t&&x.t!==what?x.t:''),d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):'',src].filter(Boolean).map(bpEsc).join(' \u00b7 ');
+      out+='<div class="fl-row"><span class="fl-ic'+(inc?' in':'')+'"><span class="ms">'+(FIN_ICO[x.t]||(inc?'payments':'receipt_long'))+'</span></span>'
+        +'<div class="fl-t"><b>'+bpEsc(what)+'</b><small>'+sub+'</small></div>'
+        +'<div class="fl-a'+(inc?' in':'')+'">'+(inc?'+ ':'\u2212 ')+bpMoneyFmt(x.a)+'</div>'
+        +(x.fi==null?'<span class="fl-del-x"></span>':'<button class="fl-del" title="Delete this entry" aria-label="Delete this entry" onclick="event.stopPropagation();bpFinDel('+x.fi+')"><span class="ms">delete</span></button>')+'</div>';
+    });
+    return '<div class="fl-list">'+out+'</div>';
+  };
   /* the Income and Expenses tabs: four figures, then every entry on that side */
   var finSide=function(k){
     if(_bpFinView!==k) return '';
@@ -8347,7 +8379,7 @@ function bpFinances(){
       +'</div>';
     var list='<div class="bpx-panel"><div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">'+(inc?'Every payment in':'Every cost')+'<span class="lg2" style="margin-left:8px">'+all.length+(all.length===1?' entry':' entries')+', newest first</span></div>'
       +'<div class="fin-acts">'+bpCsvBtn('bpCsvLedger()')+(inc?'<button class="bpx-addbtn" onclick="bpFinAddOpen(\'income\')">+ Add income</button>':'<button class="bpx-addbtn" onclick="bpFinAddOpen(\'expense\')">+ Add expense</button>')+'</div></div>'
-      +'<div class="bpx-cwrap" style="border:0;border-radius:0"><table class="bpx-ctable"><thead><tr><th>Item</th><th>Type</th><th>Date</th><th class="bpx-r">Amount</th><th></th></tr></thead><tbody>'+ledHtml+'</tbody></table></div>'+ledPg.nav+'</div>';
+      +finRows(ledPg.items,inc)+ledPg.nav+'</div>';
     var rec=recExp.length?'<div class="bpx-panel"><div class="bpx-ptitle">Repeating '+(inc?'income':'costs')+'<span class="lg2">books itself on schedule</span></div><div class="bpx-cwrap" style="border:0;border-radius:0"><table class="bpx-ctable"><thead><tr><th>Item</th><th>Repeats</th><th>Next</th><th class="bpx-r">Amount</th><th></th></tr></thead><tbody>'
       +recExp.map(function(r){var f=r.f;return '<tr><td>'+bpEsc(f.note||f.category||(inc?'Income':'Expense'))+'</td><td><span class="bpx-badge'+(inc?'':' warn')+'">'+BP_RECUR[f.recur]+'</span></td><td class="bpx-mut">'+bpRecurNext(f).toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(+f.amount||0)+'</td><td class="bpx-r">'+bpDelBtn('bpFinDel('+r.fi+')','Stop this repeating entry')+'</td></tr>';}).join('')
       +'</tbody></table></div></div>':'';
@@ -14887,7 +14919,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/pfiles.js?v=20261116a"></script>
 <script src="portal/permits.js?v=20261024q30"></script>
 <script src="portal/projsheet.js?v=20261120c"></script>
-<script src="portal/contact.js?v=20261102c"></script>
+<script src="portal/contact.js?v=20261120h"></script>
 <script src="portal/gcal.js?v=20261118f"></script>
 <script src="portal/inspect.js?v=20261024q36"></script>
 <script src="portal/custportal.js?v=20261025d2"></script>
@@ -14917,11 +14949,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261120d"></script>
 <script src="portal/website.js?v=20261118f"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261120-20261120g"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261120-20261120g"></script>
-<script src="site/vendor/SplitText.min.js?v=20261120-20261120g"></script>
-<script src="site/site.js?v=20261120-20261120g"></script>
-<script src="site/present.js?v=20261120-20261120g"></script>
+<script src="site/vendor/gsap.min.js?v=20261120-20261120j"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261120-20261120j"></script>
+<script src="site/vendor/SplitText.min.js?v=20261120-20261120j"></script>
+<script src="site/site.js?v=20261120-20261120j"></script>
+<script src="site/present.js?v=20261120-20261120j"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261118f">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261120c">
@@ -14955,7 +14987,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/tour.css?v=20261109b">
 <link rel="stylesheet" href="portal/glass.css?v=20261118f">
 <link rel="stylesheet" href="portal/dash4.css?v=20261120b">
-<link rel="stylesheet" href="portal/flat.css?v=20261120g">
+<link rel="stylesheet" href="portal/flat.css?v=20261120j">
 <script src="site/silk.js?v=20261118f"></script>
 <script src="portal/appbg.js?v=20261113d"></script>
 <!--/app-only-->
