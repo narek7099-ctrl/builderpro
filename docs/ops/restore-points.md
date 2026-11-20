@@ -386,3 +386,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before cleaner income/expense lists, jobs list, full-width calendar, contact page (2026-11-20)
 - Live site (main): `ff84db3`
 - Changes: Finances Income and Expenses tabs list one entry a line grouped by month (what, who / date / where it came from, amount; a bin only on entries added by hand). Jobs: the "job steps to check off" banner is gone from the page (steps are checked off on each project's Schedule); job rows are one clean line (street only, status only when it says something, price with what's been paid, crew, Mark done); flat number tiles and filter buttons. Safari's automatic address/phone links are switched off in the app (format-detection meta) so addresses no longer wrap with dotted underlines. Calendar takes the full width: projects with no days and the Google box sit over it only when they apply, To-dos and Upcoming sit under it. Contact page: one plain top card with the person, actions and their numbers in a line; Stage and Added rows left Contact details (address shows if on file); flat tabs on contacts and open projects. To undo: revert app.html, portal/contact.js and portal/flat.css to the SHA above.
+
+## Before the hard hat icon (2026-11-20)
+- Live site (main): `9639d10`
+- Changes: The Employees item in the sidebar (and the phone menu) uses a new hard hat icon instead of the single-person one (portal/shell.js icon "hardhat", app.html BP_NAV). To undo: revert app.html and portal/shell.js to the SHA above.
