@@ -327,3 +327,62 @@
 #bpx#bpx#bpx#bpx#bpx.bpx-dark .ctp-pipe li:not(:last-child)::after{background:#222d3d}
 #bpx#bpx#bpx#bpx#bpx.bpx-dark .ctp-pipe li.done:not(:last-child)::after{background:var(--st)}
 #bpx#bpx#bpx#bpx#bpx.bpx-dark .ctp-row,#bpx#bpx#bpx#bpx#bpx.bpx-dark .ctp-foot{border-top-color:#222d3d}
+
+/* =====================================================================
+   The contact page, second pass (2026-11-20): two columns. The person on
+   the left in one card; what to do next, then their jobs, on the right.
+   ===================================================================== */
+#bpx#bpx#bpx#bpx .ctp2{max-width:1180px}
+#bpx#bpx#bpx#bpx .ctp2-wrap{display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){ #bpx#bpx#bpx#bpx .ctp2-wrap{grid-template-columns:minmax(0,1fr)} }
+#bpx#bpx#bpx#bpx .ctp2-side{position:sticky;top:116px;min-width:0}
+@media (max-width:900px){ #bpx#bpx#bpx#bpx .ctp2-side{position:static} }
+#bpx#bpx#bpx#bpx .ctp2-me{padding:20px !important}
+#bpx#bpx#bpx#bpx .ctp2-top{display:flex;align-items:flex-start;justify-content:space-between}
+#bpx#bpx#bpx#bpx .ctp2-top .bpx-av{font-size:20px !important;font-weight:650}
+#bpx#bpx#bpx#bpx .ctp2-me h2{margin:14px 0 0;font-size:20px;line-height:1.25;font-weight:650;letter-spacing:-.02em;color:#0b1526;text-transform:capitalize;word-break:break-word}
+#bpx#bpx#bpx#bpx .ctp2-me .ctp-meta{margin-top:8px}
+#bpx#bpx#bpx#bpx .ctp2-me .ctp-stage{height:24px;font-weight:600;border:0}
+#bpx#bpx#bpx#bpx .ctp2-qs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0 6px}
+#bpx#bpx#bpx#bpx .ctp2-q{all:unset;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border:1px solid #e3e8ef;border-radius:10px;background:#fff;cursor:pointer;color:#0b1526;box-shadow:0 1px 2px rgba(16,24,40,.05);transition:border-color .15s,background .15s}
+#bpx#bpx#bpx#bpx .ctp2-q .ms{font-size:20px;color:#006fff}
+#bpx#bpx#bpx#bpx .ctp2-q small{font-size:12.5px;font-weight:600}
+#bpx#bpx#bpx#bpx .ctp2-q:hover{border-color:#b9d3f7;background:#f7faff}
+#bpx#bpx#bpx#bpx .ctp2-q:focus-visible{outline:2px solid #006fff;outline-offset:2px}
+#bpx#bpx#bpx#bpx .ctp2-q.off{opacity:.4;cursor:not-allowed}
+#bpx#bpx#bpx#bpx .ctp2-ls{margin-top:12px;border-top:1px solid #eef1f5}
+#bpx#bpx#bpx#bpx .ctp2-l{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid #eef1f5;font-size:13.5px;min-width:0}
+#bpx#bpx#bpx#bpx .ctp2-l .ms{font-size:18px;color:#94a3b8;flex:0 0 auto;margin-top:1px}
+#bpx#bpx#bpx#bpx .ctp2-l>div{min-width:0;word-break:break-word}
+#bpx#bpx#bpx#bpx .ctp2-l a{color:#0b1526;text-decoration:none;font-weight:500}
+#bpx#bpx#bpx#bpx .ctp2-l a:hover{color:#006fff}
+#bpx#bpx#bpx#bpx .ctp2-me .ctp-tags{margin-top:12px}
+#bpx#bpx#bpx#bpx .ctp2-me .ctp-tags span{border:0;background:#f1f4f8;color:#475569;font-weight:500}
+#bpx#bpx#bpx#bpx .ctp2-me .ctp-foot{border-top:0;margin-top:10px;padding-top:0}
+/* the right side: one column of cards */
+#bpx#bpx#bpx#bpx .ctp2-main{min-width:0}
+#bpx#bpx#bpx#bpx .ctp2-main .insp-ctabs{margin:0 0 12px !important}
+#bpx#bpx#bpx#bpx#bpx .ctp2-grid{grid-template-columns:minmax(0,1fr) !important;gap:14px !important}
+/* next step */
+#bpx#bpx#bpx#bpx .ctp2-next{padding:20px 22px !important}
+#bpx#bpx#bpx#bpx .ctp2-nh{display:flex;justify-content:space-between;align-items:center;gap:10px}
+#bpx#bpx#bpx#bpx .ctp2-nh small{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#006fff}
+#bpx#bpx#bpx#bpx .ctp2-nh span{font-size:12.5px;color:#64748b}
+#bpx#bpx#bpx#bpx .ctp2-bar{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:10px 0 16px}
+#bpx#bpx#bpx#bpx .ctp2-bar i{height:5px;border-radius:9px;background:#eef1f5}
+#bpx#bpx#bpx#bpx .ctp2-bar i.done{background:#16C79A}
+#bpx#bpx#bpx#bpx .ctp2-bar i.now{background:#006fff}
+#bpx#bpx#bpx#bpx .ctp2-nt{display:block;font-size:18px;font-weight:650;letter-spacing:-.01em;color:#0b1526}
+#bpx#bpx#bpx#bpx .ctp2-next p{margin:4px 0 14px;font-size:13.5px;color:#64748b}
+#bpx#bpx#bpx#bpx .ctp2-nb{display:flex;gap:8px;flex-wrap:wrap}
+#bpx#bpx#bpx#bpx .ctp2-nb .ctp-act{height:38px;border-color:#e3e8ef;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+#bpx#bpx#bpx#bpx .ctp2-nb .ctp-act.pri{background:#006fff;border-color:#006fff;color:#fff}
+/* dark */
+#bpx#bpx#bpx#bpx.bpx-dark .ctp2-me h2,#bpx#bpx#bpx#bpx.bpx-dark .ctp2-nt,#bpx#bpx#bpx#bpx.bpx-dark .ctp2-l a{color:#e9eef6}
+#bpx#bpx#bpx#bpx.bpx-dark .ctp2-q{background:#111824;border-color:#222d3d;color:#e9eef6}
+#bpx#bpx#bpx#bpx.bpx-dark .ctp2-q:hover{background:#151d2a}
+#bpx#bpx#bpx#bpx.bpx-dark .ctp2-ls,#bpx#bpx#bpx#bpx.bpx-dark .ctp2-l{border-color:#222d3d}
+#bpx#bpx#bpx#bpx.bpx-dark .ctp2-bar i{background:#1c2533}#bpx#bpx#bpx#bpx.bpx-dark .ctp2-bar i.done{background:#16C79A}#bpx#bpx#bpx#bpx.bpx-dark .ctp2-bar i.now{background:#006fff}
+#bpx#bpx#bpx#bpx.bpx-dark .ctp2-me .ctp-tags span{background:#1b2433;color:#cbd5e1}
+#bpx#bpx#bpx#bpx.bpx-dark .ctp2-nb .ctp-act{background:#111824;border-color:#222d3d;color:#e9eef6}
+#bpx#bpx#bpx#bpx.bpx-dark .ctp2-nb .ctp-act.pri{background:#006fff;border-color:#006fff;color:#fff}
