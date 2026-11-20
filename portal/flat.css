@@ -458,3 +458,5 @@
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx :is(.eq-mini-acts,.eq-acts)>:is(.bpx-addbtn,.bpx-btn) .ms{margin:0 !important;vertical-align:0 !important;font-size:18px}
 #bpx#bpx#bpx#bpx .eq-mini-acts{align-items:center}
 #bpx#bpx#bpx#bpx#bpx#bpx .ctp3-head{padding:0 !important;min-height:0 !important;background:none !important;border:0 !important;box-shadow:none !important}
+/* the lead page stretches across the whole page (2026-11-20) */
+#bpx#bpx#bpx#bpx#bpx .ctp3{max-width:none !important;width:100%}
