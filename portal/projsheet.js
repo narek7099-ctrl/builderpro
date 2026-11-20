@@ -150,7 +150,8 @@
     view.innerHTML = '<div class="pjs-ov">' + cust + info + '</div>';
     var ap = document.getElementById('ap-row'); if (ap) view.querySelector('.pjs-cust-ap').appendChild(ap);
     pane.insertBefore(view, pane.firstChild);
-    pane.classList.add('pjs-ro');
+    /* 2026-11-20: the owner wants the fill-out boxes open straight away, as they used to be;
+       the customer card stays on top, the read-only Job info list only shows if pjs-ro is set */
     Array.prototype.forEach.call(view.querySelectorAll('[data-pjs-edit]'), function (b) { b.onclick = function () { pane.classList.remove('pjs-ro'); var f = pane.querySelector('.pjs-sec:not(.pjs-view) input'); if (f) f.focus(); }; });
   }
 

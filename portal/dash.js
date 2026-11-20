@@ -311,7 +311,7 @@
       x: { label: 'Job', values: shown.map(last) },
       series: [{ name: 'What you collected', values: shown.map(function (r) { return r.c; }) }, { name: 'What it cost', values: shown.map(function (r) { return r.e; }) }],
       groupCaps: shown.map(function (r) { return sgn(r.p); }),
-      notes: shown.map(function (r) { return (r.j.name || '') + (r.j.title ? ', ' + r.j.title : '') + ' \u00b7 kept ' + (r.p < 0 ? '\u2212' : '') + money(Math.abs(r.p)) + (r.c > 0 ? ' (' + Math.round(r.p / r.c * 100) + '%)' : ''); }),
+      notes: shown.map(function (r) { var tt = String(r.j.title || '').trim(); return (tt ? (tt.length > 22 ? tt.slice(0, 21) + '\u2026' : tt) + ' \u00b7 kept ' : 'Kept ') + (r.p < 0 ? '\u2212' : '') + money(Math.abs(r.p)) + (r.c > 0 ? ' (' + Math.round(r.p / r.c * 100) + '%)' : ''); }),
       fmt: money, height: 220,
     }) + '</div>';
   }

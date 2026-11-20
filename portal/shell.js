@@ -189,6 +189,8 @@
     quote: 'Build a quote with good, better and best options',
     invoicebuilder: 'Build a bill to send your customer',
     ledger: 'Every payment in and expense out',
+    finincome: 'Every payment that came in, from jobs and by hand',
+    finexpenses: 'Every cost, by kind, and what repeats each month',
     finarchive: 'Finished years, closed and ready for taxes',
     payouts: 'Let customers pay by card, straight to your bank',
     quickbooks: 'Send your invoices and payments to QuickBooks',
