@@ -295,6 +295,9 @@
       document.querySelectorAll('.pjs [data-pj-tab]').forEach(function (b) { b.setAttribute('aria-selected', String(b.classList.contains('on'))); });
       if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       var body = document.querySelector('.pjs .pjs-body'); if (body) body.scrollTop = 0;
+      /* phones scroll the whole sheet (flat.css): a new tab starts just under the header */
+      var card = document.querySelector('.pjs .pjs-card'), tb = document.querySelector('.pjs .pjs-tabs');
+      if (card && tb && card.scrollHeight > card.clientHeight && card.scrollTop > tb.offsetTop) card.scrollTop = tb.offsetTop;
       if (t === 'permits' && window.bpPermitsRender) bpPermitsRender();
       if (t === 'subs' && window.bpSubsTabOpen) bpSubsTabOpen(job());
       if (t === 'crew' && window.bpCeoReco && !isCrew()) bpCeoReco(job());
@@ -335,9 +338,10 @@
     b._menu = m;
     /* 2026-11-20: iPhone Safari clipped the menu because it lived inside the sideways-scrolling tab
        row; it now opens from the sheet itself (and on a phone, as a panel from the bottom) */
-    var host = b.closest('.pjs-card') || b.closest('#bpx-modal') || document.body;
-    if (m.parentNode !== host) host.appendChild(m);
     var phoneW = (window.innerWidth || 1000) <= 760;
+    /* on a phone the sheet itself scrolls, so the panel hangs off the dark backdrop around it instead */
+    var host = (phoneW ? b.closest('.bpx-modal') : null) || b.closest('.pjs-card') || b.closest('#bpx-modal') || document.body;
+    if (m.parentNode !== host) host.appendChild(m);
     m.classList.toggle('pjs-menu-sheet', phoneW);
     m.hidden = !m.hidden; b.setAttribute('aria-expanded', String(!m.hidden));
     if (!m.hidden && phoneW) {
