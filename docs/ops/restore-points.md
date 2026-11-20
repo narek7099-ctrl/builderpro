@@ -418,3 +418,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the simpler phone home and the More menu fix (2026-11-21)
 - Live site (main): `77182a4`
 - Changes (phones): Home is simpler: a smaller greeting, one "Customers owe you" card with active jobs and collected under it, one row of three quick buttons (Estimate, Job, Invoice), a one-line setup bar (opens the full list on tap), one "Today" card for what needs you and what's booked (was two cards), and a smaller apps grid (portal/mobile.js home, setupCard; portal/flat.css .mh3). Open project: the More menu moves out of the sideways-scrolling tab row when opened (iPhone Safari clipped it there) and opens as a panel from the bottom on phones (portal/projsheet.js bpPjsMore). Dark mode: the selected bottom-bar tab is dark with white text. To undo: revert portal/mobile.js, portal/projsheet.js, portal/flat.css and app.html to the SHA above.
+
+## Before the one-scroll project sheet on phones (2026-11-21)
+- Live site (main): `1a9a46b`
+- Changes (phones): an open project scrolls as one page: the header (name, address, money, Call/Text/Mark done) scrolls away, the tab row sticks to the top at full width, the Delete/Cancel/Save bar stays at the bottom; switching tabs jumps to just under the header. Overview drops the phone/email rows (the form under it has them); fields 44px tall. The More panel hangs off the backdrop so it stays put while the sheet scrolls (portal/projsheet.js, portal/flat.css). To undo: revert those and app.html to the SHA above.

@@ -565,3 +565,34 @@
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx .mh3>.mh3-hi{padding:4px 2px 0 !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .bp-tabbar .bp-slide{background:#1b2433 !important;box-shadow:none !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .bp-tabbar .bp-tab.on{color:#fff !important}
+
+/* =====================================================================
+   An open project on a phone feels like an app (2026-11-21): the whole
+   sheet scrolls as one page. The header scrolls away, the tabs stick to
+   the top, Save stays at the bottom. The Overview drops the phone and
+   email rows that the form under it already has.
+   ===================================================================== */
+@media (max-width:820px){
+  #bpx#bpx#bpx .bpx-modal.pjs .bpx-modalcard.pjs-card{overflow-y:auto !important;overflow-x:hidden !important;display:block !important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  #bpx#bpx#bpx#bpx .pjs-card>.pjs-body{overflow:visible !important;flex:none !important;height:auto !important;max-height:none !important;padding-bottom:12px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-card>.pjs-tabs{position:sticky !important;top:0 !important;z-index:5 !important;margin:0 !important;border-radius:0 !important;border-width:0 0 1px !important;padding:6px 10px !important;background:#fff !important;box-shadow:0 1px 0 #e9edf3 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-card>.pjs-tabs{background:#0f1520 !important;box-shadow:0 1px 0 #222d3d !important}
+  #bpx#bpx#bpx#bpx .pjs-card>.pjs-foot{position:sticky !important;bottom:0 !important;z-index:5 !important;padding:10px 14px calc(10px + env(safe-area-inset-bottom)) !important;background:#fff !important;border-top:1px solid #e9edf3 !important}
+  #bpx#bpx#bpx#bpx.bpx-dark .pjs-card>.pjs-foot{background:#0f1520 !important;border-color:#222d3d !important}
+  #bpx#bpx#bpx#bpx .pjs-card>.pjs-foot button{height:44px !important;min-height:44px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-menu.pjs-menu-sheet{position:fixed !important}
+  /* Overview: the customer as one line with Profile; their phone and email are in the form below */
+  #bpx#bpx#bpx#bpx [data-pj-pane="details"]:not(.pjs-ro) .pjs-cust .pjs-cls{display:none !important}
+  #bpx#bpx#bpx#bpx [data-pj-pane="details"] .pjs-cust{padding:12px 14px !important}
+  #bpx#bpx#bpx#bpx [data-pj-pane="details"] .pjs-cust .pjs-cu{padding-bottom:10px !important;margin-bottom:10px !important}
+  #bpx#bpx#bpx#bpx [data-pj-pane="details"] .pjs-cust .pjs-cu-av{width:40px !important;height:40px !important;font-size:15px !important}
+  /* the form: tighter */
+  #bpx#bpx#bpx#bpx .pjs-card .pjs-body .pjs-sec{padding:14px !important;margin-bottom:10px !important}
+  #bpx#bpx#bpx#bpx .pjs-card .pjs-body label{margin-top:8px !important}
+  #bpx#bpx#bpx#bpx .pjs-card .pjs-body :is(input,select){min-height:44px !important;height:44px !important}
+  #bpx#bpx#bpx#bpx .pjs-card .pjs-body textarea{min-height:76px !important}
+}
+@media (max-width:820px){
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-card>.pjs-tabs{width:100% !important;max-width:none !important;box-sizing:border-box}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .bpx-modal>.pjs-menu.pjs-menu-sheet{position:fixed !important;left:10px !important;right:10px !important;bottom:calc(84px + env(safe-area-inset-bottom)) !important;z-index:10000 !important;max-height:70vh !important}
+}
