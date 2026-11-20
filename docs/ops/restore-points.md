@@ -394,3 +394,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the two-column contact page (2026-11-20)
 - Live site (main): `aa390bb`
 - Changes: The contact (lead) page is two columns: on the left one card with the person (avatar, name, stage, Call / Text / Email, phone, email, address, tags, Edit, Delete); on the right a "Next step" card (one suggestion for their stage with a slim 7-step progress line and one or two buttons), then Jobs and estimates, the calculator estimate and Equipment. The number strip, the big pipeline and the repeated stage rows are gone; tags that repeat the stage are hidden (portal/contact.js, portal/flat.css). To undo: revert portal/contact.js, portal/flat.css and app.html to the SHA above.
+
+## Before the one-column lead page (2026-11-20)
+- Live site (main): `5538b5f`
+- Changes: The contact (lead) page is one column, in the order a contractor uses it: name, stage and Edit; three big buttons (Call in blue, Text, Email); a "Next step" card with one line and one or two buttons for where they are; Details (phone, email, address with Directions, "Add" when missing); Jobs and estimates; Equipment folded closed; Delete contact at the bottom (portal/contact.js, portal/flat.css). Equipment's "Scan a nameplate" and "Add by hand" buttons are the same size now. To undo: revert portal/contact.js, portal/flat.css and app.html to the SHA above.
