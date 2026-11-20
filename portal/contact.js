@@ -115,51 +115,44 @@
     var first = String(c.name || '').trim().split(/\s+/)[0] || 'them';
 
     window.bpCtpMail = function () { if (window.bpNav) bpNav('email'); setTimeout(function () { if (window.bpMailCompose) bpMailCompose({ to: c.email, name: c.name || '' }); }, 250); };
-    /* 2026-11-20 (second pass, "too much going on"): two columns. On the left, one card that is
-       the person: who, their stage, Call / Text / Email, and their details. On the right, what to do
-       next (one suggestion for where they are, with a slim progress line), then their jobs and
-       estimates, the calculator estimate and equipment. The colour band, the number strip, the big
-       seven-step pipeline and the repeated stage / added rows are gone. */
-    var circ = function (href, icon, label, on, click) {
-      if (!on) return '<span class="ctp2-q off" aria-disabled="true" title="No ' + label.toLowerCase() + ' on file"><span class="ms">' + icon + '</span><small>' + label + '</small></span>';
-      return (click ? '<button type="button" class="ctp2-q" onclick="' + click + '">' : '<a class="ctp2-q" href="' + esc(href) + '">')
-        + '<span class="ms">' + icon + '</span><small>' + label + '</small>' + (click ? '</button>' : '</a>');
-    };
-    var line = function (icon, html) { return '<div class="ctp2-l"><span class="ms">' + icon + '</span><div>' + html + '</div></div>'; };
+    /* 2026-11-20 (third pass): one column, in the order a contractor uses it. Who it is, three big
+       buttons to reach them, the one thing to do next, their details, their jobs. Inspection reports,
+       equipment and delete fold away at the bottom. */
     var addr = c.address1 || c.address || '';
-    /* tags that only say the stage again ("new lead", "missed call") stay out of the chips */
-    var stl = String(stage[0] || '').toLowerCase();
-    tags = tags.filter(function (t) { var n = String(t).toLowerCase().replace(/[-_]+/g, ' ').trim(); return n && stl.indexOf(n) < 0 && !/^new lead$/.test(n); });
-    var side = '<aside class="ctp2-side"><section class="ctp-card ctp2-me">'
-      + '<div class="ctp2-top">' + (window.bpAvatar ? bpAvatar(c.name || '?', 56) : '')
-      + '<button type="button" class="ctp-link ctp2-edit" onclick="bpOpenEdit(\'' + c.id + '\')"><span class="ms">edit</span>Edit</button></div>'
-      + '<h2>' + esc(c.name || 'Unnamed contact') + '</h2>'
-      + '<div class="ctp-meta"><span class="ctp-stage"><i></i>' + esc(stage[0]) + '</span>' + (added ? '<span class="ctp-since" title="' + esc(added) + '">' + esc(since(c.dateAdded)) + '</span>' : '') + '</div>'
-      + '<div class="ctp2-qs">' + circ('tel:' + c.phone, 'call', 'Call', !!c.phone) + circ('sms:' + c.phone, 'sms', 'Text', !!c.phone) + circ('', 'mail', 'Email', !!c.email, 'bpCtpMail()') + '</div>'
-      + '<div class="ctp2-ls">'
-      + line('call', c.phone ? '<a href="tel:' + esc(c.phone) + '">' + esc(c.phone) + '</a>' : '<span class="ctp-none">No phone yet</span>')
-      + line('mail', c.email ? '<a href="#" onclick="bpCtpMail();return false">' + esc(c.email) + '</a>' : '<span class="ctp-none">No email yet</span>')
-      + (addr ? line('location_on', '<a href="https://maps.google.com/?q=' + encodeURIComponent(addr) + '" target="_blank" rel="noopener">' + esc(addr) + '</a>') : '')
-      + '</div>'
-      + (tags.length ? '<div class="ctp-tags">' + tags.map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('') + '</div>' : '')
-      + '<div class="ctp-foot"><button type="button" class="ctp-del" onclick="bpOpenDelete(\'' + c.id + '\')"><span class="ms">delete</span>Delete contact</button></div>'
-      + '</section></aside>';
+    var big = function (href, icon, label, on, click) {
+      if (!on) return '<span class="ctp3-b off" aria-disabled="true" title="No ' + label.toLowerCase() + ' on file"><span class="ms">' + icon + '</span>' + label + '</span>';
+      return (click ? '<button type="button" class="ctp3-b" onclick="' + click + '">' : '<a class="ctp3-b" href="' + esc(href) + '">') + '<span class="ms">' + icon + '</span>' + label + (click ? '</button>' : '</a>');
+    };
+    var head = '<section class="ctp3-head">'
+      + (window.bpAvatar ? bpAvatar(c.name || '?', 52) : '')
+      + '<div class="ctp3-who"><h2>' + esc(c.name || 'Unnamed contact') + '</h2>'
+      + '<div class="ctp3-meta"><span class="ctp-stage"><i></i>' + esc(stage[0]) + '</span>' + (added ? '<span>' + esc(since(c.dateAdded)) + '</span>' : '') + '</div></div>'
+      + '<button type="button" class="ctp3-edit" onclick="bpOpenEdit(\'' + c.id + '\')"><span class="ms">edit</span>Edit</button>'
+      + '</section>'
+      + '<div class="ctp3-bs">' + big('tel:' + c.phone, 'call', 'Call', !!c.phone) + big('sms:' + c.phone, 'sms', 'Text', !!c.phone) + big('', 'mail', 'Email', !!c.email, 'bpCtpMail()') + '</div>';
 
     /* the one thing to do next, for where they are */
     var NEXT = [
-      ['Book an inspection', 'Get out there, measure and take photos. Then send the estimate.', [['event', 'Book a visit', "window._bpApptCal='inspection';window.bpOpenBook&&bpOpenBook()", 1], ['request_quote', 'Write the estimate', "bpQuoteNew('" + c.id + "')"]]],
-      ['Send the estimate', 'You’ve been in touch. Price the job and send it while it’s fresh.', [['request_quote', 'Write the estimate', "bpQuoteNew('" + c.id + "')", 1], ['fact_check', 'Inspection report', 'bpCtpInspect()']]],
-      ['Waiting on a yes', 'The estimate is with ' + first + '. A quick text often gets the answer.', [['sms', 'Text ' + first, c.phone ? "location.href='sms:" + esc(c.phone) + "'" : '', 1]]],
-      ['Collect the deposit', first + ' said yes. Send the deposit invoice to get the job on the calendar.', [['receipt_long', 'Send an invoice', 'window.bpInvOpen&&bpInvOpen()', 1]]],
-      ['Waiting on payment', 'An invoice is out. A friendly reminder helps if it’s been a few days.', [['sms', 'Text ' + first, c.phone ? "location.href='sms:" + esc(c.phone) + "'" : '', 1]]],
-      ['Finish the job', 'Paid in full. Close out the project when the work is done.', [['construction', 'See jobs', "bpNav('activejobs')", 1]]],
-      ['All done', 'Job completed. Ask for a review, or quote the next one.', [['request_quote', 'New estimate', "bpQuoteNew('" + c.id + "')", 1]]]
-    ][step] || [stage[0], '', []];
-    var next = '<section class="ctp-card ctp2-next"><div class="ctp2-nh"><small>Next step</small><span>Step ' + (step + 1) + ' of ' + STEPS.length + ' · ' + esc(stage[0]) + '</span></div>'
-      + '<div class="ctp2-bar">' + STEPS.map(function (x, k) { return '<i class="' + (k < step ? 'done' : k === step ? 'now' : '') + '" title="' + esc(x[0]) + '"></i>'; }).join('') + '</div>'
-      + '<b class="ctp2-nt">' + esc(NEXT[0]) + '</b><p>' + esc(NEXT[1]) + '</p>'
-      + '<div class="ctp2-nb">' + NEXT[2].filter(function (a) { return a[2]; }).map(function (a) { return '<button type="button" class="ctp-act' + (a[3] ? ' pri' : '') + '" onclick="' + a[2] + '"><span class="ms">' + a[0] + '</span><span>' + esc(a[1]) + '</span></button>'; }).join('')
+      ['Book an inspection', [['event', 'Book a visit', "window._bpApptCal='inspection';window.bpOpenBook&&bpOpenBook()", 1], ['request_quote', 'Write the estimate', "bpQuoteNew('" + c.id + "')"]]],
+      ['Send the estimate', [['request_quote', 'Write the estimate', "bpQuoteNew('" + c.id + "')", 1], ['fact_check', 'Inspection report', 'bpCtpInspect()']]],
+      ['Waiting on a yes. A quick text often gets the answer.', [['sms', 'Text ' + first, c.phone ? "location.href='sms:" + esc(c.phone) + "'" : '', 1]]],
+      ['They said yes. Send the deposit invoice.', [['receipt_long', 'Send an invoice', 'window.bpInvOpen&&bpInvOpen()', 1]]],
+      ['Waiting on payment. Send a friendly reminder.', [['sms', 'Text ' + first, c.phone ? "location.href='sms:" + esc(c.phone) + "'" : '', 1]]],
+      ['Paid in full. Close out the job when the work is done.', [['construction', 'See jobs', "bpNav('activejobs')", 1]]],
+      ['Job done. Quote the next one.', [['request_quote', 'New estimate', "bpQuoteNew('" + c.id + "')", 1]]]
+    ][step] || [stage[0], []];
+    var next = '<section class="ctp-card ctp3-next"><div><small>Next step</small><b>' + esc(NEXT[0]) + '</b></div>'
+      + '<div class="ctp3-nb">' + NEXT[1].filter(function (a) { return a[2]; }).map(function (a) { return '<button type="button" class="ctp3-a' + (a[3] ? ' pri' : '') + '" onclick="' + a[2] + '"><span class="ms">' + a[0] + '</span>' + esc(a[1]) + '</button>'; }).join('')
       + '</div></section>';
+
+    var drow = function (k, v) { return '<div class="ctp3-r"><small>' + k + '</small><div>' + v + '</div></div>'; };
+    var copyB = function (v, what) { return v ? '<button type="button" class="ctp-copy" title="Copy" aria-label="Copy ' + what + '" onclick="bpCtpCopy(this,\'' + esc(v).replace(/'/g, '&#39;') + '\')"><span class="ms">content_copy</span></button>' : ''; };
+    var addB = '<button type="button" class="ctp3-add" onclick="bpOpenEdit(\'' + c.id + '\')">Add</button>';
+    var details = '<section class="ctp-card ctp3-det"><div class="ctp-ch"><b>Details</b></div>'
+      + drow('Phone', c.phone ? '<a href="tel:' + esc(c.phone) + '">' + esc(c.phone) + '</a>' + copyB(c.phone, 'phone') : addB)
+      + drow('Email', c.email ? '<a href="#" onclick="bpCtpMail();return false">' + esc(c.email) + '</a>' + copyB(c.email, 'email') : addB)
+      + drow('Address', addr ? '<a href="https://maps.google.com/?q=' + encodeURIComponent(addr) + '" target="_blank" rel="noopener">' + esc(addr) + '</a><a class="ctp3-dir" href="https://maps.google.com/?q=' + encodeURIComponent(addr) + '" target="_blank" rel="noopener">Directions</a>' : addB)
+      + '</section>';
 
     var jobsCard = '<section class="ctp-card"><div class="ctp-ch"><b>Jobs</b>' + (jobs.length ? '<span>' + jobs.length + '</span>' : '') + '</div>'
       + (jobs.length ? jobs.map(function (j) {
@@ -174,15 +167,21 @@
       }).join('')
         : '<div class="ctp-empty"><span class="ms">construction</span><b>No jobs yet</b><small>When ' + esc(first) + ' signs, the project shows up here, with any inspection reports you wrote.</small></div>')
       + '</section>';
-    var jobsHead = jobs.length ? jobs.length + (jobs.length === 1 ? ' job' : ' jobs') + (got ? ' · ' + money(got) + ' collected' : est ? ' · ' + money(est) + ' total' : '') : '';
+    var jobsHead = jobs.length ? jobs.length + (jobs.length === 1 ? ' job' : ' jobs') + (got ? ' · ' + money(got) + ' collected' : '') : '';
     var jobsCard2 = jobsCard.replace('<div class="ctp-ch"><b>Jobs</b>' + (jobs.length ? '<span>' + jobs.length + '</span>' : '') + '</div>',
-      '<div class="ctp-ch"><b>Jobs and estimates</b>' + (jobsHead ? '<span>' + esc(jobsHead) + '</span>' : '') + '</div>');
+      '<div class="ctp-ch"><b>Jobs and estimates</b>' + (jobsHead ? '<span>' + esc(jobsHead) + '</span>' : '') + '</div>')
+      .replace(/<div class="ctp-empty">[\s\S]*?<\/div>(?=<\/section>$)/, '<div class="ctp3-none">Nothing yet. ' + (step < 2 ? 'Write the estimate when you’re ready.' : 'Their job shows here once it starts.') + '</div>');
 
-    document.getElementById('bpxViewArea').innerHTML = '<div class="ctp ctp2" style="--st:' + col + '">'
+    var equip = window.BPA && !(window.bpLocked && bpLocked('assets'));
+    var more = '<div class="ctp3-more">'
+      + (equip ? '<details class="ctp-card ctp3-fold"><summary><span class="ms">hvac</span>Equipment at their place<span class="ms ctp3-chev">expand_more</span></summary><div id="ctp-equip"></div></details>' : '')
+      + '<button type="button" class="ctp-del" onclick="bpOpenDelete(\'' + c.id + '\')"><span class="ms">delete</span>Delete contact</button></div>';
+
+    document.getElementById('bpxViewArea').innerHTML = '<div class="ctp ctp3" style="--st:' + col + '">'
       + '<button type="button" class="ctp-back" onclick="bpNav(\'contacts\')"><span class="ms">arrow_back</span>All contacts</button>'
-      + '<div class="ctp2-wrap">' + side
-      + '<div class="ctp2-main"><div class="bpx-set-grid ctp-grid ctp2-grid">' + next + '<section class="ctp-card ctp-calc" id="ctp-calc" hidden></section>' + jobsCard2
-      + (window.BPA && !(window.bpLocked && bpLocked('assets')) ? '<section class="ctp-card"><div class="ctp-ch"><b>Equipment</b></div><div id="ctp-equip"></div></section>' : '') + '</div></div></div></div>';
+      + head
+      + '<div class="bpx-set-grid ctp-grid ctp3-grid">' + next + '<section class="ctp-card ctp-calc" id="ctp-calc" hidden></section>' + details + jobsCard2 + '</div>'
+      + more + '</div>';
     /* the units at their place: age, service and when they'll need replacing (portal/assets.js) */
     if (window.BPA && document.getElementById('ctp-equip')) BPA.mount(document.getElementById('ctp-equip'), { contactId: c.id, name: c.name || '', addr: c.address1 || c.address || '' });
 
