@@ -93,9 +93,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261120-20261120b">
-<link rel="stylesheet" href="site/present.css?v=20261120-20261120b">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261120-20261120b"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261120-20261120c">
+<link rel="stylesheet" href="site/present.css?v=20261120-20261120c">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261120-20261120c"}}</script>
 
 
 <style id="bpi-icons">
@@ -2786,7 +2786,7 @@ function bpLogout(force){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={assets:{t:'Equipment',s:''},connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewdash:{t:'Home',s:''},crewclock:{t:'Time clock',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Jobs',s:''},crewid:{t:'My ID',s:''},crewmsgs:{t:'Messages',s:''},subjobs:{t:'Jobs',s:''},subinvoices:{t:'Invoices',s:''},subchanges:{t:'Change orders',s:''},subcomply:{t:'Compliance',s:''},subcompany:{t:'My company',s:''},subs:{t:'Subcontractors',s:''},routing:{t:'Driving routes',s:''},quote:{t:'Estimate',s:''},invoicebuilder:{t:'Invoice',s:''},teamchat:{t:'Team chat',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active jobs',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finarchive:{t:'Tax years',s:''},payouts:{t:'Card payments',s:''},quickbooks:{t:'QuickBooks',s:''},checks:{t:'Calculator leads',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Order lists',s:''},receipts:{t:'Receipts',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
+var BPVIEWS={assets:{t:'Equipment',s:''},connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewdash:{t:'Home',s:''},crewclock:{t:'Time clock',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Jobs',s:''},crewid:{t:'My ID',s:''},crewmsgs:{t:'Messages',s:''},subjobs:{t:'Jobs',s:''},subinvoices:{t:'Invoices',s:''},subchanges:{t:'Change orders',s:''},subcomply:{t:'Compliance',s:''},subcompany:{t:'My company',s:''},subs:{t:'Subcontractors',s:''},routing:{t:'Driving routes',s:''},quote:{t:'Estimate',s:''},invoicebuilder:{t:'Invoice',s:''},teamchat:{t:'Team chat',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active jobs',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finincome:{t:'Income',s:''},finexpenses:{t:'Expenses',s:''},finarchive:{t:'Tax years',s:''},payouts:{t:'Card payments',s:''},quickbooks:{t:'QuickBooks',s:''},checks:{t:'Calculator leads',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Order lists',s:''},receipts:{t:'Receipts',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -2804,9 +2804,10 @@ var BP_NAV=[
   {id:'dashboard',l:'Dashboard',ico:'dashboard'},
   {id:'convos',l:'Conversations',ico:'convos',kids:[['messaging','Texts'],['email','Email'],['teamchat','Team chat']]},
   {id:'calendar',l:'Calendar',ico:'calendar'},
-  {id:'leads',l:'Leads',ico:'leads',kids:[['contacts','Contacts'],['checks','Calculator leads'],['automations','Automations'],['calculator','Calculators']] /* 'leadsources' still opens if called, just out of the menu */},
-  {id:'projects',l:'Jobs',ico:'projects',kids:[['activejobs','Active'],['assets','Equipment'],['employees','Employees'],['subs','Subcontractors'],['routing','Driving routes']]},
-  {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['invoices','Invoices'],['estimates','Estimates'],['finarchive','Tax years'],['payouts','Card payments'],['quickbooks','QuickBooks']]},
+  {id:'leads',l:'Leads',ico:'leads',kids:[['contacts','Contacts'],['checks','Calculator leads'],['calculator','Calculators'],['automations','Automations']] /* 'leadsources' still opens if called, just out of the menu */},
+  {id:'projects',l:'Jobs',ico:'projects',kids:[['activejobs','Active'],['assets','Equipment'],['routing','Driving routes']]},
+  {id:'people',l:'Employees',ico:'crew',kids:[['employees','Employees'],['subs','Subcontractors']]} /* its own branch since 2026-11-20 (was under Jobs) */,
+  {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['finincome','Income'],['finexpenses','Expenses'],['invoices','Invoices'],['estimates','Estimates'],['finarchive','Tax years'],['payouts','Card payments'],['quickbooks','QuickBooks']]},
   {id:'supply',l:'Supply',ico:'supply',g:2,kids:[['matlists','Order lists'],['receipts','Receipts']]} /* 'prices', 'supply' and 'supplyorders' still work if called (portal/supply.js), just out of the sidebar */,
   {id:'aiteam',l:'AI Team',ico:'aiteam'},
   {id:'marketing',l:'Marketing',ico:'marketing',kids:[['marketing','Ads & Listings'],['reputation','Reputation'],['website','Website'],['social','Social Media'],['competitors','Competitors']]}
@@ -2855,7 +2856,7 @@ function bpNav(v){
   else document.getElementById('bpxVtitle').textContent=BPVIEWS[v].t;
   if(!again){ bpSpin(true); area.classList.remove('bpx-in');void area.offsetWidth; }
   if(bpLocked(v)){ area.innerHTML=bpUpgradeCard(v); bpSpin(false); area.classList.add('bpx-in'); if(!again)bpScrollTop(); return; }
-  ({assets:function(){window.bpAssetsPage?bpAssetsPage():bpSpin(false);},crewdash:function(){window.bpCrewDash?bpCrewDash():bpSpin(false);},crewclock:window.bpCrewClock,crewhome:window.bpCrewHome,crewprojects:window.bpCrewProjects,crewid:window.bpCrewId,crewmsgs:function(){window.bpCrewMsgs?bpCrewMsgs():bpSpin(false);},subjobs:function(){window.bpSubJobs?bpSubJobs():bpSpin(false);},subinvoices:function(){window.bpSubInvoices?bpSubInvoices():bpSpin(false);},subchanges:function(){window.bpSubChanges?bpSubChanges():bpSpin(false);},subcomply:function(){window.bpSubComply?bpSubComply():bpSpin(false);},subcompany:function(){window.bpSubCompany?bpSubCompany():bpSpin(false);},subs:function(){window.bpSubsPage?bpSubsPage():bpSpin(false);},quote:function(){window.bpQuotePage?bpQuotePage():bpSpin(false);},invoicebuilder:function(){window.bpInvoicePage?bpInvoicePage():bpSpin(false);},routing:function(){var j=bpJobsGet();bpJobMapView(j.filter(function(x){return x.status==='active';}),j.filter(function(x){return x.status==='done';}));},teamchat:function(){window.bpTeamChat?bpTeamChat():bpSpin(false);},dashboard:bpDashboard,messaging:bpMessaging,email:bpEmailPage,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,employees:bpEmployees,installations:function(){window.bpInstalls?bpInstalls():bpSpin(false);},finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,finarchive:function(){window.bpFinArchive?bpFinArchive():bpSpin(false);},payouts:bpPayouts,quickbooks:function(){window.bpQuickBooks?bpQuickBooks():bpSpin(false);},checks:function(){window.bpChecks?bpChecks():bpSpin(false);},website:function(){window.bpWebsite?bpWebsite():bpSpin(false);},connections:function(){window.bpWebConnections?bpWebConnections():bpSpin(false);},leadsources:bpLeadSources,automations:function(){window.bpAutomations?bpAutomations():bpSpin(false);},marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,matlists:function(){window.bpMatLists?bpMatLists():bpSpin(false);},receipts:function(){window.bpReceiptsPage?bpReceiptsPage():bpSpin(false);},prices:function(){window.bpPrices?bpPrices():bpSpin(false);},mattemplates:function(){window.bpMatTemplates?bpMatTemplates():bpSpin(false);},reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings,aiteam:function(){window.bpAiTeam?bpAiTeam():bpSpin(false);}}[v])();
+  ({assets:function(){window.bpAssetsPage?bpAssetsPage():bpSpin(false);},crewdash:function(){window.bpCrewDash?bpCrewDash():bpSpin(false);},crewclock:window.bpCrewClock,crewhome:window.bpCrewHome,crewprojects:window.bpCrewProjects,crewid:window.bpCrewId,crewmsgs:function(){window.bpCrewMsgs?bpCrewMsgs():bpSpin(false);},subjobs:function(){window.bpSubJobs?bpSubJobs():bpSpin(false);},subinvoices:function(){window.bpSubInvoices?bpSubInvoices():bpSpin(false);},subchanges:function(){window.bpSubChanges?bpSubChanges():bpSpin(false);},subcomply:function(){window.bpSubComply?bpSubComply():bpSpin(false);},subcompany:function(){window.bpSubCompany?bpSubCompany():bpSpin(false);},subs:function(){window.bpSubsPage?bpSubsPage():bpSpin(false);},quote:function(){window.bpQuotePage?bpQuotePage():bpSpin(false);},invoicebuilder:function(){window.bpInvoicePage?bpInvoicePage():bpSpin(false);},routing:function(){var j=bpJobsGet();bpJobMapView(j.filter(function(x){return x.status==='active';}),j.filter(function(x){return x.status==='done';}));},teamchat:function(){window.bpTeamChat?bpTeamChat():bpSpin(false);},dashboard:bpDashboard,messaging:bpMessaging,email:bpEmailPage,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,employees:bpEmployees,installations:function(){window.bpInstalls?bpInstalls():bpSpin(false);},finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,finincome:bpFinIncome,finexpenses:bpFinExpenses,finarchive:function(){window.bpFinArchive?bpFinArchive():bpSpin(false);},payouts:bpPayouts,quickbooks:function(){window.bpQuickBooks?bpQuickBooks():bpSpin(false);},checks:function(){window.bpChecks?bpChecks():bpSpin(false);},website:function(){window.bpWebsite?bpWebsite():bpSpin(false);},connections:function(){window.bpWebConnections?bpWebConnections():bpSpin(false);},leadsources:bpLeadSources,automations:function(){window.bpAutomations?bpAutomations():bpSpin(false);},marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,matlists:function(){window.bpMatLists?bpMatLists():bpSpin(false);},receipts:function(){window.bpReceiptsPage?bpReceiptsPage():bpSpin(false);},prices:function(){window.bpPrices?bpPrices():bpSpin(false);},mattemplates:function(){window.bpMatTemplates?bpMatTemplates():bpSpin(false);},reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings,aiteam:function(){window.bpAiTeam?bpAiTeam():bpSpin(false);}}[v])();
   area.classList.add('bpx-in');
   if(!again)bpScrollTop();
 }
@@ -8268,11 +8269,13 @@ function bpFinances(){
   var catHtml=cats.length?cats.map(function(c){return '<div class="bpx-fincat"><span class="nm">'+bpEsc(c)+'</span><span class="bar"><i style="width:'+Math.max(6,Math.round(d.catTot[c]/cmax*100))+'%;background:'+(ccol[c]||'#2f6bff')+'"></i></span><span class="amt">'+bpMoneyFmt(d.catTot[c])+'</span></div>';}).join(''):'<div class="bpx-empty2">No expenses logged yet.</div>';
   // ledger
   var all=d.inc.map(function(x){return {n:x.name,t:x.type,a:x.amt,s:1,w:x.when,fi:x.fi,rec:x.rec};}).concat(d.exp.map(function(x){return {n:x.name,t:x.type,a:x.amt,s:-1,w:x.when,fi:x.fi,rec:x.rec};}));
-  if(_bpFinTab==='income') all=all.filter(function(x){return x.s>0;});
-  if(_bpFinTab==='expense') all=all.filter(function(x){return x.s<0;});
+  /* Income and Expenses are their own tabs (2026-11-20); each shows only its side */
+  var side=_bpFinView==='income'?'income':_bpFinView==='expense'?'expense':_bpFinTab;
+  if(side==='income') all=all.filter(function(x){return x.s>0;});
+  if(side==='expense') all=all.filter(function(x){return x.s<0;});
   all.sort(function(a,b){return (b.w||0)-(a.w||0);});
   window._bpFinLedger=all;
-  var ledPg=bpPage('finled',all,10,'bpFinances()');
+  var ledPg=bpPage('finled'+side,all,15,'bpFinances()');
   var ledHtml=all.length?ledPg.items.map(function(x){var dt=x.w?new Date(x.w).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
     return '<tr><td>'+bpEsc(x.n)+(x.rec?' <span class="fin-rec" title="Recurring \u2014 delete the rule from the Recurring panel or with Delete on this row">'+BP_RECUR[x.rec]+'</span>':'')+'</td><td><span class="bpx-badge'+(x.s<0?' warn':'')+'">'+bpEsc(x.t)+'</span></td><td class="bpx-mut">'+dt+'</td><td class="bpx-r bpx-num '+(x.s>0?'bpx-pos':'bpx-neg')+'">'+(x.s>0?'+ ':'− ')+bpMoneyFmt(x.a)+'</td>'
       +'<td class="bpx-r">'+(x.fi==null?'<span class="bpx-mut" title="This came from a job — edit or delete it on the project itself" style="font-size:11px">from a job</span>':bpDelBtn('bpFinDel('+x.fi+')','Delete this entry'))+'</td></tr>';
@@ -8286,6 +8289,27 @@ function bpFinances(){
   }).join(''):'<tr><td colspan="6" class="bpx-empty2">Mark a job done under Jobs and it shows up here — tap it to add what you collected and your costs.</td></tr>';
 
   var vp=function(k,html){return '<div data-fin-pane="'+k+'"'+(_bpFinView===k?'':' hidden')+'>'+html+'</div>';};
+  /* the Income and Expenses tabs: four figures, then every entry on that side */
+  var finSide=function(k){
+    if(_bpFinView!==k) return '';
+    var inc=k==='income', rows=inc?d.inc:d.exp, now=new Date(), m0=new Date(now.getFullYear(),now.getMonth(),1).getTime();
+    var sum=function(a){return a.reduce(function(t,x){return t+(+x.amt||0);},0);};
+    var tot=sum(rows), month=sum(rows.filter(function(x){return (x.when||0)>=m0;}));
+    var fromJobs=sum(rows.filter(function(x){return x.fi==null;})), other=tot-fromJobs;
+    var st=function(l,v,n,cls){return '<div class="bpx-stat"><div class="lbl">'+l+'</div><div class="val'+(cls?' '+cls:'')+'">'+v+'</div><div class="note">'+n+'</div></div>';};
+    var recExp=recRules.filter(function(r){return r.f.kind===(inc?'income':'expense');});
+    var kpi='<div class="bpx-stats fin-side-kpi">'
+      +(inc?st('Collected',bpMoneyFmt(tot),'to date','blue')+st('This month',bpMoneyFmt(month),now.toLocaleDateString('en-US',{month:'long'}))+st('From jobs',bpMoneyFmt(fromJobs),'paid on projects')+st('Other income',bpMoneyFmt(other),'logged by hand')
+        :st('Spent',bpMoneyFmt(tot),'to date')+st('This month',bpMoneyFmt(month),now.toLocaleDateString('en-US',{month:'long'}))+st('Fixed costs',bpMoneyFmt(recMonthly),'a month, repeating')+st('Biggest cost',cats.length?bpEsc(cats[0]):'—',cats.length?bpMoneyFmt(d.catTot[cats[0]]):'nothing logged yet'))
+      +'</div>';
+    var list='<div class="bpx-panel"><div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">'+(inc?'Every payment in':'Every cost')+'<span class="lg2" style="margin-left:8px">'+all.length+(all.length===1?' entry':' entries')+', newest first</span></div>'
+      +'<div class="fin-acts">'+bpCsvBtn('bpCsvLedger()')+(inc?'<button class="bpx-addbtn" onclick="bpFinAddOpen(\'income\')">+ Add income</button>':'<button class="bpx-addbtn" onclick="bpFinAddOpen(\'expense\')">+ Add expense</button>')+'</div></div>'
+      +'<div class="bpx-cwrap" style="border:0;border-radius:0"><table class="bpx-ctable"><thead><tr><th>Item</th><th>Type</th><th>Date</th><th class="bpx-r">Amount</th><th></th></tr></thead><tbody>'+ledHtml+'</tbody></table></div>'+ledPg.nav+'</div>';
+    var rec=recExp.length?'<div class="bpx-panel"><div class="bpx-ptitle">Repeating '+(inc?'income':'costs')+'<span class="lg2">books itself on schedule</span></div><div class="bpx-cwrap" style="border:0;border-radius:0"><table class="bpx-ctable"><thead><tr><th>Item</th><th>Repeats</th><th>Next</th><th class="bpx-r">Amount</th><th></th></tr></thead><tbody>'
+      +recExp.map(function(r){var f=r.f;return '<tr><td>'+bpEsc(f.note||f.category||(inc?'Income':'Expense'))+'</td><td><span class="bpx-badge'+(inc?'':' warn')+'">'+BP_RECUR[f.recur]+'</span></td><td class="bpx-mut">'+bpRecurNext(f).toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(+f.amount||0)+'</td><td class="bpx-r">'+bpDelBtn('bpFinDel('+r.fi+')','Stop this repeating entry')+'</td></tr>';}).join('')
+      +'</tbody></table></div></div>':'';
+    return kpi+(inc?'':'<div class="bpx-panel" style="margin-bottom:16px">'+bpFinCatChart(d)+'</div>')+list+rec;
+  };
   q('bpxViewArea').setAttribute('data-fin',_bpFinView);
   q('bpxViewArea').innerHTML=
     '<div class="bpx-stats fin-kpi">'
@@ -8309,10 +8333,9 @@ function bpFinances(){
         +'</div>'
       +'<div class="bpx-panel"><div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">Per-job profit<span class="lg2" style="margin-left:8px">completed jobs — tap one to add income &amp; costs</span></div>'+bpCsvBtn('bpCsvJobs()')+'</div>'
       +'<div class="bpx-cwrap" style="border:0;border-radius:0"><table class="bpx-ctable"><thead><tr><th>Job</th><th class="bpx-r">Est.</th><th class="bpx-r">Collected</th><th class="bpx-r">Costs</th><th class="bpx-r">Profit</th><th class="bpx-r">Margin</th></tr></thead><tbody>'+pjHtml+'</tbody></table></div>'+pjPg.nav+'</div>'
-      /* Income & expenses lives here now (the separate tab is gone) */
-      +'<div class="bpx-panel"><div class="bpx-ptitle">Income &amp; expenses<span class="lg2">every dollar in and out</span></div><div class="bpx-chead" style="margin-bottom:14px"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpFinTab==='all'?' on':'')+'" onclick="bpFinTab(\'all\')">All</button><button class="bpx-jt'+(_bpFinTab==='income'?' on':'')+'" onclick="bpFinTab(\'income\')">Income</button><button class="bpx-jt'+(_bpFinTab==='expense'?' on':'')+'" onclick="bpFinTab(\'expense\')">Expenses</button></div>'
-      +'<div class="bpx-finrow-btns">'+bpCsvBtn('bpCsvLedger()')+'<button class="bpx-addbtn" onclick="bpFinAddOpen(\'income\')">+ Add income</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpFinAddOpen(\'expense\')">+ Add expense</button></div></div>'
-      +'<div class="bpx-cwrap" style="border:0;border-radius:0"><table class="bpx-ctable"><thead><tr><th>Item</th><th>Type</th><th>Date</th><th class="bpx-r">Amount</th><th></th></tr></thead><tbody>'+ledHtml+'</tbody></table></div>'+ledPg.nav+'</div>')
+      )
+    +vp('income',finSide('income'))
+    +vp('expense',finSide('expense'))
     +vp('invoices',
       '<div id="bpxQbInvs"></div><div class="bpx-panel"><div class="bpx-ptitle">Invoices<span class="lg2">real invoices — payment updates your account automatically</span></div>'
       +'<div class="bpx-chead" style="margin-bottom:10px"><span class="bpx-mut" id="bpxInvCount" style="font-size:12.5px"></span></div>'
@@ -10281,6 +10304,8 @@ function bpFinOverview(){_bpFinView='overview';bpFinances();}
 function bpFinInvoices(){_bpFinView='invoices';bpFinances();}
 function bpFinEstimates(){_bpFinView='estimates';bpFinances();}
 function bpFinLedger(){_bpFinView='ledger';bpFinances();}
+function bpFinIncome(){_bpFinView='income';bpFinances();}
+function bpFinExpenses(){_bpFinView='expense';bpFinances();}
 var GHL_INV_URL=BP_URL+'/functions/v1/ghl-invoice';
 var GHL_EST_URL=BP_URL+'/functions/v1/ghl-estimate';
 var BPEST_NOTE='<div class="bpx-when-note">Your account setup is still finishing, usually within 3 to 4 days of signing up. Once it\'s done, the estimates you send show here. You can build drafts now.</div>';
@@ -14790,7 +14815,7 @@ window.bpRepCopy=function(text,btn){
 <!--/app-only-->
 </body>
 <!--app-only-->
-<link rel="stylesheet" href="portal/charts.css?v=20261118f">
+<link rel="stylesheet" href="portal/charts.css?v=20261120c">
 <link rel="stylesheet" href="portal/progress.css?v=20261118f">
 <link rel="stylesheet" href="portal/supply.css?v=20261118f">
 <link rel="stylesheet" href="portal/dash.css?v=20261119b">
@@ -14814,11 +14839,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/quote.js?v=20261119b"></script>
 <link rel="stylesheet" href="portal/quote.css?v=20261118f">
 <script src="portal/prices.js?v=20261118f"></script>
-<script src="portal/dash.js?v=20261120a"></script>
+<script src="portal/dash.js?v=20261120c"></script>
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261116a"></script>
 <script src="portal/permits.js?v=20261024q30"></script>
-<script src="portal/projsheet.js?v=20261110e"></script>
+<script src="portal/projsheet.js?v=20261120c"></script>
 <script src="portal/contact.js?v=20261102c"></script>
 <script src="portal/gcal.js?v=20261118f"></script>
 <script src="portal/inspect.js?v=20261024q36"></script>
@@ -14827,7 +14852,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/payplan.css?v=20261118f">
 <script src="portal/bpedit.js?v=20261118f"></script>
 <script src="portal/crewapp.js?v=20261118f"></script>
-<script src="portal/live.js?v=20261118e"></script>
+<script src="portal/live.js?v=20261120c"></script>
 <script src="portal/teamchat.js?v=20261118f"></script>
 <script src="portal/subapp.js?v=20261031b"></script>
 <script src="portal/subs.js?v=20261118f"></script>
@@ -14849,14 +14874,14 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261119a"></script>
 <script src="portal/website.js?v=20261118f"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261120-20261120b"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261120-20261120b"></script>
-<script src="site/vendor/SplitText.min.js?v=20261120-20261120b"></script>
-<script src="site/site.js?v=20261120-20261120b"></script>
-<script src="site/present.js?v=20261120-20261120b"></script>
+<script src="site/vendor/gsap.min.js?v=20261120-20261120c"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261120-20261120c"></script>
+<script src="site/vendor/SplitText.min.js?v=20261120-20261120c"></script>
+<script src="site/site.js?v=20261120-20261120c"></script>
+<script src="site/present.js?v=20261120-20261120c"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261118f">
-<link rel="stylesheet" href="portal/projsheet.css?v=20261118f">
+<link rel="stylesheet" href="portal/projsheet.css?v=20261120c">
 <link rel="stylesheet" href="portal/inspect.css?v=20261118f">
 <link rel="stylesheet" href="portal/contact.css?v=20261118f">
 <link rel="stylesheet" href="portal/crewapp.css?v=20261118f">
@@ -14874,7 +14899,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/ui-kit.js?v=20261118f"></script>
 <script src="portal/slidetabs.js?v=20261117a"></script>
 <script src="portal/motion.js?v=20261118f"></script>
-<script src="portal/shell.js?v=20261118j"></script>
+<script src="portal/shell.js?v=20261120c"></script>
 <script src="portal/mobile.js?v=20261108a"></script>
 <script src="portal/appfeel.js?v=20261116a"></script>
 <script src="portal/filming.js?v=20261101a"></script>

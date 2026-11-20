@@ -19,7 +19,7 @@
   'use strict';
   /* which screens show which kind of data */
   var VIEWS = {
-    jobs: ['dashboard', 'activejobs', 'installations', 'finances', 'invoices', 'estimates', 'ledger', 'finarchive', 'payouts', 'calendar', 'closedeals', 'routing', 'employees', 'subs', 'supplyorders', 'matlists', 'receipts', 'quickbooks'],
+    jobs: ['dashboard', 'activejobs', 'installations', 'finances', 'finincome', 'finexpenses', 'invoices', 'estimates', 'ledger', 'finarchive', 'payouts', 'calendar', 'closedeals', 'routing', 'employees', 'subs', 'supplyorders', 'matlists', 'receipts', 'quickbooks'],
     contacts: ['contacts', 'dashboard', 'calendar', 'closedeals'],
     calendar: ['calendar', 'dashboard'],
     clock: ['employees', 'dashboard', 'activejobs'],
@@ -131,7 +131,7 @@
      Quiet like the live updates: no fade, same scroll position. Only saves that follow a tap
      or a key press count, so the app's own background syncing never sets this off. */
   var S = { touched: 0, savedAt: 0, drawnAt: 0, t1: 0, t2: 0, tries: 0 };
-  var LOCAL = { dashboard: 1, activejobs: 1, installations: 1, finances: 1, ledger: 1, finarchive: 1, payouts: 1, routing: 1, supplyorders: 1, matlists: 1, receipts: 1, quickbooks: 1 };
+  var LOCAL = { dashboard: 1, activejobs: 1, installations: 1, finances: 1, finincome: 1, finexpenses: 1, ledger: 1, finarchive: 1, payouts: 1, routing: 1, supplyorders: 1, matlists: 1, receipts: 1, quickbooks: 1 };
   ['pointerdown', 'keydown', 'touchstart'].forEach(function (ev) { document.addEventListener(ev, function () { S.touched = Date.now(); }, true); });
   (function watchArea() {
     var a = document.getElementById('bpxViewArea'); if (!a) return setTimeout(watchArea, 500);

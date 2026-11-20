@@ -374,3 +374,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before smaller top-card numbers (2026-11-20)
 - Live site (main): `97a54ce`
 - Changes: The four top dashboard numbers come down from 36 to 46px to 28 to 34px (portal/dash4.css). To undo: revert portal/dash4.css and app.html to the SHA above.
+
+## Before sidebar Employees, Finance tabs, project form (2026-11-20)
+- Live site (main): `633e15b`
+- Changes: Sidebar gets its own "Employees" branch under Jobs (Employees, Subcontractors; app.html BP_NAV). Finances gets Income and Expenses tabs beside Overview (views finincome / finexpenses, each with four figures and its own list; Expenses adds the category chart and repeating costs); the Income & expenses list left Overview. Leads tabs: Calculators now sits after Calculator leads. Job cost chart tooltip: the bottom line wraps and shows the job title and what was kept (charts.css, dash.js). Opening a project shows the fill-out boxes straight away again, with the customer card on top (projsheet.js/css). To undo: revert app.html, portal/dash.js, portal/charts.css, portal/projsheet.js, portal/projsheet.css, portal/live.js, portal/shell.js to the SHA above.
