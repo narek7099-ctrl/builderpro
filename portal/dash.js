@@ -687,7 +687,7 @@
       var dlt = bpChart.delta(M.prev[key], M.cur[key], { upIsGood: o.upIsGood, vs: P.vs });
       var vs = String(P.vs || '').replace('the 6 months before', 'prior 6 months').replace('the 12 months before', 'prior year');
       return '<div class="bpx-panel db-st cb" onclick="bpNav(\'' + go + '\')"><div class="cb-top"><span class="db-kl">' + lbl + '</span>'
-        + '<div class="cb-viz" onclick="event.stopPropagation()">' + miniViz(vals, o.viz, { neg: o.tone === 'neg', labels: M.labels, fmt: o.fmt }) + '</div></div>'
+        + '</div>'
         + '<div class="db-kv' + (o.tone ? ' ' + o.tone : '') + '">' + val + '</div>'
         + '<div class="cb-d">' + (dlt ? dlt + '<span>vs ' + esc(vs) + '</span>' : '<span>' + sub + '</span>') + '</div>'
         + '<div class="cb-foot"><span>' + o.see + '</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>';
@@ -701,21 +701,17 @@
       t('Active projects', 'act', String(o5.n), money(o5.v) + ' in progress', M.act, 'activejobs', { viz: 'line', see: 'See jobs', fmt: function (v) { return v + (v === 1 ? ' project running' : ' projects running'); } }),
     ];
   }
-  /* New leads (2026-11-18): contacts that came in, per week or month, as thin bars, with the
-     change against the period before. Until the contacts have loaded (or if they can't be
-     read) it is the icon card with HighLevel's count for the month, as before. */
+  /* New leads: contacts that came in during the period, with the change against the period
+     before. Until the contacts have loaded (or if they can't be read) it is HighLevel's count
+     for the month. (2026-11-20: the top four cards are the number alone, no graph or icon.) */
   function leadsCard(M) {
     if (!Array.isArray(D.leadRows)) return statCard('New leads', 'person_add', D.leads ? String(D.leads.n) : '&mdash;', D.leads ? 'this month' : 'not connected yet', D.leads ? 'contacts' : 'marketing', 'See leads');
-    var rows = D.leadRows, one = function () { return 1; }, at = function (t) { return t; };
-    var vals = bpChart.byBuckets(rows, P.buckets, at, one).values;
-    /* the leads adding up through the period, as a mint line that climbs to the total (2026-11-18:
-       the thin bars read as dashes when most months were quiet) */
-    var run = 0, cum = vals.map(function (v) { run += v; return run; });
+    var rows = D.leadRows;
     var cur = rows.filter(function (t) { return inP(t, P.start, P.end); }).length, prev = rows.filter(function (t) { return inP(t, P.pStart, P.pEnd); }).length;
     var dlt = bpChart.delta(prev, cur, { vs: P.vs });
     var vs = String(P.vs || '').replace('the 6 months before', 'prior 6 months').replace('the 12 months before', 'prior year');
     return '<div class="bpx-panel db-st cb" onclick="bpNav(\'contacts\')"><div class="cb-top"><span class="db-kl">New leads</span>'
-      + '<div class="cb-viz" onclick="event.stopPropagation()">' + miniViz(cum, 'line', { mint: true, labels: M.labels, fmt: function (v) { return v + (v === 1 ? ' lead' : ' leads') + ' so far'; } }) + '</div></div>'
+      + '</div>'
       + '<div class="db-kv">' + cur.toLocaleString() + '</div>'
       + '<div class="cb-d">' + (dlt ? dlt + '<span>vs ' + esc(vs) + '</span>' : '<span>' + P.word + '</span>') + '</div>'
       + '<div class="cb-foot"><span>See leads</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>';
@@ -732,7 +728,7 @@
      for figures that have no month-by-month history (2026-11-14) */
   function statCard(lbl, ico, val, sub, go, see) {
     return '<div class="bpx-panel db-st cb cb-ico" onclick="bpNav(\'' + go + '\')"><div class="cb-top"><span class="db-kl">' + lbl + '</span>'
-      + '<span class="cb-ic"><span class="ms">' + ico + '</span></span></div>'
+      + '</div>'
       + '<div class="db-kv">' + val + '</div><div class="cb-d"><span>' + sub + '</span></div>'
       + '<div class="cb-foot"><span>' + see + '</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>';
   }
