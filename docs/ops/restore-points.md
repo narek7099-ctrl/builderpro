@@ -366,3 +366,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the clean dashboard (2026-11-19)
 - Live site (main): `4d70921`
 - Changes: Dashboard rebuilt on the look of the dashboard block the owner picked (efferd dashboard-4), in our own code and colours instead of installing React/shadcn. Flat white cards with a hairline border (portal/dash4.css, dashboard only, loaded after glass.css). Overview layout: the four figures, then a wide "Money in" area chart with its own range picker, then "Work won" (value won by month, total top right), the pipeline ring and a "Quick actions" list (New estimate, Add a job, Send an invoice, Book a visit, Send a text); "Money in and out" columns moved down beside "Where the money goes". Delta shown as a coloured arrow and figure, card menus show on hover. Added the missing .hl-c6 column size (used by the other layouts too). To undo: revert portal/dash.js and app.html to the SHA above and remove portal/dash4.css.
+
+## Before the number-only top cards (2026-11-20)
+- Live site (main): `8d65efc`
+- Changes: The four cards at the top of the dashboard (Projects won, New leads, Active projects, Quotes out) lose their mini graphs and icons; the number is the main point (about 36 to 46px, bold), with the label above and one line under it (portal/dash.js sparkTiles, leadsCard, statCard; portal/dash4.css). To undo: revert portal/dash.js, portal/dash4.css and app.html to the SHA above.

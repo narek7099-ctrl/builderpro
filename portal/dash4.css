@@ -37,11 +37,11 @@
 
 /* ---- the four figures across the top ---- */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .db4 .hl-w.hl-spk > .db-st.cb{padding:18px 20px 16px !important;border-radius:14px !important}
-#bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb .db-kl{font-size:12.5px !important;font-weight:450 !important;color:#64748b !important}
-#bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb .db-kv{font-size:clamp(22px,1.7vw,27px) !important;font-weight:620 !important;letter-spacing:-.03em;color:#0b1526 !important;margin-top:10px}
-#bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb .cb-d{margin-top:12px;font-size:12px;color:#64748b}
+#bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb .db-kl{font-size:13.5px !important;font-weight:500 !important;color:#64748b !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb .db-kv{font-size:clamp(36px,3.2vw,46px) !important;font-weight:650 !important;letter-spacing:-.035em;line-height:1.05 !important;color:#0b1526 !important;margin-top:14px}
+#bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb .cb-d{margin-top:10px;font-size:13px;color:#64748b}
 #bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb .cb-foot{display:none}
-#bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb .cb-top{min-height:40px}
+#bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb .cb-top{min-height:0}
 #bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb .cb-viz{width:84px}
 #bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb-ic{width:34px;height:34px;border-radius:9px;background:#f1f6ff;border:1px solid #e3ecfb}
 #bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb-ic .ms{font-size:18px;color:#006fff}
