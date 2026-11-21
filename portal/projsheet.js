@@ -110,6 +110,19 @@
     }
     if (acts) Array.prototype.forEach.call(acts.querySelectorAll('.pjs-act'), function (b) { if (/Mark done/.test(b.textContent)) b.lastChild.textContent = 'Done'; });
     if (form) Array.prototype.forEach.call(form.querySelectorAll('label'), function (l) { if (/^\s*Customer name\s*$/.test(l.textContent)) l.textContent = 'Name'; });
+    /* less to scroll (2026-11-21): the customer card goes; its Profile link and the automatic-texts
+       switch become rows in the groups, like Settings */
+    if (form && !form.querySelector('.pjs-prow')) {
+      var g1 = form.querySelector('.pjs-sec:not(.pjs-view)');
+      if (g1) {
+        var pr = document.createElement('button'); pr.type = 'button'; pr.className = 'pjs-prow';
+        pr.innerHTML = '<span>Customer profile</span><span class="ms">chevron_right</span>';
+        pr.onclick = function () { if (window.bpOpenPerson) bpOpenPerson(window._bpProjId || ''); };
+        g1.appendChild(pr);
+        var ap = form.querySelector('#ap-row');
+        if (ap) { var apg = document.createElement('section'); apg.className = 'pjs-sec pjs-apg'; apg.appendChild(ap); g1.after(apg); }
+      }
+    }
     /* Delete becomes the last row of the Overview */
     if (form && !form.querySelector('.pjs-delrow')) {
       var d = document.createElement('button'); d.type = 'button'; d.className = 'pjs-delrow'; d.textContent = 'Delete project';
