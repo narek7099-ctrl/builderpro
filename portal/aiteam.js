@@ -370,23 +370,26 @@
      status, the badge its open tasks; tap one to close in on it. */
   function teamMap(W, H) {
     var small = W < 600, links = '', nodes = '', dots = '', i = 0;
-    var cx = small ? W / 2 : W * 0.36, cy = small ? 176 : H / 2 + 8;
-    var you = { x: small ? W / 2 : W * 0.08, y: small ? 74 : cy };
+    var cx = small ? W / 2 : W * 0.36, cy = small ? 206 : H / 2 + 8;
+    var you = { x: small ? W / 2 : W * 0.08, y: small ? 100 : cy };
     var pts = [];
     if (small) {
-      var cols = 3, top = 300, step = Math.min(86, (H - top - 34) / Math.ceil(RING.length / cols));
-      RING.forEach(function (k, j) { pts.push({ x: W * (0.18 + 0.32 * (j % cols)), y: top + Math.floor(j / cols) * step, k: k }); });
+      /* phones: an org chart. You on top, the AI CEO under you, a bar under its name, then
+         three columns of assistants hanging from the bar (2026-11-21: the curves from the
+         CEO's middle crossed every name) */
+      var cols = 3, top = 352, step = Math.min(96, Math.max(84, (H - top - 52) / Math.max(1, Math.ceil(RING.length / cols) - 1)));
+      RING.forEach(function (k, j) { pts.push({ x: W * (0.18 + 0.32 * (j % cols)), y: top + Math.floor(j / cols) * step, k: k, c: j % cols }); });
     } else {
       var half = Math.ceil(RING.length / 2), stp = Math.min(92, (H - 120) / Math.max(1, half - 1 + 0.5)), y0 = cy - ((half - 1) * stp + stp / 2) / 2;
       RING.forEach(function (k, j) { var b = j >= half, jj = b ? j - half : j; pts.push({ x: W * (b ? 0.87 : 0.66), y: y0 + jj * stp + (b ? stp / 2 : 0), k: k }); });
     }
     /* you */
-    var yd = small ? 'M' + cx + ' ' + cy + ' C' + cx + ' ' + (cy + you.y) / 2 + ' ' + you.x + ' ' + (cy + you.y) / 2 + ' ' + you.x + ' ' + you.y
+    var yd = small ? 'M' + cx + ' ' + (cy - 40) + ' L' + you.x + ' ' + (you.y + 20)
       : 'M' + cx + ' ' + cy + ' C' + (cx + you.x) / 2 + ' ' + cy + ' ' + (cx + you.x) / 2 + ' ' + you.y + ' ' + you.x + ' ' + you.y;
     links += '<path id="aimty" class="aim-l" stroke="#16C79A" stroke-opacity=".55" d="' + yd + '"/>';
     dots += dot('aimty', 0, '#16C79A', true);
     var pend = (A.st && A.st.pending) || 0, ry = small ? 17 : 21;
-    nodes += '<g class="aim-n" data-go="wait" tabindex="0" role="button" aria-label="Waiting for you"><circle class="b" cx="' + you.x + '" cy="' + you.y + '" r="' + ry + '" stroke="#16C79A"/>' + icon(you.x, you.y, 'person', small ? 15 : 18, '#16C79A')
+    nodes += '<g class="aim-n" data-go="wait" tabindex="0" role="button" aria-label="Waiting for you"><circle class="b" cx="' + you.x + '" cy="' + you.y + '" r="' + ry + '" stroke="#16C79A"/>' + icon(you.x, you.y, 'person', small ? 15 : 22, '#16C79A')
       + (pend ? '<circle cx="' + (you.x + ry * .72) + '" cy="' + (you.y - ry * .72) + '" r="9" fill="#0970F7"/><text x="' + (you.x + ry * .72) + '" y="' + (you.y - ry * .72 + 3.5) + '" text-anchor="middle" style="fill:#fff;font-size:10px">' + pend + '</text>' : '')
       + '<text x="' + you.x + '" y="' + (you.y + ry + 15) + '" text-anchor="middle" style="font-size:12px">You</text>'
       + (small ? '' : '<text class="s" x="' + you.x + '" y="' + (you.y + ry + 28) + '" text-anchor="middle">' + (pend ? pend + ' waiting for your OK' : 'approve what goes out') + '</text>') + '</g>';
@@ -394,32 +397,36 @@
     pts.forEach(function (p) {
       var k = p.k, s = stateOf(k), on = matches(k), id = 'aimt' + (i++), t = s[2], n = t.open + t.doing + t.blocked, col = s[0] === 'work' ? '#006fff' : '#7fb0ff';
       var mx = (cx + p.x) / 2, my = (cy + p.y) / 2;
-      var d = small ? 'M' + cx + ' ' + cy + ' C' + cx + ' ' + my + ' ' + p.x + ' ' + my + ' ' + p.x + ' ' + p.y : 'M' + cx + ' ' + cy + ' C' + mx + ' ' + cy + ' ' + mx + ' ' + p.y + ' ' + p.x + ' ' + p.y;
+      var bar = cy + 92, rc = 10, dx = p.x - cx, sg = dx > 0 ? 1 : -1;
+      var d = small ? (Math.abs(dx) < 2 ? 'M' + cx + ' ' + (cy + 62) + ' L' + p.x + ' ' + p.y
+          : 'M' + cx + ' ' + (cy + 62) + ' L' + cx + ' ' + (bar - rc) + ' Q' + cx + ' ' + bar + ' ' + (cx + sg * rc) + ' ' + bar + ' L' + (p.x - sg * rc) + ' ' + bar + ' Q' + p.x + ' ' + bar + ' ' + p.x + ' ' + (bar + rc) + ' L' + p.x + ' ' + p.y)
+        : 'M' + cx + ' ' + cy + ' C' + mx + ' ' + cy + ' ' + mx + ' ' + p.y + ' ' + p.x + ' ' + p.y;
       links += '<path id="' + id + '" class="aim-l' + (on ? '' : ' dim') + '" stroke="' + col + '" stroke-opacity="' + (s[0] === 'work' ? '.85' : '.5') + '" d="' + d + '"/>';
       if (on) dots += dot(id, i, col);
-      var r = small ? 18 : 22;
+      var r = small ? 23 : 22;
       nodes += '<g class="aim-n' + (on ? '' : ' dim') + '" data-k="' + k + '" tabindex="0" role="button" aria-label="' + esc(AG[k].n) + '"><circle class="b" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + r + '" stroke="' + SC[s[0]] + '"/>'
-        + icon(p.x, p.y, AG[k].ic, small ? 15 : 18, '#006fff')
+        + icon(p.x, p.y, AG[k].ic, small ? 21 : 22, '#006fff')
         + (n ? '<circle cx="' + (p.x + r * .72).toFixed(1) + '" cy="' + (p.y - r * .72).toFixed(1) + '" r="9" fill="#006fff"/><text x="' + (p.x + r * .72).toFixed(1) + '" y="' + (p.y - r * .72 + 3.5).toFixed(1) + '" text-anchor="middle" style="fill:#fff;font-size:10px">' + n + '</text>' : '')
-        + '<text x="' + p.x.toFixed(1) + '" y="' + (p.y + r + 15).toFixed(1) + '" text-anchor="middle" style="font-size:' + (small ? 11 : 12) + 'px">' + esc(AG[k].n) + '</text>'
+        + '<text x="' + p.x.toFixed(1) + '" y="' + (p.y + r + 16).toFixed(1) + '" text-anchor="middle" style="font-size:' + (small ? 12.5 : 12) + 'px">' + esc(AG[k].n) + '</text>'
         + (small ? '' : '<text class="s" x="' + p.x.toFixed(1) + '" y="' + (p.y + r + 28).toFixed(1) + '" text-anchor="middle">' + s[1] + '</text>') + '</g>';
     });
     /* the AI CEO */
-    var R = small ? 32 : 42, con = matches('ceo');
-    var ceo = '<g class="aim-n' + (con ? '' : ' dim') + '" data-k="ceo" tabindex="0" role="button" aria-label="AI CEO"><circle cx="' + cx + '" cy="' + cy + '" r="' + (R + 12) + '" fill="rgba(0,111,255,.08)"/><circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="url(#aimG)"/>'
-      + icon(cx, cy, AG.ceo.ic, small ? 24 : 28, '#fff') + '<text x="' + cx + '" y="' + (cy + R + 18) + '" text-anchor="middle" style="font-size:14px;font-weight:700">AI CEO</text>'
+    var R = small ? 36 : 42, con = matches('ceo');
+    var ceo = '<g class="aim-n aim-ceo' + (con ? '' : ' dim') + '" data-k="ceo" tabindex="0" role="button" aria-label="AI CEO">'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="' + (R + 7) + '" fill="rgba(0,111,255,.12)"/><circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="#006fff" stroke="#fff" stroke-width="3"/>'
+      + icon(cx, cy, AG.ceo.ic, small ? 32 : 36, '#fff') + '<text x="' + cx + '" y="' + (cy + R + 20) + '" text-anchor="middle" style="font-size:' + (small ? 15 : 14) + 'px;font-weight:700">AI CEO</text>'
       + (small ? '' : '<text class="s" x="' + cx + '" y="' + (cy + R + 32) + '" text-anchor="middle">manages ' + RING.length + ' assistants</text>') + '</g>';
     return '<g class="aim-in">' + links + dots + nodes + '</g>' + ceo;
   }
   /* one assistant up close: the AI CEO and you on one side, everything it works from on the other */
   function focusMap(k, W, H) {
     var small = W < 600, c = connList(k), links = '', nodes = '', dots = '', i = 0;
-    var cx = small ? W / 2 : W * 0.4, cy = small ? 170 : H / 2;
+    var cx = small ? W / 2 : W * 0.4, cy = small ? 206 : H / 2;
     var left = k === 'ceo' ? [{ n: 'You', ic: 'person', kind: 'you', s: 'approve what goes out' }] : [{ n: 'AI CEO', ic: 'monitoring', kind: 'mgr', s: 'hands out tasks', k: 'ceo' }, { n: 'You', ic: 'person', kind: 'you', s: 'approve what goes out' }];
     var pts = [];
     if (small) {
-      left.forEach(function (d, j) { pts.push({ x: left.length === 1 ? W / 2 : (j ? W * 0.82 : W * 0.18), y: 78, d: d }); });
-      var cols = 3, top = 292, step = Math.min(84, (H - top - 30) / Math.ceil(c.length / cols));
+      left.forEach(function (d, j) { pts.push({ x: left.length === 1 ? W / 2 : (j ? W * 0.78 : W * 0.22), y: 100, d: d, up: 1 }); });
+      var cols = 3, top = 352, step = Math.min(92, Math.max(80, (H - top - 52) / Math.max(1, Math.ceil(c.length / cols) - 1)));
       c.forEach(function (d, j) { pts.push({ x: W * (0.18 + 0.32 * (j % cols)), y: top + Math.floor(j / cols) * step, d: d }); });
     } else {
       left.forEach(function (d, j) { pts.push({ x: W * 0.1, y: left.length === 1 ? cy : H * (0.3 + 0.4 * j), d: d }); });
@@ -429,17 +436,22 @@
     }
     pts.forEach(function (p) {
       var col = KC[p.d.kind] || '#7fb0ff', id = 'aimf' + (i++), mx = (cx + p.x) / 2, my = (cy + p.y) / 2;
-      var d = small ? 'M' + cx + ' ' + cy + ' C' + cx + ' ' + my + ' ' + p.x + ' ' + my + ' ' + p.x + ' ' + p.y : 'M' + cx + ' ' + cy + ' C' + mx + ' ' + cy + ' ' + mx + ' ' + p.y + ' ' + p.x + ' ' + p.y;
+      var bar = cy + 92, rc = 10, dx = p.x - cx, sg = dx > 0 ? 1 : -1;
+      var ex = p.x + (p.x < cx ? 23 : -23);
+      var d = small && p.up ? 'M' + cx + ' ' + (cy - 44) + ' C' + cx + ' ' + p.y + ' ' + cx + ' ' + p.y + ' ' + ex + ' ' + p.y
+        : small ? (Math.abs(dx) < 2 ? 'M' + cx + ' ' + (cy + 62) + ' L' + p.x + ' ' + p.y
+          : 'M' + cx + ' ' + (cy + 62) + ' L' + cx + ' ' + (bar - rc) + ' Q' + cx + ' ' + bar + ' ' + (cx + sg * rc) + ' ' + bar + ' L' + (p.x - sg * rc) + ' ' + bar + ' Q' + p.x + ' ' + bar + ' ' + p.x + ' ' + (bar + rc) + ' L' + p.x + ' ' + p.y)
+        : 'M' + cx + ' ' + cy + ' C' + mx + ' ' + cy + ' ' + mx + ' ' + p.y + ' ' + p.x + ' ' + p.y;
       links += '<path id="' + id + '" class="aim-l" style="stroke:' + col + '" stroke-opacity=".5" d="' + d + '"/>';
       dots += dot(id, i, col, p.x < cx || (small && p.y < cy));
-      var r = small ? 17 : 20;
-      nodes += '<g class="aim-n"' + (p.d.k ? ' data-k="' + p.d.k + '" tabindex="0" role="button"' : ' style="cursor:default"') + '><circle class="b" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + r + '" style="stroke:' + col + '"/>' + icon(p.x, p.y, p.d.ic, small ? 15 : 17, col)
-        + '<text x="' + p.x.toFixed(1) + '" y="' + (p.y + r + 14).toFixed(1) + '" text-anchor="middle" style="font-size:' + (small ? 10.5 : 11.5) + 'px;font-weight:500">' + esc(cut(p.d.n, small ? 13 : 18)) + '</text>'
+      var r = small ? 22 : 20;
+      nodes += '<g class="aim-n"' + (p.d.k ? ' data-k="' + p.d.k + '" tabindex="0" role="button"' : ' style="cursor:default"') + '><circle class="b" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + r + '" style="stroke:' + col + '"/>' + icon(p.x, p.y, p.d.ic, small ? 20 : 21, col)
+        + '<text x="' + p.x.toFixed(1) + '" y="' + (p.y + r + 14).toFixed(1) + '" text-anchor="middle" style="font-size:' + (small ? 12 : 11.5) + 'px;font-weight:600">' + esc(cut(p.d.n, small ? 14 : 18)) + '</text>'
         + (p.d.s && !small ? '<text class="s" x="' + p.x.toFixed(1) + '" y="' + (p.y + r + 27).toFixed(1) + '" text-anchor="middle">' + p.d.s + '</text>' : '') + '</g>';
     });
-    var R = small ? 32 : 40;
-    var me = '<g class="aim-in"><circle cx="' + cx + '" cy="' + cy + '" r="' + (R + 12) + '" fill="rgba(0,111,255,.08)"/><circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="url(#aimG)"/>' + icon(cx, cy, AG[k].ic, small ? 24 : 28, '#fff')
-      + '<text x="' + cx + '" y="' + (cy + R + 18) + '" text-anchor="middle" style="font-family:inherit;font-size:14px;font-weight:700;fill:var(--ink)">' + esc(AG[k].n) + '</text></g>';
+    var R = small ? 36 : 40;
+    var me = '<g class="aim-in aim-n aim-ceo">' + '<circle cx="' + cx + '" cy="' + cy + '" r="' + (R + 7) + '" fill="rgba(0,111,255,.12)"/><circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="#006fff" stroke="#fff" stroke-width="3"/>' + icon(cx, cy, AG[k].ic, small ? 32 : 36, '#fff')
+      + '<text x="' + cx + '" y="' + (cy + R + 20) + '" text-anchor="middle" style="font-family:inherit;font-size:' + (small ? 15 : 14) + 'px;font-weight:700;fill:var(--ink)">' + esc(AG[k].n) + '</text></g>';
     return '<g class="aim-in">' + links + dots + nodes + '</g>' + me;
   }
   function mapHtml() {
