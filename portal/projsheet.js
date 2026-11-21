@@ -123,6 +123,15 @@
         if (ap) { var apg = document.createElement('section'); apg.className = 'pjs-sec pjs-apg'; apg.appendChild(ap); g1.after(apg); }
       }
     }
+    /* Money and Schedule as app screens too (2026-11-21): name each group so the phone styles can
+       lay it out as rows; Budget folds shut until it is opened */
+    var tagSec = function (sel, cls) { var e = card.querySelector(sel), sec = e && e.closest('.pjs-sec'); if (sec) sec.classList.add(cls); return sec; };
+    tagSec('#bpx-pj-est', 'pjs-mrows'); tagSec('#bpx-pj-exps', 'pjs-exp'); tagSec('.bpp-panel', 'pjs-phases'); tagSec('#bpx-pj-cal', 'pjs-days');
+    var bud = tagSec('#bpx-pj-budget', 'pjs-fold');
+    if (bud && !bud._fold) {
+      bud._fold = 1; var bh = bud.querySelector('.pjs-h');
+      if (bh) { bh.setAttribute('role', 'button'); bh.setAttribute('tabindex', '0'); bh.onclick = function () { bud.classList.toggle('open'); }; bh.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); bud.classList.toggle('open'); } }; }
+    }
     /* Delete becomes the last row of the Overview */
     if (form && !form.querySelector('.pjs-delrow')) {
       var d = document.createElement('button'); d.type = 'button'; d.className = 'pjs-delrow'; d.textContent = 'Delete project';

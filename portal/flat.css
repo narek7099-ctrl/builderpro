@@ -738,3 +738,99 @@
 #bpx#bpx#bpx#bpx#bpx.bpx-dark .mj-pill.green{background:#0b2e26 !important;color:#3FE0B6 !important}
 #bpx#bpx#bpx#bpx#bpx.bpx-dark .mj-pill.gray{background:#23272f !important;color:#cbd5e1 !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .hl-tabs{box-shadow:0 1px 0 #2a2f38 !important}
+
+/* =====================================================================
+   Money and Schedule on a phone, as app screens (2026-11-21)
+   ===================================================================== */
+@media (max-width:760px){
+  /* every group: no explanations, the heading above the group like Settings */
+  #bpx#bpx#bpx#bpx#bpx .pjs-app :is([data-pj-pane="money"],[data-pj-pane="schedule"]) .pjs-sec>.bpx-mut,
+  #bpx#bpx#bpx#bpx#bpx .pjs-app :is([data-pj-pane="money"],[data-pj-pane="schedule"]) .pjs-sec>div>.bpx-mut,
+  #bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-budget>.bpx-mut{display:none !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app :is([data-pj-pane="money"],[data-pj-pane="schedule"]) .pjs-sec{padding:4px 0 4px 16px !important;margin:30px 0 0 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app :is([data-pj-pane="money"],[data-pj-pane="schedule"]) .pjs-sec:first-child{margin-top:4px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app :is([data-pj-pane="money"],[data-pj-pane="schedule"]) .pjs-sec .pjs-h{display:block;margin:-26px 0 10px -16px !important;padding:0 !important;font-size:13px !important;font-weight:400 !important;letter-spacing:0 !important;text-transform:uppercase;color:#6b7280 !important}
+
+  /* MONEY. The plan: its name and Change on one line, then one row per payment */
+  #bpx#bpx#bpx#bpx#bpx .pjs-app .pp-sec{padding:0 !important;margin-top:30px !important}
+  #bpx#bpx#bpx#bpx#bpx .pjs-app .pp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px 10px 16px;margin:0 !important;border-bottom:.5px solid var(--fl-line)}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pp-head .pjs-h{position:absolute;margin:-48px 0 0 -16px !important}
+  #bpx#bpx#bpx#bpx#bpx .pjs-app .pp-head .pp-meth{font-size:15px;font-weight:600}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pp-head .bpx-rowbtn{all:unset;font-size:15px;color:#006fff;cursor:pointer;padding:6px 4px}
+  #bpx#bpx#bpx#bpx#bpx .pjs-app .pp-m3,#bpx#bpx#bpx#bpx#bpx .pjs-app .pp-note{display:none !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pp-steps{margin:0 !important;padding:0 !important;border:0 !important;background:none !important;box-shadow:none !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pp-st{display:grid !important;grid-template-columns:26px minmax(0,1fr) auto;column-gap:12px;row-gap:2px;align-items:center;padding:10px 14px 10px 16px !important;border:0 !important;border-bottom:.5px solid var(--fl-line) !important;background:none !important;margin:0 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pp-st:last-child{border-bottom:0 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pp-st>i{grid-row:1/span 2;width:26px !important;height:26px !important;font-size:12px}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pp-st-t{grid-column:2;min-width:0}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pp-st-t b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pp-st-t small{font-size:12.5px}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pp-st-a{grid-column:3;grid-row:1;display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin:0 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pp-st-a b{font-size:15px;font-variant-numeric:tabular-nums}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pp-st-a .pjk-tag{font-size:11px;padding:1px 7px}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pp-st-b{grid-column:2/-1;margin:2px 0 0 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pp-st-b .bpx-rowbtn{all:unset;font-size:14px;font-weight:600;color:#006fff;cursor:pointer;padding:4px 0}
+  /* price and paid as rows; the balance is already in the header */
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-mrows>div{display:block !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-mrows>div>div{display:grid !important;grid-template-columns:110px minmax(0,1fr);align-items:center;border-bottom:.5px solid var(--fl-line)}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-mrows>div>div:has(#bpx-pj-bal){display:none !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-mrows>div>div:nth-last-child(2){border-bottom:0}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app :is(.pjs-mrows,.pjs-fold,.pjs-exp,.pjs-days) label:not(.pjs-h){margin:0 !important;font-size:16px !important;font-weight:400 !important;color:var(--ink,#0b1526) !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app :is(.pjs-mrows,.pjs-fold,.pjs-exp,.pjs-days) :is(input,select){height:44px !important;min-height:44px !important;margin:0 !important;padding:0 12px 0 0 !important;border:0 !important;border-radius:0 !important;background:transparent !important;box-shadow:none !important;font-size:16px !important;text-align:right;width:100% !important;box-sizing:border-box}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-exp select{text-align:left}
+  /* budget: folded shut, one row per kind of cost when open */
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-fold{padding:0 0 0 16px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-fold .pjs-h{position:static !important;display:flex !important;align-items:center;justify-content:space-between;height:44px;margin:0 !important;padding-right:12px !important;font-size:16px !important;text-transform:none !important;color:var(--ink,#0b1526) !important;cursor:pointer}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-fold .pjs-h::after{content:"Set limits \203A";font-size:15px;color:#94a3b8}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-fold.open .pjs-h::after{content:"Done";color:#006fff}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-fold:not(.open)>:not(.pjs-h){display:none !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-fold .bg-grid{display:block !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-fold .bg-row{display:grid !important;grid-template-columns:minmax(0,1fr) 120px;align-items:center;column-gap:8px;padding:6px 0 !important;border:0 !important;border-top:.5px solid var(--fl-line) !important;background:none !important;margin:0 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-fold .bg-meter{grid-column:1/-1;padding-right:12px}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-fold .bg-name{font-size:16px}
+  /* expenses: one row each */
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-exp .bpx-exprow{display:grid !important;grid-template-columns:minmax(0,1fr) 110px 36px;align-items:center;border-bottom:.5px solid var(--fl-line);margin:0 !important;gap:0 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-exp .bpx-expnote{padding:6px 0;font-size:12.5px}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-exp .bpx-addexp{display:flex;align-items:center;height:44px;color:#006fff !important;font-size:16px !important}
+
+  /* SCHEDULE. Phases: the line chart without its legend, then one row per phase */
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-phases .bpp-panel{padding:0 12px 0 0 !important;border:0 !important;background:none !important;box-shadow:none !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-phases .bpc-legend,#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-phases details,#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-phases .bpc-tbl,#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-phases .bpc-t{display:none !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-phases .bpc{margin:6px 0 0 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-phases .bpc-cap{margin:0 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-phases .bpc-lead{font-size:13.5px !important;font-weight:600;color:var(--ink,#0b1526) !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-phases .bpp-phases{display:block !important;margin:4px 0 0 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .bpp-ph{display:flex !important;align-items:center;gap:12px;min-height:52px;padding:6px 0 !important;margin:0 !important;border:0 !important;border-top:.5px solid var(--fl-line) !important;border-radius:0 !important;background:none !important;box-shadow:none !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .bpp-ph .bpp-tick{width:26px !important;height:26px !important;flex:0 0 26px;border-radius:50% !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .bpp-ph .bpp-ph-t{flex:1;min-width:0}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .bpp-ph .bpp-ph-t b{font-size:15px}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .bpp-ph .bpp-ph-t span{font-size:12.5px}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .bpp-ph.late .bpp-ph-t span{color:#0853B5}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .bpp-ph .bpx-rowbtn{all:unset;font-size:14px;font-weight:600;color:#006fff;cursor:pointer;padding:6px 2px}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .bpp-foot{margin:0 !important;padding:0 !important;border-top:.5px solid var(--fl-line)}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .bpp-foot .bpx-rowbtn{all:unset;display:flex;align-items:center;height:44px;font-size:16px;color:#006fff;cursor:pointer}
+  /* work days: a tighter calendar, start and end on one line */
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-days .bpx-iv-grid{display:block !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-cal{border:0 !important;background:none !important;padding:6px 12px 6px 0 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-cal div[style*="repeat(7"]>:not(.bpx-mut){height:36px !important;min-height:36px !important;padding:0 !important;line-height:36px !important;border-radius:50% !important;border:0 !important;font-size:15px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-days .bpx-iv-grid>div:last-child{display:grid !important;grid-template-columns:auto minmax(0,1fr) auto minmax(0,1fr);align-items:center;column-gap:8px;border-top:.5px solid var(--fl-line);padding-right:12px}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-days .bpx-iv-grid>div:last-child label{font-size:15px !important;color:#6b7280 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-days .bpx-iv-grid>div:last-child label:first-of-type::after{content:""}
+}
+@media (max-width:760px){
+  /* small actions as blue words, not boxes */
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app :is(.pp-head,.pp-st-b,.bpp-ph,.bpp-foot) .bpx-rowbtn{background:transparent !important;border:0 !important;box-shadow:none !important;height:auto !important;min-height:0 !important;padding:6px 2px !important;margin:0 !important;border-radius:0 !important;color:#006fff !important;font-size:14.5px !important;font-weight:600 !important;width:auto !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .bpp-foot .bpx-rowbtn{height:44px !important;font-size:16px !important;font-weight:400 !important;display:flex !important;align-items:center}
+  /* the explanations deeper inside a group */
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-days .bpx-iv-grid .bpx-mut:not(#bpx-pj-cal .bpx-mut){display:none !important}
+  /* calendar days: round */
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-cal div[style*="repeat(7"]>:not(.bpx-mut){width:38px !important;height:38px !important;min-height:38px !important;line-height:38px !important;justify-self:center;border-radius:50% !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-cal>div:first-child button{border:0 !important;background:transparent !important;color:#006fff !important;font-size:22px !important}
+  /* start and end: a row each, the time on the right */
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-days .bpx-iv-grid>div:last-child{display:grid !important;grid-template-columns:110px minmax(0,1fr) !important;column-gap:0 !important;padding-right:12px}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-days .bpx-iv-grid>div:last-child label{font-size:16px !important;color:var(--ink,#0b1526) !important;display:flex;align-items:center;height:44px}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-days .bpx-iv-grid>div:last-child input{color:var(--ink,#0b1526) !important;text-align:right !important;padding:0 !important;-webkit-appearance:none;appearance:none}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-days .bpx-iv-grid>div:last-child>label:nth-of-type(2),#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-days .bpx-iv-grid>div:last-child>input:last-of-type{border-top:.5px solid var(--fl-line)}
+  /* payments: the number badge sits with its row's title */
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pp-st>i{grid-row:1 !important;align-self:start;margin-top:2px}
+}
