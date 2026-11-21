@@ -382,7 +382,7 @@
       var body = st.querySelector('.st-body');
       if (body && !body.querySelector('.st-back')) {
         var bk = document.createElement('button'); bk.type = 'button'; bk.className = 'st-back';
-        bk.innerHTML = '<span class="ms">arrow_back</span>All settings';
+        bk.innerHTML = '<span class="ms">chevron_left</span>Settings';
         bk.onclick = function () { st.classList.add('st-menu'); var m = document.querySelector('#bpx .bpx-main'); if (m) m.scrollTop = 0; };
         body.insertBefore(bk, body.firstChild);
       }
@@ -399,7 +399,27 @@
     document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-set-tab]')) { w._user = 1; setTimeout(function () { w._user = 0; }, 0); } }, true);
   }
   M.inboxBack = function () { var ib = document.querySelector('#bpxViewArea .bpx-inbox'); if (ib) ib.classList.remove('bp-thread-open'); };
-  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); settingsHook(); jobsHook(); }, 80); }
+  /* long explanations (3+ lines) read like a website on a phone: show two
+     lines and a "more" to open the rest. Only plain text blocks in the page,
+     never lists, messages, forms, tables or warnings about money. */
+  var CLAMP_SKIP = 'input,textarea,select,table,button,a,label,.bpx-msg,.bpx-cm,.fl-row,.wa-dh,.pjs,.bpx-modal,.tc-msg,.bpx-bubble,.bg-warn,.ctp3,.st-plan-card,[contenteditable]';
+  function clampLong() {
+    if (!M.on()) return;
+    var v = document.getElementById('bpxViewArea'); if (!v) return;
+    Array.prototype.forEach.call(v.querySelectorAll('p,span,div'), function (e) {
+      if (e._bpc || e.closest(CLAMP_SKIP)) return;
+      var own = Array.prototype.some.call(e.childNodes, function (n) { return n.nodeType === 3 && n.textContent.trim().length > 40; });
+      if (!own || (e.textContent || '').length < 110 || e.querySelector('button,input,select,img,svg')) return;
+      var r = e.getBoundingClientRect(); if (!r.height) return;
+      var cs = getComputedStyle(e), lh = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.35;
+      if (r.height / lh < 2.6 || parseFloat(cs.fontSize) > 17) return;
+      e._bpc = 1; e.classList.add('bp-clamp');
+      /* the "more" label fades into whatever is behind the text */
+      for (var a = e; a && a !== document.body; a = a.parentElement) { var bg = getComputedStyle(a).backgroundColor; if (bg && bg !== 'transparent' && !/rgba\([^)]*,\s*0(\.0*)?\)/.test(bg)) { e.style.setProperty('--bp-clamp-bg', bg); break; } }
+      e.addEventListener('click', function () { e.classList.toggle('bp-open'); });
+    });
+  }
+  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); settingsHook(); jobsHook(); clampLong(); }, 80); }
   function watch() {
     var a = $('bpxViewArea'); if (!a || a._bpmw || !window.MutationObserver) return;
     a._bpmw = 1; new MutationObserver(function () { if (M.on()) tidy(); }).observe(a, { childList: true, subtree: true });

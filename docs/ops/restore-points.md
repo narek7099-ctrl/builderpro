@@ -442,3 +442,5 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-21: Before the app clean-up batch 2 (form fields, one brand blue, Customize prices on phones, flat cards, Finances tab actions, tab strip soft edges). main = 0b0710f
 
 - 2026-11-21: Before the app clean-up batch 3 (Lisa publish bar, contact tabs, dialog buttons, link buttons, Lead sources, Supply search). main = c490246
+
+- 2026-11-21: Before the app clean-up batches 4-5 (Settings back bar, Plan and Team lists, 2-line explanations with more, home header, estimate step fixes, subcontractor tiles). main = 1ba7a81
