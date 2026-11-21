@@ -116,6 +116,8 @@
     var tt = top.querySelector('.hl-ttl h1') || top.querySelector('.hl-ttl'); if (tt && M.on() && role() === 'owner' && (v || window._bpCurView) === 'activejobs' && /^Projects$/.test(tt.textContent.trim())) tt.textContent = 'Jobs';
     /* the crew's first tab is Today, so its page says Today too */
     if (tt && M.on() && role() === 'crew' && (v || window._bpCurView) === 'crewdash' && /^Home$/.test(tt.textContent.trim())) tt.textContent = 'Today';
+    /* the bottom tab says Inbox, and "Conversations" does not fit next to the header buttons */
+    if (tt && M.on() && /^Conversations$/.test(tt.textContent.trim())) tt.textContent = 'Inbox';
     var av0 = $('hlAv');
     if (av0 && role() === 'owner' && !av0._m) { av0._m = 1; var po = av0.onclick; av0.onclick = function (e) { if (M.on()) { e.preventDefault(); M.apps(); } else if (po) po.call(av0, e); }; }
     var acts = $('hlTacts');

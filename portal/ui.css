@@ -1,0 +1,185 @@
+/* =====================================================================
+   BuilderPro app UI (2026-11-21)
+   One place for the shared parts every page uses, so a page does not
+   depend on which of the older sheets (glass, theme-hl, site-theme,
+   redesign, flat, mobile, shell) wins. Loaded last. Phones first (#bpx.bp-m),
+   then fixes that apply everywhere.
+
+     1. bottom tab bar      5. empty and error boxes
+     2. section tab strip   6. page spacing
+     3. segmented controls  7. full-screen flows
+     4. buttons             8. page fixes
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   1. Bottom tab bar: five equal slots, an icon over a small label, the
+      open one in blue, the + always in the middle (iOS tab bar).
+   --------------------------------------------------------------------- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m:not(.qs-focus) .bpx-app.on .bp-tabbar{display:grid !important;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:0 !important;align-items:center}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-tabbar .bp-slide{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-tab{flex:none !important;min-width:0;display:flex !important;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:50px;padding:0 !important;margin:0 !important;background:none !important;box-shadow:none !important;border:0 !important;color:#7b8594 !important;font-weight:600}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-tab .bp-tab-i{background:none !important;width:26px;height:26px;display:grid;place-items:center}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-tab .bp-tab-i svg{width:24px;height:24px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-tab .bp-tab-l{max-width:none !important;opacity:1 !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10.5px !important;font-weight:600 !important;line-height:1.1;color:inherit !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-tab.on{color:#006fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-tab.on .bp-tab-i{color:#006fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .bp-tab{color:#8b94a3 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .bp-tab.on,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .bp-tab.on .bp-tab-i{color:#4d9bff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-tab.bp-tab-new{color:#fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-tab.bp-tab-new .bp-tab-l{display:none}
+
+/* ---------------------------------------------------------------------
+   2. Section tab strip under the header: scrolls sideways with a soft
+      edge where more tabs are hidden. No arrow sitting on the labels.
+   --------------------------------------------------------------------- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs .bp-tabmore{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs{padding-left:12px !important;padding-right:12px !important;scroll-padding:0 28px;-webkit-mask-image:none;mask-image:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-more:not(.bp-less){-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-less:not(.bp-more){-webkit-mask-image:linear-gradient(90deg,transparent,#000 44px);mask-image:linear-gradient(90deg,transparent,#000 44px)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-more.bp-less{-webkit-mask-image:linear-gradient(90deg,transparent,#000 44px,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(90deg,transparent,#000 44px,#000 calc(100% - 44px),transparent)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs .hl-tab{flex:0 0 auto !important;white-space:nowrap}
+
+/* ---------------------------------------------------------------------
+   3. Segmented controls inside a page (Day/Week/Month, People/Crews,
+      Overview/Campaigns...): full width, equal parts, never a cut word.
+   --------------------------------------------------------------------- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-jobtabs,.bpt-seg):not(.cal-view){display:flex !important;width:100% !important;max-width:none !important;box-sizing:border-box;gap:2px !important;padding:2px !important;margin:0 0 12px !important;border:0 !important;border-radius:10px !important;background:rgba(118,128,145,.14) !important;box-shadow:none !important;overflow-x:auto;scrollbar-width:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-jobtabs,.bpt-seg)::-webkit-scrollbar{display:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-jobtabs,.bpt-seg):not(.cal-view)>:is(button,a){flex:1 0 auto !important;min-width:0;height:34px !important;min-height:34px !important;padding:0 12px !important;margin:0 !important;border:0 !important;border-radius:8px !important;background:transparent !important;box-shadow:none !important;color:#3b4656 !important;font-size:13.5px !important;font-weight:600 !important;white-space:nowrap;display:flex !important;align-items:center;justify-content:center;gap:5px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-jobtabs,.bpt-seg):not(.cal-view)>:is(button,a):is(.on,[aria-selected="true"]){background:#fff !important;color:#0b1526 !important;box-shadow:0 1px 3px rgba(16,24,40,.14),0 1px 1px rgba(16,24,40,.06) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-jobtabs,.bpt-seg):not(.cal-view){background:rgba(255,255,255,.08) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-jobtabs,.bpt-seg):not(.cal-view)>:is(button,a){color:#aab3c2 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-jobtabs,.bpt-seg):not(.cal-view)>:is(button,a):is(.on,[aria-selected="true"]){background:#2a303b !important;color:#fff !important}
+/* calendar's Day/Week/Month: even inner padding */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .cal-view{padding:2px !important;gap:2px !important}
+
+/* ---------------------------------------------------------------------
+   4. Buttons. Three kinds, one shape:
+        main action  (the one "add / new / done" per screen)  mint, flat
+        button       (everything else that acts)               blue, flat
+        secondary    (Refresh, Preview, Scheduled...)          white
+      44px tall, 12px corners, centred label, no glow or gradient.
+   --------------------------------------------------------------------- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-btn,.bpx-addbtn,.bp-cta,.bpx-donebtn):not(.bpx-linkbtn):not(.pjs-act){min-height:44px !important;border-radius:12px !important;align-items:center !important;justify-content:center !important;gap:6px;text-align:center;font-size:15px !important;font-weight:600 !important;line-height:1.2 !important;white-space:nowrap;background-image:none !important;transform:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bp-cta,.bpx-addbtn,.bpx-donebtn,[data-fin="estimates"] .fin-new-est){background:#16c79a !important;color:#001530 !important;border:0 !important;box-shadow:0 1px 2px rgba(0,60,40,.18) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bp-cta,.bpx-addbtn,.bpx-donebtn,[data-fin="estimates"] .fin-new-est):active{background:#12b38a !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-btn:not(.ghost):not(.bpx-delbtn):not(.danger):not(.bp-cta):not(.bpx-addbtn):not(.fin-new-est){background:#006fff !important;color:#fff !important;border:0 !important;box-shadow:0 1px 2px rgba(0,40,120,.2) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-btn.ghost,.fin-new-est):not([data-fin="estimates"] *){background:var(--fl-2,#fff) !important;color:var(--ink,#0b1526) !important;border:0 !important;box-shadow:0 0 0 .5px rgba(16,24,40,.1),0 1px 2px rgba(16,24,40,.08) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-btn.ghost,.fin-new-est):not([data-fin="estimates"] *){background:#23272f !important;color:#e5e7eb !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-btn,.bpx-addbtn,.bp-cta) :is(.ms,svg){color:currentColor !important;font-size:19px !important}
+/* a row of header actions: equal widths across the row */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-finrow-btns,.eq-acts){display:flex !important;width:100%;gap:10px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-finrow-btns,.eq-acts)>:is(button,a):not([hidden]){flex:1 1 0 !important;min-width:0;padding:0 10px !important}
+
+/* ---------------------------------------------------------------------
+   5. Empty and error boxes: one look. A soft card, centred grey line, no
+      dashed outline (dashes read as "drop a file here").
+   --------------------------------------------------------------------- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-tempty,.pjk-empty,.bpx-empty2,.sp-items-none,.ml-empty-box){border:0 !important;border-radius:14px !important;background:var(--fl-1,#f7f9fc) !important;box-shadow:0 0 0 .5px rgba(16,24,40,.06) !important;padding:28px 20px !important;text-align:center !important;color:#6b7280 !important;font-size:14px !important;line-height:1.45}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .sp-firstrun{border-style:solid !important;border-color:transparent !important}
+/* errors: one banner, message on the left, Retry on the right */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.sp-note.bad,.bpx-pay-band.warn){display:flex !important;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px !important;border:0 !important;border-radius:12px !important;background:#fff4ed !important;color:#7a2e0e !important;font-size:14px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.sp-note.bad,.bpx-pay-band.warn) :is(button,a){flex:0 0 auto;margin-left:auto !important;text-decoration:none !important;font-weight:600 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.sp-note.bad,.bpx-pay-band.warn){background:#2a1d17 !important;color:#ffc9a8 !important}
+
+/* ---------------------------------------------------------------------
+   6. Page spacing: content clears the floating tab bar.
+   --------------------------------------------------------------------- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea{padding-bottom:calc(112px + env(safe-area-inset-bottom)) !important}
+
+/* ---------------------------------------------------------------------
+   7. Full-screen flows (new estimate, new invoice): their own footer bar
+      replaces the tab bar, so nothing peeks through.
+   --------------------------------------------------------------------- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.qs-focus .bpx-app.on .bp-tabbar{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.qs-focus .qs-steps{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent);padding-right:40px !important}
+
+/* ---------------------------------------------------------------------
+   8. Page fixes
+   --------------------------------------------------------------------- */
+/* Settings: the business tile shows a real-size icon; every row the same */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-id .st-logo .ms{font-size:24px !important;width:24px;height:24px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-id>div:last-child>span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-nav .ms{font-size:22px !important;width:24px !important;text-align:center}
+
+/* dark mode: boxes that kept their light background behind light text */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark :is(.bpx-a2p,.ls-bar-go,.sp-firstrun){background:#15233a !important;border-color:transparent !important;color:#dbe7ff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark :is(.bpx-a2p,.ls-bar-go,.sp-firstrun) :is(b,span,p,small){color:inherit !important}
+
+/* Inbox: Scheduled / Send to many / New text as one even row; the page
+   heading that repeats the tab goes */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-msgbar{display:block !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-msgbar>:not(.bpx-msgbar-btns){display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-msgbar-btns{display:grid !important;grid-template-columns:1fr 1fr 1.15fr;gap:8px !important;width:100%;margin:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-msgbar-btns>button{min-width:0 !important;height:44px !important;padding:0 8px !important;justify-content:center !important;font-size:14px !important;border-radius:12px !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-msgbar-btns>.bpx-ghostbtn{background:var(--fl-2,#fff) !important;color:var(--ink,#0b1526) !important;border:0 !important;box-shadow:0 0 0 .5px rgba(16,24,40,.1),0 1px 2px rgba(16,24,40,.08) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-msgbar-btns>.bpx-ghostbtn .ms{display:none !important}
+
+/* Marketing pages (Ads, Social, Competitors): Refresh + the main action, even */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead>div:has(>.bpx-btn.ghost+:is(.bpx-addbtn,.bpx-btn,.bp-cta)){display:grid !important;grid-template-columns:auto 1fr;gap:10px !important;width:100%}
+
+/* Calendar month on a phone: a dot per booking (the names did not fit) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpx-calgrid .bpx-day{display:flex !important;flex-wrap:wrap;align-content:flex-start;gap:3px;border-top-color:var(--fl-line,#e3e8ef) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpx-calgrid .bpx-day>.bpx-daynum{flex:0 0 100%}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpx-calgrid .bpx-day>:not(.bpx-daynum){font-size:0 !important;line-height:0 !important;width:7px !important;height:7px !important;min-height:0 !important;flex:0 0 7px;padding:0 !important;margin:0 !important;border:0 !important;border-radius:50% !important;background:#006fff !important;box-shadow:none !important;overflow:hidden;color:transparent !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpx-calgrid .bpx-day>:not(.bpx-daynum) *{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpx-calgrid .bpx-day>.bpx-mut{display:none !important}
+
+/* Contacts: the button lines up with the search box; rows get room and real-size call / text icons */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead-r{width:100%;margin:0 !important;padding:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead-r>.bpx-addbtn{width:100% !important;margin:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-cm{padding:10px 14px !important;gap:12px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-cm-b{width:40px !important;height:40px !important;border-radius:50% !important;background:rgba(0,111,255,.1) !important;box-shadow:none !important;border:0 !important;display:grid !important;place-items:center;color:#006fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-cm-b .ms,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-cm-b svg{font-size:20px !important;width:20px !important;height:20px !important;color:#006fff !important}
+
+/* Website steps: brand blue numbers; the address box gets the full width, the button under it */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .ws-sn{background:#006fff !important;color:#fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .ws-step:not(:first-child) .ws-sn{background:rgba(118,128,145,.18) !important;color:#475467 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .ws-dom{display:grid !important;grid-template-columns:1fr;gap:8px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .ws-dom>*{width:100% !important}
+
+/* Automations on a phone: a plain list, no row stuck looking selected */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .wa-wf.on{background:transparent !important;box-shadow:none !important}
+
+/* Jobs: "1–3 of 3" under a one-page list says nothing */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjl-ft:not(:has(button:not([disabled]))){display:none !important}
+
+/* page headings that only repeat the tab right above them */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .eq-head h2{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead-r{flex:1 1 100% !important}
+/* an empty message inside a card is just a line in that card, not a second box */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-panel,.bpx-convlist) :is(.bpx-tempty,.pjk-empty,.bpx-empty2){background:transparent !important;box-shadow:none !important;padding:22px 8px !important}
+/* calendar: today is the blue circle, not a circle plus a line */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpx-calgrid .bpx-day.today{box-shadow:none !important;border-top:1px solid var(--fl-line,#e3e8ef) !important;background:transparent !important}
+/* Settings on a phone is a menu: no row looks "selected" */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st.st-menu .st-nav{background:none !important;box-shadow:none !important;color:var(--ink,#0b1526) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st.st-menu .st-nav::before{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st.st-menu .st-nav .ms{color:#006fff !important}
+
+/* Equipment and Subcontractors with nothing yet: the empty card has the
+   button, so the same button above it goes; its text stays short */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea:has(.eq-empty:not(.sm)) .eq-acts{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .eq-head :is(p,.bpx-mut){display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea:has(.ca-empty) .sb-top>.bpx-btn{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.eq-empty,.ca-empty,.pjs-empty) p{display:-webkit-box !important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:300px;margin-left:auto !important;margin-right:auto !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.eq-empty,.ca-empty)>:is(button,.bpx-btn,.bpx-addbtn){margin-top:14px !important}
+
+/* Automations had no dark mode at all (dark text on the dark page) */
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .wa{color:#e5e7eb}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .wa :is(.wa-wf,.wa-nm,.wa-fn,.wa-fold,.wa-dh,.wa-dh *,.wa-node,.wa-node *,.wa-tcard,.wa-tcard *,.wa-up,.wa-storm,.wa-storm *,.wa-lockhd,.wa-note,.wa-note *){color:#e5e7eb}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .wa :is(small,.bpx-mut,.wa-sub,.wa-lock .wa-fn){color:#98a2b3}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .wa :is(.wa-list,.wa-dh,.wa-node,.wa-tcard,.wa-plans,.wa-storm){background:#15181e !important;border-color:rgba(255,255,255,.08) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .wa :is(.wa-pill,.wa-plus,.wa-bl){background:#23272f !important;border-color:rgba(255,255,255,.12) !important;color:#cbd5e1 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .wa :is(.wa-note,.wa-note.warn,.wa-up,.wa-pill.chg,.wa-dot.chg,.wa-warn,.wa-ti,.wa-chip){background:#15233a !important;color:#cfe0ff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .wa .wa-note.soft{background:#1b1f27 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .wa :is(.wa-wf:hover,.wa-wf.on){background:rgba(255,255,255,.06) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .wa .wa-lockhd{border-top-color:rgba(255,255,255,.08)}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .wa .wa-plans button.on{background:#006fff;color:#fff}
+/* estimate / invoice totals table in dark mode */
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .qx-st td{color:#cbd5e1 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .qx-st tr.sub td,#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .qx-st tr.tot td{color:#f1f5f9 !important}
+/* Suppliers: the main add button first and full width, the two helpers side by side under it */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead>div:has(>.sp-inline){display:grid !important;grid-template-columns:1fr 1fr;gap:10px !important;width:100%}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead>div:has(>.sp-inline)>.bpx-addbtn{order:-1;grid-column:1/-1;width:100% !important;margin:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead>div:has(>.sp-inline)>.sp-inline:only-of-type{grid-column:1/-1}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead>div:has(>.sp-inline)>*{min-width:0;padding:0 8px !important;font-size:14px !important}

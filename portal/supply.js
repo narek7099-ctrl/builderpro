@@ -318,8 +318,8 @@
       + '<span class="lg2">' + (SP.sup.length ? SP.sup.length + (SP.sup.length === 1 ? ' supply house' : ' supply houses') : 'nothing added yet') + '</span></div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
       + (SP.sup.length ? '' : '<button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Add sample suppliers</button>')
-      + '<button class="bpx-btn ghost sp-inline" onclick="SP.dirOpen ? SP.dirOpen() : SP.supOpen()">+ Add supplier</button>'
-      + '<button class="bpx-addbtn" onclick="SP.supOpen()">+ Add one by hand</button></div></div>';
+      + '<button class="bpx-btn ghost sp-inline" onclick="SP.dirOpen ? SP.dirOpen() : SP.supOpen()">Find a supplier</button>'
+      + '<button class="bpx-addbtn" onclick="SP.supOpen()">+ Add supplier</button></div></div>';
 
     if (!SP.sup.length) h += firstRun();
     else h += '<div class="sp-grid">' + SP.sup.map(supCard).join('') + '</div>';
