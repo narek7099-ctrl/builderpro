@@ -377,3 +377,32 @@
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bp-stickbot{z-index:6;background:rgba(247,249,252,.94) !important;-webkit-backdrop-filter:saturate(1.8) blur(16px);backdrop-filter:saturate(1.8) blur(16px);box-shadow:0 0 0 .5px rgba(16,24,40,.08),0 6px 18px -8px rgba(16,24,40,.25) !important;padding:10px 12px !important;display:flex !important;gap:10px}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bp-stickbot>button{flex:1 1 0}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea .bp-stickbot{background:rgba(21,24,30,.94) !important}
+
+/* AI Team on a phone: the org chart (portal/aiteam.js draws it) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .aim-map{height:720px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .aim-bar{left:12px !important;right:12px !important;top:12px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .aim-q{min-height:44px;border:1px solid rgba(16,24,40,.12) !important;border-radius:12px !important;background:var(--fl-2,#fff) !important;box-shadow:none !important;padding:0 12px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .aim-q input{border:0 !important;background:transparent !important;box-shadow:none !important;min-height:42px !important;padding:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .aim-q .ms{font-size:20px !important}
+/* names sit on a clean backing so a line never runs through them */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #aimSvg .aim-n text:not([style*="fill:#fff"]){paint-order:stroke;stroke:var(--fl-1,#f7f9fc);stroke-width:5px;stroke-linejoin:round}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #aimSvg .aim-n text:not([style*="fill:#fff"]){stroke:#15181e}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #aimSvg .aim-n circle.b{fill:var(--fl-2,#fff);stroke-width:2.5}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #aimSvg .aim-n circle.b{fill:#23272f}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #aimSvg .aim-ceo>circle:nth-child(2){filter:drop-shadow(0 6px 12px rgba(0,80,200,.28))}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #aimSvg .aim-n foreignObject{overflow:visible}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #aimSvg .aim-n foreignObject>.ms{font-size:26px !important;line-height:21px !important;width:100%}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #aimSvg .aim-ceo foreignObject>.ms{font-size:38px !important;line-height:32px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #aimSvg .aim-n text:not([style*="fill:#fff"]){fill:#e5e7eb !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .aim-bar>span[style*="flex:1"]{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .aim-bar>.aim-q{flex:1 1 100% !important;width:100%}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #aimSvg .aim-n[data-go] foreignObject>.ms{font-size:21px !important;line-height:15px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .aim-bar .aim-btn{min-height:40px;min-width:40px;justify-content:center;border-radius:12px !important;font-size:14px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .aim-bar .aim-btn .ms{font-size:20px !important}
+/* AI Team on a computer too: names on a clean backing, icons that fill their circles */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bp-m) #aimSvg .aim-n text:not([style*="fill:#fff"]){paint-order:stroke;stroke:var(--card,#fff);stroke-width:5px;stroke-linejoin:round}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bp-m) #aimSvg .aim-n foreignObject{overflow:visible}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bp-m) #aimSvg .aim-n foreignObject>.ms{font-size:24px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bp-m) #aimSvg .aim-ceo foreignObject>.ms{font-size:40px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bp-m) #aimSvg .aim-ceo>circle:nth-child(2){filter:drop-shadow(0 8px 16px rgba(0,80,200,.28))}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark:not(.bp-m) #aimSvg .aim-n text:not([style*="fill:#fff"]){stroke:var(--card,#15181e)}

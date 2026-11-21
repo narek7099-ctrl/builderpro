@@ -446,3 +446,5 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-21: Before the app clean-up batches 4-5 (Settings back bar, Plan and Team lists, 2-line explanations with more, home header, estimate step fixes, subcontractor tiles). main = 1ba7a81
 
 - 2026-11-21: Before the app clean-up round 6 (iPhone switches, careful 4-line "More", tab strip edges painted on top, card stacks as lists, Save bar above the tab bar, routes and employees fixes). main = 64eed94
+
+- 2026-11-21: Before the AI Team clean-up (phone org chart, solid blue AI CEO, bigger icons, names on a backing, one search box). main = 07d9daf
