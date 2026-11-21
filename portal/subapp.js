@@ -133,7 +133,7 @@
       var tot = js.reduce(function (t, j) { t.c += contract(j); t.p += +j.paid || 0; t.o += owedNow(j); return t; }, { c: 0, p: 0, o: 0 });
       area().innerHTML = '<div class="ca-wrap sa">' + compBanner()
         + '<div class="sa-hello"><div><small>' + esc(b.name || 'Your contractor') + '</small><h2>' + esc(sub().company || 'Your jobs') + '</h2></div>'
-        + '<div class="sa-kpis"><div><small>Contract value</small><b>' + money0(tot.c) + '</b></div><div><small>Paid</small><b>' + money0(tot.p) + '</b></div><div><small>Approved, unpaid</small><b>' + money0(tot.o) + '</b></div></div></div>'
+        + '<div class="sa-kpis"><div><small>Contract value</small><b>' + money0(tot.c) + '</b></div><div><small>Paid</small><b>' + money0(tot.p) + '</b></div><div><small>Owed to you</small><b>' + money0(tot.o) + '</b></div></div></div>'
         + (js.length ? '<div class="sa-jobs">' + js.map(function (j) {
             var pct = contract(j) > 0 ? Math.min(100, Math.round((+j.paid || 0) / contract(j) * 100)) : 0;
             return '<button class="bpx-panel sa-job" onclick="bpSubJob(\'' + esc(j.id) + '\')">'

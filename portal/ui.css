@@ -256,3 +256,50 @@
 /* dialogs on a phone: the confirm button is flat like the rest (no glow) */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-modal :is(.bpx-btn,.bpx-addbtn,.bp-cta){background-image:none !important;min-height:44px;border-radius:12px !important;font-size:15px !important;font-weight:600 !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-modal .row>.bpx-btn:last-child:not(.ghost):not(.danger){background:#16c79a !important;color:#001530 !important;border:0 !important;box-shadow:0 1px 2px rgba(0,60,40,.18) !important}
+
+/* =====================================================================
+   Batch 4 (2026-11-21)
+   ===================================================================== */
+/* Home header: the business name gets two lines instead of "Enterprise Roo…" */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-macct-t small{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-macct-t b{white-space:normal !important;display:-webkit-box !important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:15.5px !important;line-height:1.2 !important}
+/* Home quick buttons: real-size icons */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh3-q .ms,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh3-q svg{font-size:24px !important;width:24px !important;height:24px !important}
+
+/* Settings sections: an iPhone back bar ("‹ Settings") that stays at the top */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-back{position:sticky;top:0;z-index:5;display:flex !important;align-items:center;gap:0;width:calc(100% + 24px);margin:-12px -12px 6px !important;padding:0 8px !important;height:44px;border:0 !important;border-radius:0 !important;background:var(--fl-0,#e3e8ef) !important;box-shadow:0 .5px 0 rgba(16,24,40,.08) !important;color:#006fff !important;font-size:17px !important;font-weight:500 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-back .ms{font-size:30px !important;width:28px;margin-right:-2px;color:#006fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .st-back{background:#08090c !important;box-shadow:0 .5px 0 rgba(255,255,255,.08) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-body .st-sec>h2,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-body .st-h{font-size:28px !important;font-weight:700 !important;letter-spacing:-.02em;margin-top:4px !important}
+/* the Settings list: no big gap under the business header */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st.st-menu .st-rail{gap:14px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st.st-menu .st-navs{margin-top:0 !important}
+/* Team: the two roles as rows in the card, not boxes inside it */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .tm-roles{display:block !important;margin:0 0 6px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .tm-roles>div{border:0 !important;box-shadow:none !important;background:none !important;border-radius:0 !important;padding:10px 0 !important;border-bottom:.5px solid var(--fl-line,rgba(16,24,40,.1)) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .tm-roles>div:last-child{border-bottom:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .tm-empty>span:last-child{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* Plan & billing: one grouped list, the action on the right of each row */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-plan-row{display:block !important;background:var(--fl-1,#f7f9fc);border-radius:14px;box-shadow:0 0 0 .5px rgba(16,24,40,.06);padding:0 14px !important;margin:0 0 18px !important;gap:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-plan-card{display:grid !important;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:12px;row-gap:2px;padding:12px 0 !important;margin:0 !important;border:0 !important;border-bottom:.5px solid var(--fl-line,rgba(16,24,40,.1)) !important;border-radius:0 !important;background:none !important;box-shadow:none !important;min-height:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-plan-card:last-child{border-bottom:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-plan-card>.st-plan-ic{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-plan-card>b{grid-column:1;font-size:16px !important;margin:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-plan-card>p{grid-column:1;margin:0 !important;font-size:13px !important;color:#6b7280 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-plan-card>:is(button,a,.bpx-badge){grid-column:2;grid-row:1/span 2;align-self:center;margin:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-plan-card>:is(button,a).bpx-rowbtn{min-height:36px !important;height:36px !important;padding:0 14px !important;border-radius:18px !important;background:rgba(0,111,255,.1) !important;color:#006fff !important;border:0 !important;box-shadow:none !important;font-size:14px !important;font-weight:600 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-plan-card>.st-danger{background:rgba(220,38,38,.08) !important;color:#c81e1e !important}
+/* long explanations on a phone: two lines, tap for the rest (portal/mobile.js clampLong) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-clamp:not(.bp-open){display:-webkit-box !important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;position:relative;cursor:pointer}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-clamp:not(.bp-open)::after{content:"more";position:absolute;right:0;bottom:0;padding-left:28px;background:linear-gradient(90deg,transparent,var(--bp-clamp-bg,var(--fl-1,#f7f9fc)) 24px);color:#006fff;font-weight:600}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea>.bp-clamp,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea>*>.bp-clamp:not(.bpx-panel *){--bp-clamp-bg:var(--fl-0,#e3e8ef)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .bp-clamp{--bp-clamp-bg:#15181e}
+/* subcontractor home: the three money tiles stay even */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .sa-kpis small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .sa-kpis b{font-size:clamp(17px,5.2vw,22px) !important;white-space:nowrap}
+/* estimate steps: a number box with its unit (%) is one box, the field inside has no second border */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .qx-in{min-height:44px;align-items:center;border-radius:10px !important;background:var(--fl-2,#fff) !important;padding-right:10px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .qx-in input{border:0 !important;background:transparent !important;box-shadow:none !important;min-height:42px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .qx-in i{font-style:normal;color:#6b7280}
+/* step chips: soft edges both sides, so a chip half off screen fades instead of being chopped */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.qs-focus .qs-steps{-webkit-mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 40px),transparent) !important;mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 40px),transparent) !important;padding-left:16px !important;scroll-padding:0 40px}
