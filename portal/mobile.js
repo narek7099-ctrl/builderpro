@@ -399,27 +399,41 @@
     document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-set-tab]')) { w._user = 1; setTimeout(function () { w._user = 0; }, 0); } }, true);
   }
   M.inboxBack = function () { var ib = document.querySelector('#bpxViewArea .bpx-inbox'); if (ib) ib.classList.remove('bp-thread-open'); };
-  /* long explanations (3+ lines) read like a website on a phone: show two
-     lines and a "more" to open the rest. Only plain text blocks in the page,
-     never lists, messages, forms, tables or warnings about money. */
-  var CLAMP_SKIP = 'input,textarea,select,table,button,a,label,.bpx-msg,.bpx-cm,.fl-row,.wa-dh,.pjs,.bpx-modal,.tc-msg,.bpx-bubble,.bg-warn,.ctp3,.st-plan-card,[contenteditable]';
+  /* long explanations (4+ lines) read like a website on a phone: show two
+     lines and a "more" under them to open the rest. Only plain paragraphs in
+     the page (text and inline words, no boxes, nothing centred); never lists,
+     messages, forms, tables, notices or warnings about money. */
+  var CLAMP_SKIP = 'input,textarea,select,table,button,a,label,summary,.bpx-msg,.bpx-cm,.fl-row,.wa-dh,.pjs,.bpx-modal,.tc-msg,.bpx-bubble,.bg-warn,.ctp3,.st-plan-card,[contenteditable],[class*=empty],[class*=note],[class*=warn],[class*=band]';
+  var INLINE = /^(B|I|EM|STRONG|SPAN|A|SMALL|CODE)$/;
   function clampLong() {
     if (!M.on()) return;
     var v = document.getElementById('bpxViewArea'); if (!v) return;
     Array.prototype.forEach.call(v.querySelectorAll('p,span,div'), function (e) {
       if (e._bpc || e.closest(CLAMP_SKIP)) return;
       var own = Array.prototype.some.call(e.childNodes, function (n) { return n.nodeType === 3 && n.textContent.trim().length > 40; });
-      if (!own || (e.textContent || '').length < 110 || e.querySelector('button,input,select,img,svg')) return;
+      if (!own || (e.textContent || '').length < 160) return;
+      if (Array.prototype.some.call(e.children, function (c) { return !INLINE.test(c.tagName) || c.querySelector('button,input,select,img,svg,br'); })) return;
       var r = e.getBoundingClientRect(); if (!r.height) return;
       var cs = getComputedStyle(e), lh = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.35;
-      if (r.height / lh < 2.6 || parseFloat(cs.fontSize) > 17) return;
+      if (cs.textAlign === 'center' || parseFloat(cs.fontSize) > 17) return;
+      if (parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) > 2 || parseFloat(cs.borderTopWidth) > 0 || !/rgba\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor)) return;
+      if (r.height / lh < 3.6) return;
       e._bpc = 1; e.classList.add('bp-clamp');
-      /* the "more" label fades into whatever is behind the text */
-      for (var a = e; a && a !== document.body; a = a.parentElement) { var bg = getComputedStyle(a).backgroundColor; if (bg && bg !== 'transparent' && !/rgba\([^)]*,\s*0(\.0*)?\)/.test(bg)) { e.style.setProperty('--bp-clamp-bg', bg); break; } }
-      e.addEventListener('click', function () { e.classList.toggle('bp-open'); });
+      var more = document.createElement('button'); more.type = 'button'; more.className = 'bp-more'; more.textContent = 'More';
+      more.onclick = function (ev) { ev.stopPropagation(); var open = e.classList.toggle('bp-open'); more.textContent = open ? 'Less' : 'More'; };
+      e.parentNode.insertBefore(more, e.nextSibling);
     });
   }
-  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); settingsHook(); jobsHook(); clampLong(); }, 80); }
+  /* bars that stick to the bottom of a page go above the tab bar */
+  function stickBottom() {
+    if (!M.on()) return;
+    var v = document.getElementById('bpxViewArea'); if (!v) return;
+    Array.prototype.forEach.call(v.querySelectorAll('[class*=foot],[class*=bar],[class*=save]'), function (e) {
+      if (e._bpsb) return; var cs = getComputedStyle(e);
+      if (cs.position === 'sticky' && cs.bottom !== 'auto') { e._bpsb = 1; e.classList.add('bp-stickbot'); }
+    });
+  }
+  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); settingsHook(); jobsHook(); clampLong(); stickBottom(); }, 80); }
   function watch() {
     var a = $('bpxViewArea'); if (!a || a._bpmw || !window.MutationObserver) return;
     a._bpmw = 1; new MutationObserver(function () { if (M.on()) tidy(); }).observe(a, { childList: true, subtree: true });

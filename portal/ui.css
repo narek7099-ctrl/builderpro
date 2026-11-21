@@ -34,10 +34,14 @@
    --------------------------------------------------------------------- */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs .bp-tabmore{display:none !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs{padding-left:12px !important;padding-right:12px !important;scroll-padding:0 28px;-webkit-mask-image:none !important;mask-image:none !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-more:not(.bp-less){-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent) !important;mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent) !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-less:not(.bp-more){-webkit-mask-image:linear-gradient(90deg,transparent,#000 44px) !important;mask-image:linear-gradient(90deg,transparent,#000 44px) !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-more.bp-less{-webkit-mask-image:linear-gradient(90deg,transparent,#000 44px,#000 calc(100% - 44px),transparent) !important;mask-image:linear-gradient(90deg,transparent,#000 44px,#000 calc(100% - 44px),transparent) !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs .hl-tab{flex:0 0 auto !important;white-space:nowrap}
+/* the soft edges are painted on top of the strip (a mask also faded the strip's own background, so the page showed through) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs{-webkit-mask-image:none !important;mask-image:none !important;--tabfade:rgba(255,255,255,.96)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .hl-tabs{--tabfade:rgb(30,33,40)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs::before,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs::after{content:"";position:sticky;z-index:2;flex:0 0 36px;align-self:stretch;pointer-events:none;opacity:0;transition:opacity .2s}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs::before{left:-12px;order:-1;margin:0 -36px 0 -12px;background:linear-gradient(90deg,var(--tabfade),transparent)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs::after{right:-12px;order:99;margin:0 -12px 0 -36px;background:linear-gradient(270deg,var(--tabfade),transparent)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-less::before,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-more::after{opacity:1}
 
 /* ---------------------------------------------------------------------
    3. Segmented controls inside a page (Day/Week/Month, People/Crews,
@@ -289,11 +293,10 @@
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-plan-card>:is(button,a,.bpx-badge){grid-column:2;grid-row:1/span 2;align-self:center;margin:0 !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-plan-card>:is(button,a).bpx-rowbtn{min-height:36px !important;height:36px !important;padding:0 14px !important;border-radius:18px !important;background:rgba(0,111,255,.1) !important;color:#006fff !important;border:0 !important;box-shadow:none !important;font-size:14px !important;font-weight:600 !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-plan-card>.st-danger{background:rgba(220,38,38,.08) !important;color:#c81e1e !important}
-/* long explanations on a phone: two lines, tap for the rest (portal/mobile.js clampLong) */
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-clamp:not(.bp-open){display:-webkit-box !important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;position:relative;cursor:pointer}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-clamp:not(.bp-open)::after{content:"more";position:absolute;right:0;bottom:0;padding-left:28px;background:linear-gradient(90deg,transparent,var(--bp-clamp-bg,var(--fl-1,#f7f9fc)) 24px);color:#006fff;font-weight:600}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea>.bp-clamp,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea>*>.bp-clamp:not(.bpx-panel *){--bp-clamp-bg:var(--fl-0,#e3e8ef)}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .bp-clamp{--bp-clamp-bg:#15181e}
+/* long explanations on a phone: two lines with "More" under them (portal/mobile.js clampLong) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-clamp:not(.bp-open){display:-webkit-box !important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m button.bp-more{all:unset;display:block;margin:2px 0 6px;color:#006fff;font-size:14px;font-weight:600;cursor:pointer;min-height:28px;line-height:28px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark button.bp-more{color:#4d9bff}
 /* subcontractor home: the three money tiles stay even */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .sa-kpis small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .sa-kpis b{font-size:clamp(17px,5.2vw,22px) !important;white-space:nowrap}
@@ -303,3 +306,74 @@
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .qx-in i{font-style:normal;color:#6b7280}
 /* step chips: soft edges both sides, so a chip half off screen fades instead of being chopped */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.qs-focus .qs-steps{-webkit-mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 40px),transparent) !important;mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 40px),transparent) !important;padding-left:16px !important;scroll-padding:0 40px}
+
+/* =====================================================================
+   Round 6 (2026-11-21)
+   ===================================================================== */
+/* on/off choices as iPhone switches (open hours per day, "text them now", calculator options) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m :is(.bpx-hrs-ck,.bpx-chk>input[type=checkbox],.cz-check>input[type=checkbox]){-webkit-appearance:none !important;appearance:none !important;flex:none;width:51px !important;height:31px !important;min-height:0 !important;margin:0 !important;padding:0 !important;border:0 !important;border-radius:999px !important;cursor:pointer;background:#dfe3ea radial-gradient(circle at 15.5px 50%,#fff 12.5px,rgba(16,24,40,.12) 13px,transparent 14px) no-repeat !important;box-shadow:none !important;transition:background-color .2s,background-position .2s;outline:0}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m :is(.bpx-hrs-ck,.bpx-chk>input[type=checkbox],.cz-check>input[type=checkbox]):checked{background:#006fff radial-gradient(circle at 35.5px 50%,#fff 12.5px,rgba(0,40,120,.15) 13px,transparent 14px) no-repeat !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark :is(.bpx-hrs-ck,.bpx-chk>input[type=checkbox],.cz-check>input[type=checkbox]):not(:checked){background-color:#3a3f4a !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-chk{display:flex !important;align-items:center;gap:12px}
+
+/* bars stuck to the bottom of a page (Customize's Save) sit above the tab bar, not behind it (portal/mobile.js marks them) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bp-stickbot{bottom:calc(86px + env(safe-area-inset-bottom)) !important;border-radius:14px !important}
+/* Income / Expenses lists: amounts end on the same edge as the month totals (the empty delete slot goes) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .fl-row:has(>.fl-del-x:empty){grid-template-columns:32px minmax(0,1fr) auto !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .fl-row>.fl-del-x:empty{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .fl-a{font-variant-numeric:tabular-nums;text-align:right}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .fl-t small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .fl-ic .ms{font-size:18px !important}
+/* contacts: the stage tag and the date never run together */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-cm-t>span{display:flex !important;align-items:center;gap:8px;min-width:0}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-cm-t>span>.bpx-cstage{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-cm-t>span>i{flex:none;font-style:normal}
+/* "See the numbers" and other fold-outs: a full-width row you can hit */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea details:not(.cz-sec):not(.pjk-fold)>summary{min-height:44px;display:flex !important;align-items:center;gap:6px;font-size:15px !important;font-weight:600;color:#006fff !important;cursor:pointer}
+/* Customize colors: a round swatch; "not set" shows a slash instead of a blank white box */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .cz-color input[type=color]{-webkit-appearance:none;appearance:none;width:40px !important;height:40px !important;min-height:0 !important;padding:0 !important;border:1px solid rgba(16,24,40,.14) !important;border-radius:50% !important;overflow:hidden;flex:none;cursor:pointer;background:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .cz-color input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .cz-color input[type=color]::-webkit-color-swatch{border:0;border-radius:50%}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .cz-color input[type=color][data-empty="1"]::-webkit-color-swatch{background:linear-gradient(135deg,#fff 46%,#b8c0cc 46%,#b8c0cc 54%,#fff 54%) !important}
+/* a disabled button still reads */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m :is(#bpxViewArea,.bpx-modal) :is(button,.bpx-btn):disabled{background:#e9edf2 !important;color:#8a94a3 !important;box-shadow:none !important;opacity:1 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark :is(#bpxViewArea,.bpx-modal) :is(button,.bpx-btn):disabled{background:#23272f !important;color:#6b7280 !important}
+/* notes: no resize grip on a phone */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m textarea{resize:none !important}
+/* dark: the Business number explainer box and the contact tabs */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .ph-why{background:#15233a !important;color:#dbe7ff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .ph-why *{color:inherit !important}
+
+/* lists that were a stack of separate cards: one list with thin lines between rows */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m :is(.sp-aisles,.sp-chains){display:block !important;background:var(--fl-2,#fff);border-radius:14px;box-shadow:0 0 0 .5px rgba(16,24,40,.08);overflow:hidden;gap:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m :is(.sp-aisle,.sp-chain){width:100% !important;margin:0 !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;background:transparent !important;border-bottom:.5px solid var(--fl-line,rgba(16,24,40,.1)) !important;min-height:56px;padding:10px 14px !important;text-align:left}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m :is(.sp-aisle,.sp-chain):last-child{border-bottom:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .sp-chain :is(img,.sp-chain-logo,.sp-logo){width:40px !important;height:40px !important;flex:0 0 40px !important;object-fit:contain;border-radius:10px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m :is(.sp-aisle-txt,.sp-chain-t) small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;font-size:13px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark :is(.sp-aisles,.sp-chains){background:#15181e}
+/* Customize: the sections as one list */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .cz-left>div:has(>details.cz-sec){background:var(--fl-2,#fff);border-radius:14px;box-shadow:0 0 0 .5px rgba(16,24,40,.08);overflow:hidden;display:block !important;gap:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .cz-left>div>details.cz-sec{margin:0 !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;background:transparent !important;border-bottom:.5px solid var(--fl-line,rgba(16,24,40,.1)) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .cz-left>div>details.cz-sec:last-of-type{border-bottom:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m details.cz-sec>summary{display:flex !important;align-items:center;min-height:50px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m details.cz-sec>summary>.ms{margin-left:auto !important;font-size:22px !important;color:#98a2b3 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .cz-left>div:has(>details.cz-sec){background:#15181e}
+/* Jobs: one list of jobs, not cards inside a card */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjl>.mj{margin:0 !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;background:transparent !important;border-bottom:.5px solid var(--fl-line,rgba(16,24,40,.1)) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjl>.mj:last-of-type{border-bottom:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjl{overflow:hidden;gap:0 !important;padding:0 !important}
+/* row "…" menus: a full 44px target */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-rowkeb{width:44px !important;height:44px !important;min-height:44px !important;display:grid !important;place-items:center;border-radius:22px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-rowkeb svg{width:22px !important;height:22px !important}
+/* Driving routes: the panel grows with its content (it cut off "Plan the day"); stops are round picks with a real-size button */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pj-route{max-height:none !important;height:auto !important;overflow:visible !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pj-stop{border:0 !important;border-radius:0 !important;box-shadow:none !important;background:transparent !important;border-bottom:.5px solid var(--fl-line,rgba(16,24,40,.1)) !important;min-height:56px;margin:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pj-stop>input[type=checkbox]{-webkit-appearance:none;appearance:none;width:24px !important;height:24px !important;border-radius:50% !important;border:2px solid #c3cbd6 !important;background:#fff !important;flex:none;margin:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pj-stop>input[type=checkbox]:checked{border-color:#006fff !important;background:#006fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center/16px no-repeat !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjm-sb{width:40px !important;height:40px !important;min-height:40px !important;border-radius:20px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjm-sb .ms{font-size:20px !important}
+/* Settings: the plan line is a quiet footer, not a lone card */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st.st-menu .st-plan{background:none !important;box-shadow:none !important;border:0 !important;justify-content:center;color:#6b7280 !important;font-size:13px !important;padding:4px 0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bp-stickbot{z-index:6;background:rgba(247,249,252,.94) !important;-webkit-backdrop-filter:saturate(1.8) blur(16px);backdrop-filter:saturate(1.8) blur(16px);box-shadow:0 0 0 .5px rgba(16,24,40,.08),0 6px 18px -8px rgba(16,24,40,.25) !important;padding:10px 12px !important;display:flex !important;gap:10px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bp-stickbot>button{flex:1 1 0}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea .bp-stickbot{background:rgba(21,24,30,.94) !important}
