@@ -834,3 +834,90 @@
   /* payments: the number badge sits with its row's title */
   #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pp-st>i{grid-row:1 !important;align-self:start;margin-top:2px}
 }
+
+/* =====================================================================
+   The rest of an open project's tabs on a phone, as app screens (2026-11-21):
+   Crew, Materials, Photos, Subs, Permits, Contract, Customer, Inspections,
+   Documents, Blueprints. Groups on the lighter layer with a small heading
+   above, no explanation paragraphs, compact "nothing here yet" rows, and
+   actions as blue rows instead of boxed buttons.
+   ===================================================================== */
+@media (max-width:760px){
+  /* groups and headings */
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-body [data-pj-pane]:not([data-pj-pane="details"]):not([data-pj-pane="money"]):not([data-pj-pane="schedule"]) .pjs-sec{padding:4px 12px 4px 16px !important;margin:30px 0 0 !important;background:var(--fl-1) !important;box-shadow:var(--fl-hi),var(--fl-sh1) !important;border:0 !important;border-radius:12px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-body [data-pj-pane]:not([data-pj-pane="details"]):not([data-pj-pane="money"]):not([data-pj-pane="schedule"]) .pjs-sec .pjs-h,
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-body [data-pj-pane="materials"] .pjs-sec>label:first-child{display:block;margin:-26px 0 10px -16px !important;padding:0 !important;font-size:13px !important;font-weight:400 !important;letter-spacing:0 !important;text-transform:uppercase;color:#6b7280 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-body [data-pj-pane]>:first-child:is(.pjs-sec,div){margin-top:22px !important}
+  /* the explanations */
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-body :is([data-pj-pane="crew"],[data-pj-pane="materials"],[data-pj-pane="photos"],[data-pj-pane="docs"],[data-pj-pane="blueprints"]) .pjs-sec>.bpx-mut,
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-contract>.bpx-mut:last-child,
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-people>.bpx-mut:last-child,
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .insp-head small,
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-mat .ml-pj-h .bpx-mut{display:none !important}
+  /* "nothing here yet": an icon, a line, and the action as blue words */
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app :is(.pjs-empty,.insp-empty){display:grid !important;grid-template-columns:40px minmax(0,1fr);column-gap:12px;row-gap:2px;align-items:center;text-align:left !important;padding:14px 12px 10px 16px !important;margin:0 !important;min-height:0 !important;border:0 !important;background:var(--fl-1) !important;box-shadow:var(--fl-hi),var(--fl-sh1) !important;border-radius:12px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-sec :is(.pjs-empty,.insp-empty){background:transparent !important;box-shadow:none !important;padding:8px 0 6px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app :is(.pjs-empty,.insp-empty)>.ms{grid-row:1/span 2;width:40px;height:40px;display:grid;place-items:center;border-radius:10px;background:var(--fl-2);box-shadow:var(--fl-sh2),var(--fl-hi);font-size:22px !important;color:#006fff !important;margin:0 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app :is(.pjs-empty,.insp-empty)>b{font-size:15px !important;margin:0 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app :is(.pjs-empty,.insp-empty)>:is(p,small){grid-column:2;margin:0 !important;font-size:13px !important;line-height:1.35;color:#6b7280 !important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app :is(.pjs-empty,.insp-empty)>button{grid-column:1/-1;justify-self:stretch;margin:10px 0 0 !important;border-top:.5px solid var(--fl-line) !important}
+  /* actions: blue rows */
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-body [data-pj-pane]:not([data-pj-pane="details"]):not([data-pj-pane="money"]):not([data-pj-pane="schedule"]) :is(.pm-btn,.bpx-btn,.bpx-rowbtn,.bpx-addbtn,.bpx-linkbtn,.cp-nudge-go):not(.insp-new){
+    display:flex !important;align-items:center;justify-content:flex-start;gap:6px;width:auto;height:44px !important;min-height:44px !important;padding:0 !important;margin:0 !important;border:0 !important;border-radius:0 !important;background:transparent !important;box-shadow:none !important;color:#006fff !important;font-size:16px !important;font-weight:400 !important;text-decoration:none !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-body [data-pj-pane] :is(.pm-btn,.bpx-btn,.bpx-rowbtn,.bpx-addbtn) .ms{font-size:20px !important;color:#006fff !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-sec>:is(.bpx-btn,.pm-btn):last-child,#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-sec>div:last-child:has(>.bpx-btn){border-top:.5px solid var(--fl-line);margin-top:6px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-sec>div:has(>.bpx-btn+.bpx-btn),#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-sec>div:has(>.bpx-btn+.bpx-rowbtn){display:flex !important;gap:22px !important}
+
+  /* Crew: one row per person */
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-people .pjcw-h{font-size:13px;text-transform:uppercase;color:#6b7280;margin:10px 0 4px}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-people .cw-list{display:block !important;margin:0 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-people .cw-row{min-height:50px !important;padding:6px 0 !important;margin:0 !important;border:0 !important;border-top:.5px solid var(--fl-line) !important;border-radius:0 !important;background:none !important;box-shadow:none !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #pjs-reco{padding:10px 12px 10px 16px !important}
+  /* Photos: a tight grid */
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-photos{display:grid !important;grid-template-columns:repeat(3,1fr) !important;gap:4px !important;margin:4px 0 6px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-photos>div{width:auto !important;height:auto !important;aspect-ratio:1;border-radius:8px !important;overflow:hidden}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-photos img{width:100% !important;height:100% !important;object-fit:cover;border-radius:0 !important}
+  /* Materials: the list header and receipts tight */
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-mat .ml-empty{padding:10px 0 !important;font-size:13px}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-mat .rc-job{margin:8px 0 0 !important;padding:8px 0 0 !important;border:0 !important;border-top:.5px solid var(--fl-line) !important;background:none !important;box-shadow:none !important}
+  /* Contract: the heading row */
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-contract>div:first-child{display:flex;align-items:center;justify-content:space-between}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-contract .bpx-empty2{padding:10px 0 !important;font-size:13.5px !important;text-align:left !important;border:0 !important;background:none !important}
+  /* Customer page: the logo nudge as one slim row */
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #cp-lognudge{margin:22px 0 0 !important;padding:10px 12px !important;border:0 !important;border-radius:12px !important;background:var(--fl-1) !important;box-shadow:var(--fl-hi),var(--fl-sh1) !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #cp-lognudge>div>span{display:none !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #cp-lognudge .cp-nudge-go{height:auto !important;min-height:0 !important;font-size:14px !important}
+  /* Inspections: the add button in the heading row */
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .insp-head{display:flex !important;align-items:center;justify-content:space-between;margin:0 0 4px !important;padding:0 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .insp-head b{font-size:16px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .insp-head .insp-new{background:transparent !important;border:0 !important;box-shadow:none !important;color:#006fff !important;height:40px !important;min-height:0 !important;padding:0 !important;font-size:15px !important;font-weight:600 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-insp .insp-empty{background:transparent !important;box-shadow:none !important;padding:6px 0 !important}
+  /* Permits: the license card as a row */
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pm-lic{padding:8px 0 !important;border:0 !important;background:none !important;box-shadow:none !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pm-lic>.ms{font-size:26px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-permits>.pjs-empty{margin-top:30px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pm-lic.none{display:grid !important;grid-template-columns:40px minmax(0,1fr);column-gap:12px;align-items:center}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pm-lic.none>.ms{width:40px;height:40px;display:grid;place-items:center;border-radius:10px;background:var(--fl-2);box-shadow:var(--fl-sh2),var(--fl-hi);font-size:22px !important;color:#006fff}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pm-lic.none b{display:block;font-size:15px}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pm-lic.none small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;line-height:1.35;color:#6b7280}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pm-lic.none>.pm-btn{grid-column:1/-1;margin:8px 0 0 !important;border-top:.5px solid var(--fl-line) !important}
+  /* Crew: the Recommended heading as a row inside its group */
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #pjs-reco .pjs-h{display:flex !important;align-items:center;gap:8px;margin:0 0 4px !important;font-size:13px !important;text-transform:uppercase;color:#6b7280 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #pjs-reco .pjs-h .bpx-linkbtn{height:32px !important;min-height:0 !important;margin-left:auto !important;font-size:15px !important;text-transform:none}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #pjs-reco .pjs-h>:not(.bpx-linkbtn){text-transform:none;font-size:12px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #pjs-reco>.bpx-mut{display:none !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #pjs-reco .rc-foot{font-size:13px !important;padding:8px 0 4px !important;margin:0 !important;border-top:.5px solid var(--fl-line)}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjcw-none .bpx-linkbtn{display:inline !important;height:auto !important;min-height:0 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjcw-none{font-size:14px;padding:4px 0 8px}
+  /* Materials: one heading, the empty line short and on the left */
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-mat .ml-pj-h{display:none !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app #bpx-pj-mat .ml-empty{text-align:left !important;display:block !important;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;color:#6b7280}
+  /* dark: the list steps and the "busy" tag stay readable and on the theme */
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-app .ml-steps button{color:#94a3b8 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-app .ml-steps button.on{color:#e5e7eb !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-app .ml-steps button:not(.on):not(.done) i{background:var(--fl-2) !important;color:#94a3b8 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-app .ml-stl{background:var(--fl-line) !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-app .rc-tag.bad{background:rgba(0,111,255,.16) !important;color:#7db4ff !important}
+  /* Documents with nothing in it: just the one empty card, like Photos and Blueprints (its Add opens the camera too) */
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app [data-pj-pane="docs"].pjs-is-empty .pjs-sec{display:none !important}
+}
