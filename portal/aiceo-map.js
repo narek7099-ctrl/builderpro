@@ -177,7 +177,7 @@
   };
   window.bpCeoStopBtn = function (j) {
     if (!C.allowed() || !M.st) return '';
-    var s = stOf(j.id), col = s.lvl === 'red' ? '#dc2626' : s.lvl === 'amber' ? '#0b70f5' : s.nc ? '#3a76ed' : '';
+    var s = stOf(j.id), col = s.lvl === 'red' ? '#001530' : s.lvl === 'amber' ? '#0b70f5' : s.nc ? '#3a76ed' : '';
     return '<button type="button" class="pjm-sb" data-ceo-stop="' + esc(j.id) + '" onclick="event.preventDefault();event.stopPropagation();bpCeoMapSel(\'' + esc(j.id) + '\')" aria-label="AI CEO on ' + esc(j.name || 'this project') + '" title="AI CEO on this job"><span class="ms">monitoring</span>' + (col ? '<i style="background:' + col + '"></i>' : '') + '</button>';
   };
 
