@@ -33,6 +33,10 @@
   function locked(v) { return !!(window.bpLocked && bpLocked(v)); }
   function sets() { try { return (window.bpSettingsGet && bpSettingsGet()) || {}; } catch (e) { return {}; } }
   function bizName() { var c = sets().company || {}; return c.name || 'My business'; }
+  /* Home has two looks on a phone: 'list' (every section as a list on Home) or 'sidebar'
+     (a menu button opens the same sidebar as the computer). Kept on this phone. */
+  function look() { try { return localStorage.getItem('bpHomeLook') === 'sidebar' ? 'sidebar' : 'list'; } catch (e) { return 'list'; } }
+  M.setLook = function (v) { try { localStorage.setItem('bpHomeLook', v); } catch (e) {} var x = $('bpx'); if (x) x.classList.toggle('bp-look-sb', v === 'sidebar'); if (window.bpDashboard) bpDashboard(); };
   function ownerFirst() { var o = sets().owner || {}; return String(o.first || o.name || '').trim().split(/\s+/)[0] || ''; }
   function initials(s) { var p = String(s || '').replace(/\([^)]*\)/g, ' ').replace(/[^\p{L}\p{N}\s]/gu, ' ').trim().split(/\s+/).filter(Boolean); return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase(); }
   function money(n) { n = Math.round(+n || 0); return (n < 0 ? '−' : '') + '$' + Math.abs(n).toLocaleString(); }
@@ -107,9 +111,10 @@
       var ttl = top.querySelector('.hl-ttl'); top.insertBefore(chip, ttl);
     }
     var logo = (sets().company || {}).logoUrl;
-    chip.innerHTML = '<span class="bp-macct-av">' + (logo ? '<img src="' + esc(logo) + '" alt="">' : esc(initials(bizName()))) + '</span>'
-      + '<span class="bp-macct-t"><b>' + esc(bizName()) + '</b><small>' + esc((sets().company || {}).city || (window.bpPlanInfo ? (bpPlanInfo().name || '') : '')) + '</small></span>'
-      + '<svg class="hl-i bp-macct-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+    /* 2026-11-21: the BuilderPro logo in the corner (the business name and its logo looked odd up here) */
+    chip.innerHTML = '<span class="bp-mlogo"><img src="assets/brand/logo-mark-64.png" alt="" width="30" height="30"><b>Builder<span>Pro</span></b></span>';
+    chip.setAttribute('aria-label', 'BuilderPro: account menu');
+    var xx = $('bpx'); if (xx) xx.classList.toggle('bp-look-sb', look() === 'sidebar');
     var x = $('bpx'); if (x) x.classList.toggle('bp-m-home', homeView(v || window._bpCurView));
     /* the bottom tab says Jobs, so the page does too */
     /* (only the heading's text: replacing the whole box removed the h1 the shell retitles on every page) */
@@ -258,16 +263,38 @@
     el.innerHTML = '<div class="mh2 mh3">'
       + '<section class="mh3-hi"><h2>' + (hiH < 12 ? 'Good morning' : hiH < 17 ? 'Good afternoon' : 'Good evening') + (name ? ', ' + esc(name) : '') + '</h2>'
         + '<small>' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + '</small></section>'
-      + '<button type="button" class="mh3-money" onclick="bpNav(\'invoices\')"><span class="mh3-ml">Customers owe you</span><b data-cu>' + money(owed) + '</b>'
-        + '<span class="mh3-ms"><span>' + act.length + (act.length === 1 ? ' active job' : ' active jobs') + '</span>' + (got ? '<span>' + money(got) + ' collected</span>' : '') + '</span></button>'
       + '<section class="mh3-qs">' + qb('estimates', 'bpEstOpen', 'request_quote', 'Estimate') + qb('activejobs', 'bpAddJobOpen', 'add_business', 'Job') + qb('invoices', 'bpInvOpen', 'receipt_long', 'Invoice') + '</section>'
       + setupCard()
       + '<section class="mh2-card mh3-today"><div class="mh2-h"><b>Today</b>' + (needs.length ? '<span class="mh2-n">' + needs.length + ' to do</span>' : '') + '</div>'
         + (todayList || '<div class="mh2-empty"><span class="ms">check_circle</span>' + (d.appts === undefined ? 'Loading today…' : 'All caught up. Nothing booked today.') + '</div>')
         + (needs.length > 3 ? '<button type="button" class="mh2-more" onclick="bpShell.notes&&bpShell.notes(document.getElementById(\'hlBell\'))">See all ' + needs.length + '</button>' : '')
       + '</section>'
-      + appsCard()
+      + (look() === 'sidebar' ? '' : sectionsCard())
+      + lookSwitch()
       + '</div>';
+  }
+  /* Look A: every section of the software as one list, the same order as the sidebar */
+  function sectionsCard() {
+    var rows = '';
+    (window.BP_NAV || []).forEach(function (g) {
+      var ks = g.kids ? g.kids.filter(function (k) { return allows(k[0]); }) : null;
+      if (g.id === 'dashboard' || (ks ? !ks.length : !allows(g.id))) return;
+      var lk = ks ? ks.every(function (k) { return locked(k[0]); }) : locked(g.id);
+      var sub = ks ? ks.map(function (k) { return k[1]; }).join(' · ') : '';
+      rows += '<button type="button" class="mh4-row" onclick="bpMobile.go(\'' + g.id + '\')"><span class="mh4-ic">' + ico(g.ico || g.id) + '</span>'
+        + '<span class="mh4-t"><b>' + esc(g.id === 'projects' ? 'Jobs' : g.l) + '</b>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</span>'
+        + (lk ? '<span class="ms bp-lk" aria-label="Not on your plan">lock</span>' : '') + '<span class="ms mh4-go">chevron_right</span></button>';
+    });
+    if (allows('settings')) rows += '<button type="button" class="mh4-row" onclick="bpMobile.nav(\'settings\')"><span class="mh4-ic">' + ico('settings') + '</span><span class="mh4-t"><b>Settings</b></span><span class="ms mh4-go">chevron_right</span></button>';
+    return rows ? '<section class="mh4-secs"><div class="mh4-h">Sections</div><div class="mh4-list">' + rows + '</div></section>' : '';
+  }
+  /* the switch between the two looks, at the bottom of Home */
+  function lookSwitch() {
+    var l = look();
+    return '<section class="mh4-look"><div class="mh4-h">Home style</div><div class="mh4-seg" role="tablist">'
+      + '<button type="button" role="tab" aria-selected="' + (l === 'list') + '" class="' + (l === 'list' ? 'on' : '') + '" onclick="bpMobile.setLook(\'list\')">Sections list</button>'
+      + '<button type="button" role="tab" aria-selected="' + (l === 'sidebar') + '" class="' + (l === 'sidebar' ? 'on' : '') + '" onclick="bpMobile.setLook(\'sidebar\')">Sidebar menu</button></div>'
+      + '<small>' + (l === 'sidebar' ? 'Tap the menu button at the top left for every section.' : 'Every section is listed above, like the sidebar on a computer.') + '</small></section>';
   }
   /* the first week decides whether a new account sticks: the same setup steps as the computer
      dashboard (portal/dash.js), so a phone-only owner sees what is left and can tap straight to it */

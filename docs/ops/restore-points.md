@@ -448,3 +448,5 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-21: Before the app clean-up round 6 (iPhone switches, careful 4-line "More", tab strip edges painted on top, card stacks as lists, Save bar above the tab bar, routes and employees fixes). main = 64eed94
 
 - 2026-11-21: Before the AI Team clean-up (phone org chart, solid blue AI CEO, bigger icons, names on a backing, one search box). main = 07d9daf
+
+- 2026-11-21: Before the phone home with two looks (Sections list / Sidebar menu), BuilderPro logo, even header buttons, no money card. main = 43f1c19
