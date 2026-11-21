@@ -43,13 +43,13 @@
    3. Segmented controls inside a page (Day/Week/Month, People/Crews,
       Overview/Campaigns...): full width, equal parts, never a cut word.
    --------------------------------------------------------------------- */
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-jobtabs,.bpt-seg):not(.cal-view){display:flex !important;width:100% !important;max-width:none !important;box-sizing:border-box;gap:2px !important;padding:2px !important;margin:0 0 12px !important;border:0 !important;border-radius:10px !important;background:rgba(118,128,145,.14) !important;box-shadow:none !important;overflow-x:auto;scrollbar-width:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.insp-ctabs):not(.cal-view){display:flex !important;width:100% !important;max-width:none !important;box-sizing:border-box;gap:2px !important;padding:2px !important;margin:0 0 12px !important;border:0 !important;border-radius:10px !important;background:rgba(118,128,145,.14) !important;box-shadow:none !important;overflow-x:auto;scrollbar-width:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-jobtabs,.bpt-seg)::-webkit-scrollbar{display:none}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-jobtabs,.bpt-seg):not(.cal-view)>:is(button,a){flex:1 0 auto !important;min-width:0;height:34px !important;min-height:34px !important;padding:0 12px !important;margin:0 !important;border:0 !important;border-radius:8px !important;background:transparent !important;box-shadow:none !important;color:#3b4656 !important;font-size:13.5px !important;font-weight:600 !important;white-space:nowrap;display:flex !important;align-items:center;justify-content:center;gap:5px}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-jobtabs,.bpt-seg):not(.cal-view)>:is(button,a):is(.on,[aria-selected="true"]){background:#fff !important;color:#0b1526 !important;box-shadow:0 1px 3px rgba(16,24,40,.14),0 1px 1px rgba(16,24,40,.06) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.insp-ctabs):not(.cal-view)>:is(button,a){flex:1 0 auto !important;min-width:0;height:34px !important;min-height:34px !important;padding:0 9px !important;margin:0 !important;border:0 !important;border-radius:8px !important;background:transparent !important;box-shadow:none !important;color:#3b4656 !important;font-size:13.5px !important;font-weight:600 !important;white-space:nowrap;display:flex !important;align-items:center;justify-content:center;gap:5px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.insp-ctabs):not(.cal-view)>:is(button,a):is(.on,[aria-selected="true"]){background:#fff !important;color:#0b1526 !important;box-shadow:0 1px 3px rgba(16,24,40,.14),0 1px 1px rgba(16,24,40,.06) !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-jobtabs,.bpt-seg):not(.cal-view){background:rgba(255,255,255,.08) !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-jobtabs,.bpt-seg):not(.cal-view)>:is(button,a){color:#aab3c2 !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-jobtabs,.bpt-seg):not(.cal-view)>:is(button,a):is(.on,[aria-selected="true"]){background:#2a303b !important;color:#fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.insp-ctabs):not(.cal-view)>:is(button,a):is(.on,[aria-selected="true"]){background:#2a303b !important;color:#fff !important}
 /* calendar's Day/Week/Month: even inner padding */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .cal-view{padding:2px !important;gap:2px !important}
 
@@ -244,3 +244,15 @@
 #bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .wa .wa-tg{color:#e5e7eb !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpx-mk-pane>.note{color:#475467 !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpx-mk-pane>.note{color:#aab3c2 !important}
+
+/* Lisa settings: the publish bar sits in the page on a phone (it floated over the fields and under the tab bar) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-rg-pubbar{position:static !important;margin:12px 0 !important;background:var(--fl-1,#f7f9fc) !important;box-shadow:0 0 0 .5px rgba(16,24,40,.08) !important;border-radius:14px !important;padding:14px !important;display:flex !important;flex-wrap:wrap;gap:10px;align-items:center}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-rg-pubbar>:first-child{flex:1 1 100%}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-rg-pubbar>button{flex:1 1 0}
+/* contact page: the next-step buttons stay on one line */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .ctp3-nb .ctp3-a{white-space:nowrap;font-size:14px !important;justify-content:center}
+/* dark: the trigger tags in Automations */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .wa .wa-tg{background:#23272f !important;color:#e5e7eb !important}
+/* dialogs on a phone: the confirm button is flat like the rest (no glow) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-modal :is(.bpx-btn,.bpx-addbtn,.bp-cta){background-image:none !important;min-height:44px;border-radius:12px !important;font-size:15px !important;font-weight:600 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-modal .row>.bpx-btn:last-child:not(.ghost):not(.danger){background:#16c79a !important;color:#001530 !important;border:0 !important;box-shadow:0 1px 2px rgba(0,60,40,.18) !important}
