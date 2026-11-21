@@ -679,3 +679,62 @@
   #bpx#bpx#bpx#bpx#bpx#bpx .pjs-app [data-pj-pane="details"] .pjs-cust{margin-bottom:40px !important}
   #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-hero .pjs-act.primary{color:#fff !important;background:#16C79A !important;background-image:none !important;box-shadow:none !important}
 }
+
+/* =====================================================================
+   Phones: the flashlight look (2026-11-21). Light falls from above: the
+   page at the back is the darkest, the groups sitting on it are lighter,
+   and what sits on them (buttons, the bars at the top) is the lightest,
+   with a bright top edge and a soft shadow underneath. Dark mode the same,
+   in greys: the closer to you, the lighter.
+   ===================================================================== */
+#bpx{--fl-0:#e3e8ef;--fl-1:#f7f9fc;--fl-2:#ffffff;--fl-hi:inset 0 1px 0 rgba(255,255,255,1);--fl-sh1:0 1px 2px rgba(15,23,42,.07);--fl-sh2:0 1px 1px rgba(15,23,42,.08),0 3px 8px -2px rgba(15,23,42,.12);--fl-line:#e2e7ee;--fl-bar:rgba(255,255,255,.86)}
+#bpx.bpx-dark{--fl-0:#08090c;--fl-1:#15181e;--fl-2:#23272f;--fl-hi:inset 0 1px 0 rgba(255,255,255,.07);--fl-sh1:0 1px 2px rgba(0,0,0,.5);--fl-sh2:inset 0 1px 0 rgba(255,255,255,.1),0 4px 10px -2px rgba(0,0,0,.6);--fl-line:#2a2f38;--fl-bar:rgba(30,33,40,.86)}
+
+/* every phone page: a darker back, lighter cards */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-app{background:var(--fl-0) !important}
+#bpx.bp-m #bpxRib{opacity:.35}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-panel,.bpx-stat,.pj-card,.bpx-cwrap,.mh2-card,.mh3-money,.mj,.cl-tile,.cl-card,.ctp-card,.pjk-stat){background:var(--fl-1) !important;border-color:transparent !important;box-shadow:var(--fl-hi),var(--fl-sh1) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.mh3-q:not(:first-child),.bpx-btn.ghost,.ctp3-b+.ctp3-b,.ctp3-a:not(.pri),.ctp3-edit,.bpx-cm-b){background:var(--fl-2) !important;border-color:transparent !important;box-shadow:var(--fl-sh2),var(--fl-hi) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #hlTop,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs{background:var(--fl-bar) !important;-webkit-backdrop-filter:saturate(180%) blur(20px) !important;backdrop-filter:saturate(180%) blur(20px) !important}
+
+/* the open project */
+@media (max-width:760px){
+  #bpx#bpx#bpx .bpx-modal.pjs.pjs-app,#bpx#bpx#bpx#bpx .bpx-modal.pjs.pjs-app .bpx-modalcard.pjs-card,
+  #bpx#bpx#bpx.bpx-dark .bpx-modal.pjs.pjs-app,#bpx#bpx#bpx#bpx.bpx-dark .bpx-modal.pjs.pjs-app .bpx-modalcard.pjs-card{background:var(--fl-0) !important}
+  #bpx#bpx .pjs-app .pjs-nav,#bpx#bpx.bpx-dark .pjs-app .pjs-nav,
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-card>.pjs-tabs{background:var(--fl-bar) !important;border-bottom-color:var(--fl-line) !important}
+  /* tighter header */
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-hero{padding:0 16px 12px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-hero h2{font-size:26px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-hero .pjs-job{font-size:15px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-hero .pjs-addr{margin-top:3px !important;font-size:14px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-hero-row{margin-top:10px !important;gap:8px !important}
+  /* layer 1: the money group */
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-hero .pjs-stats{background:var(--fl-1) !important;box-shadow:var(--fl-hi),var(--fl-sh1);padding:9px 12px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-hero .pjs-stat b{font-size:16px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-hero .pjs-stat+.pjs-stat{border-left-color:var(--fl-line) !important}
+  /* layer 2: the buttons */
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-hero .pjs-act{height:54px !important;min-height:54px !important;background:var(--fl-2) !important;box-shadow:var(--fl-sh2),var(--fl-hi) !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-hero .pjs-act .ms{font-size:20px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-hero .pjs-act.primary{background:linear-gradient(180deg,#2fd9ac,#16C79A) !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 3px 8px -2px rgba(14,143,115,.45) !important}
+  /* the overview: no customer card; groups on layer 1, the rows inside */
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app [data-pj-pane="details"] .pjs-view{display:none !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-body .pjs-sec,#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app [data-pj-pane="details"] .pjs-sec:not(.pjs-view){background:var(--fl-1) !important;box-shadow:var(--fl-hi),var(--fl-sh1) !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app [data-pj-pane="details"] .pjs-sec:not(.pjs-view){margin:0 0 34px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app [data-pj-pane="details"] .pjs-sec:first-of-type:not(.pjs-view),#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app [data-pj-pane="details"] .pjs-view+.pjs-sec{margin-top:26px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app [data-pj-pane="details"] .pjs-sec :is(input,select,label:not(.pjs-h)){height:44px !important;min-height:44px !important;border-bottom-color:var(--fl-line) !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app [data-pj-pane="details"] .pjs-sec textarea{min-height:60px !important;height:60px;padding-top:10px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app [data-pj-pane="details"] .pjs-sec label:has(+ textarea){height:auto !important;min-height:0 !important;padding-top:10px !important}
+  #bpx#bpx#bpx#bpx .pjs-app .pjs-prow{all:unset;box-sizing:border-box;grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;height:44px;padding-right:12px;font-size:16px;color:#006fff;cursor:pointer;border-top:.5px solid var(--fl-line)}
+  #bpx#bpx#bpx#bpx .pjs-app .pjs-prow .ms{font-size:20px;color:#94a3b8}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app [data-pj-pane="details"] .pjs-apg{margin-top:-20px !important;padding:0 !important;display:block !important}
+  #bpx#bpx#bpx#bpx#bpx .pjs-app .pjs-apg .ap-row{margin:0 !important;border:0 !important;border-radius:12px !important;background:transparent !important;box-shadow:none !important;padding:10px 14px !important}
+  #bpx#bpx#bpx#bpx .pjs-app .pjs-delrow{background:var(--fl-2) !important;box-shadow:var(--fl-sh2),var(--fl-hi) !important;margin-top:0 !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-app [data-pj-pane="details"] .pjs-sec :is(label:not(.pjs-h),input,select,textarea){border-color:var(--fl-line) !important}
+}
+@media (max-width:760px){ #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-app [data-pj-pane="details"] .pjs-apg{margin:-14px 0 46px !important} }
+#bpx#bpx#bpx#bpx#bpx.bpx-dark .mj2 .mj-bar{background:#2a2f38 !important}
+#bpx#bpx#bpx#bpx#bpx.bpx-dark .mj-pill.red,#bpx#bpx#bpx#bpx#bpx.bpx-dark .mj-pill.blue{background:#0f2340 !important;color:#9cc4ff !important}
+#bpx#bpx#bpx#bpx#bpx.bpx-dark .mj-pill.green{background:#0b2e26 !important;color:#3FE0B6 !important}
+#bpx#bpx#bpx#bpx#bpx.bpx-dark .mj-pill.gray{background:#23272f !important;color:#cbd5e1 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .hl-tabs{box-shadow:0 1px 0 #2a2f38 !important}
