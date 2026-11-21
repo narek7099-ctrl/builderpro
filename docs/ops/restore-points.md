@@ -438,3 +438,5 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-21: Before app-style rest of project tabs on phones (Crew, Materials, Photos, Subs, Permits, Contract, Customer, Inspections, Documents, Blueprints). main = fc38ca3
 
 - 2026-11-21: Before the app clean-up batch 1 (new portal/ui.css: iOS tab bar, tab strip fade, even segmented controls and buttons, one empty/error look, dark Automations). main = 8c249d0
+
+- 2026-11-21: Before the app clean-up batch 2 (form fields, one brand blue, Customize prices on phones, flat cards, Finances tab actions, tab strip soft edges). main = 0b0710f

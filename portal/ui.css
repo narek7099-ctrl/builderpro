@@ -33,10 +33,10 @@
       edge where more tabs are hidden. No arrow sitting on the labels.
    --------------------------------------------------------------------- */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs .bp-tabmore{display:none !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs{padding-left:12px !important;padding-right:12px !important;scroll-padding:0 28px;-webkit-mask-image:none;mask-image:none}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-more:not(.bp-less){-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent)}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-less:not(.bp-more){-webkit-mask-image:linear-gradient(90deg,transparent,#000 44px);mask-image:linear-gradient(90deg,transparent,#000 44px)}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-more.bp-less{-webkit-mask-image:linear-gradient(90deg,transparent,#000 44px,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(90deg,transparent,#000 44px,#000 calc(100% - 44px),transparent)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs{padding-left:12px !important;padding-right:12px !important;scroll-padding:0 28px;-webkit-mask-image:none !important;mask-image:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-more:not(.bp-less){-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent) !important;mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-less:not(.bp-more){-webkit-mask-image:linear-gradient(90deg,transparent,#000 44px) !important;mask-image:linear-gradient(90deg,transparent,#000 44px) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-more.bp-less{-webkit-mask-image:linear-gradient(90deg,transparent,#000 44px,#000 calc(100% - 44px),transparent) !important;mask-image:linear-gradient(90deg,transparent,#000 44px,#000 calc(100% - 44px),transparent) !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs .hl-tab{flex:0 0 auto !important;white-space:nowrap}
 
 /* ---------------------------------------------------------------------
@@ -183,3 +183,64 @@
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead>div:has(>.sp-inline)>.bpx-addbtn{order:-1;grid-column:1/-1;width:100% !important;margin:0 !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead>div:has(>.sp-inline)>.sp-inline:only-of-type{grid-column:1/-1}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead>div:has(>.sp-inline)>*{min-width:0;padding:0 8px !important;font-size:14px !important}
+
+/* ---------------------------------------------------------------------
+   9. One brand blue. Older sheets each set their own (#2563eb, #155EEF,
+      #2457d6, #2b63e6); buttons and links then came out in four blues.
+   --------------------------------------------------------------------- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark){--blue:#006fff;--blue-d:#0057cc;--blue-l:#e6f0ff;--bl:#006fff}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark{--blue:#3d8bff;--blue-d:#8db8ff;--blue-l:#0f2a52;--bl:#4d9bff}
+
+/* ---------------------------------------------------------------------
+   10. Form fields on a phone: 44px tall, 16px text (iPhone zooms into
+       anything smaller), one border, a proper chevron on dropdowns.
+   --------------------------------------------------------------------- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m :is(#bpxViewArea,.bpx-modal) :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]),select,textarea){font-size:16px !important;border-radius:10px !important;border:1px solid rgba(16,24,40,.14) !important;background-color:var(--fl-2,#fff) !important;box-shadow:none !important;color:var(--ink,#0b1526) !important;box-sizing:border-box}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m :is(#bpxViewArea,.bpx-modal) :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]),select){min-height:44px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m :is(#bpxViewArea,.bpx-modal) select{-webkit-appearance:none !important;appearance:none !important;padding-right:34px !important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2398a2b3' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3C/svg%3E") !important;background-repeat:no-repeat !important;background-position:right 10px center !important;background-size:18px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m :is(#bpxViewArea,.bpx-modal) :is(input,select,textarea):focus{border-color:#006fff !important;outline:0 !important;box-shadow:0 0 0 3px rgba(0,111,255,.15) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m :is(#bpxViewArea,.bpx-modal) ::placeholder{color:#98a2b3 !important;font-weight:400 !important;opacity:1}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark :is(#bpxViewArea,.bpx-modal) :is(input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea){border-color:rgba(255,255,255,.12) !important;background-color:#1b1f27 !important;color:#e5e7eb !important}
+/* search boxes keep their icon room */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .hl-tsearch{min-height:44px;border-radius:10px !important;align-items:center}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .hl-tsearch input{border:0 !important;background:transparent !important;min-height:40px !important;box-shadow:none !important;padding-left:4px !important}
+
+/* full-screen flows: no section tabs above the form either */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.qs-focus .hl-tabs{display:none !important}
+
+/* Customize prices on a phone: the item name on its own line, Low and High side by side under it */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .cz-sec-b .bpx-price-row{grid-template-columns:1fr 1fr !important;column-gap:10px !important;row-gap:6px !important;padding:10px 0 !important;align-items:center}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .cz-sec-b .bpx-price-row>.bpx-price-nm{grid-column:1/-1;font-size:15px !important;font-weight:600}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .cz-sec-b .bpx-price-hd{position:sticky;top:0;z-index:1;padding:6px 0 !important;background:inherit}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .cz-sec-b .bpx-price-hd>span:first-child{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .cz-sec-s{display:none !important}
+
+/* boxes inside boxes: on a phone, a card that holds other cards is just the page */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea>.bpx-panel:has(.bpx-panel,.bpx-jobtabs){background:transparent !important;box-shadow:none !important;border:0 !important;padding:0 !important}
+
+/* Finances: each tab's own action (Income: add income, Expenses: add expense), no gap above it */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea:not([data-fin="income"]) .fin-new-incm,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea:not([data-fin="expense"]) .fin-new-exp{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea:is([data-fin="income"],[data-fin="expense"]) :is(.fin-new-inv,.fin-new-est){display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea:not([data-fin="overview"]) .fin-kpi+.bpx-chead{margin-top:0 !important;padding-top:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead:has(>.bpx-finrow-btns)>.bpx-finrow-btns{flex:1 1 100% !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead:has(>.bpx-finrow-btns)>div:empty{display:none !important}
+/* list header actions (Export CSV + Add): a row with a gap, lined up */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .fin-acts{display:flex !important;align-items:center;gap:10px;flex-wrap:wrap}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .fin-acts>*{margin:0 !important}
+
+/* text buttons: blue words, no web underline */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-linkbtn{text-decoration:none !important;color:#006fff !important;font-weight:600 !important;min-height:36px;display:inline-flex;align-items:center}
+/* Lead sources connect card: text, then the button full width under it */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .ls-bar.ls-bar-go{display:flex !important;flex-direction:column;align-items:stretch !important;gap:12px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .ls-bar.ls-bar-go>.bpx-btn{width:100% !important}
+/* Supply search: the box draws the border, the field inside does not */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .sp-pk-box input{border:0 !important;background:transparent !important;box-shadow:none !important}
+/* Calculator: Restart and Edit prices read as buttons */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpt-acts .bpx-mini{font-size:14px !important;font-weight:600 !important;min-height:40px}
+/* a lone header action is full width */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea>.bpx-chead>.bpx-addbtn:only-child{width:100% !important}
+/* section headings: one style */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-sec-h{font-size:18px !important;font-weight:700 !important;letter-spacing:-.01em}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .wa .wa-tg{color:#e5e7eb !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpx-mk-pane>.note{color:#475467 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpx-mk-pane>.note{color:#aab3c2 !important}

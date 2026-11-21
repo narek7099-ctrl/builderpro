@@ -339,7 +339,7 @@
     var upd = function () { var more = t.scrollWidth - t.clientWidth - t.scrollLeft > 6; t.classList.toggle('bp-more', more); t.classList.toggle('bp-less', t.scrollLeft > 6); mb.hidden = !more || !M.on(); };
     if (!t._bpf) { t._bpf = 1; t.addEventListener('scroll', upd, { passive: true }); }
     var on = t.querySelector('.hl-tab.on');
-    if (on && M.on()) { var l = on.offsetLeft - 16, r = on.offsetLeft + on.offsetWidth - t.clientWidth + 16; if (t.scrollLeft > l) t.scrollLeft = l; else if (t.scrollLeft < r) t.scrollLeft = r; }
+    if (on && M.on()) { var l = on.offsetLeft - 48, r = on.offsetLeft + on.offsetWidth - t.clientWidth + 48;   /* clear of the soft edges */ if (t.scrollLeft > l) t.scrollLeft = l; else if (t.scrollLeft < r) t.scrollLeft = r; }
     upd();
   }
   var tidyT = null;
