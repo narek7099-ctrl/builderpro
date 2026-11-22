@@ -197,6 +197,28 @@
     bpQuoteOpen(j.id, 'edit');
     return j.id;
   };
+  /* Lisa's draft (portal/lisa-do.js): a new estimate with the customer, the job,
+     the address and one line per item at the customer price she was told (each
+     goes in under Other costs at your usual mark-up, so the totals match). It is
+     only a draft: nothing is sent until the owner taps Send. */
+  window.bpQuoteDraft = async function (contactId, d) {
+    if (window.bpEnsureContacts) { try { await bpEnsureContacts(); } catch (e) {} }
+    d = d || {};
+    var c = contactId ? contactBy(contactId) : null;
+    var j = newSheet(c), q = quoteOf(j);
+    if (!c && d.customer) j.name = String(d.customer).slice(0, 80);
+    j.title = String(d.title || 'Estimate').slice(0, 80);
+    if (d.addr) j.addr = String(d.addr).slice(0, 200);
+    if (d.note) q.desc = String(d.note).slice(0, 1000);
+    (d.lines || []).forEach(function (l) {
+      if (!l || !l.name) return;
+      q.other.push({ id: uid('ot'), name: String(l.name).slice(0, 120), cat: 'Other', cost: +l.price > 0 ? r2(+l.price / f(q.mkOth)) : '' });
+    });
+    q.fromLisa = { at: Date.now() };
+    save(true);
+    bpQuoteOpen(j.id, 'edit');
+    return j.id;
+  };
   window.bpQuoteOpen = function (id, mode) {
     if (Q.id !== id) Q.step = null;   /* each sheet opens on its own step, not the last one's */
     Q.id = id; tidy(id);

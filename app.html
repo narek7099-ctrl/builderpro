@@ -94,9 +94,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261122-20261122e">
-<link rel="stylesheet" href="site/present.css?v=20261122-20261122e">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261122-20261122e"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261122-lisa-do">
+<link rel="stylesheet" href="site/present.css?v=20261122-lisa-do">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261122-lisa-do"}}</script>
 
 
 <style id="bpi-icons">
@@ -13308,7 +13308,7 @@ function bpEnsureLeaflet(cb){
   /* the look: an orb, the name and a live dot up top; a welcome with tap-to-ask
      ideas until the first question; a typing pulse while the answer comes */
   var ORB='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l1.9 4.6 4.6 1.9-4.6 1.9L12 16.5l-1.9-4.6L5.5 10l4.6-1.9z"/><path d="M18.5 15l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z" opacity=".75"/></svg>';
-  var SUGS=['What needs me today?','How do I send an invoice?','Book an inspection','Change what '+A_NAME+' says on calls'];
+  var SUGS=['Make an estimate for a roof repair','Add a new lead','Book an inspection Thursday at 9','What needs me today?'];
   pan.innerHTML='<div class="oaw-head"><span class="oaw-orb">'+ORB+'</span><span class="oaw-ht"><b>'+A_NAME+'</b><small><i class="oaw-dot"></i>Your '+A_BRAND+' assistant</small></span></div>'
     +'<div class="oaw-log" id="oawLog"></div>'
     +'<div class="oaw-in"><input id="oawIn" placeholder="Ask '+A_NAME+' anything" autocomplete="off" enterkeyhint="send"><button id="oawGo" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></svg></button></div>';
@@ -13318,7 +13318,7 @@ function bpEnsureLeaflet(cb){
   function add(role,text){var l=document.getElementById('oawLog');var w=l.querySelector('.oaw-hi');if(w)w.remove();var d=document.createElement('div');d.className='oaw-m '+(role==='user'?'u':'b');d.innerHTML=esc(text);l.appendChild(d);l.scrollTop=l.scrollHeight;return d;}
   function typing(){var d=add('bot','');d.classList.add('oaw-typing');d.innerHTML='<i></i><i></i><i></i>';return d;}
   function hello(){var l=document.getElementById('oawLog');if(!l||l.children.length)return;
-    l.innerHTML='<div class="oaw-hi"><span class="oaw-orb lg">'+ORB+'</span><b>Hi, I\'m '+esc(A_NAME)+'</b><p>Ask about your bookings, customers or money, or how anything here works. I\'ll take you straight there.</p>'
+    l.innerHTML='<div class="oaw-hi"><span class="oaw-orb lg">'+ORB+'</span><b>Hi, I\'m '+esc(A_NAME)+'</b><p>Ask me anything, or tell me what to make: an estimate, an invoice, a new lead, a visit, an expense. I fill it in and you tap Send. Tap the mic to talk.</p>'
       +'<div class="oaw-sugs">'+SUGS.map(function(t){return '<button type="button" class="oaw-sug">'+esc(t)+'</button>';}).join('')+'</div></div>';
     l.querySelectorAll('.oaw-sug').forEach(function(b){b.onclick=function(){var i=document.getElementById('oawIn');i.value=b.textContent;send();};});}
   btn.onclick=function(){open=!open;pan.style.display=open?'flex':'none';
@@ -13335,13 +13335,13 @@ function bpEnsureLeaflet(cb){
   /* the owner-mode brain is deployed as ai-response on some projects and ai-chat on
      others — try both rather than silently failing on whichever name is missing */
   async function callAi(body,tok){
-    var base=(window.BP_URL||'https://ttzwzouhiwdwamuimhpo.supabase.co'),names=['ai-response','ai-chat'],last=null;
+    var base=(window.BP_URL||'https://ttzwzouhiwdwamuimhpo.supabase.co'),names=['ai-chat','ai-response'],last=null;   /* ai-chat first: it is the one in the repo, and it can do tasks */
     for(var i=0;i<names.length;i++){
       try{
         var r=await fetch(base+'/functions/v1/'+names[i],{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify(body)});
         if(r.status===404){continue;}
         var d=await r.json();
-        if(d&&(d.reply||d.navigate))return d;
+        if(d&&(d.reply||d.navigate||d.task))return d;
         last=d&&d.error;
       }catch(e){last=String(e);}
     }
@@ -13355,13 +13355,16 @@ function bpEnsureLeaflet(cb){
       var tok='';
       if(window.BP_SB&&BP_SB.auth){var s=await BP_SB.auth.getSession();tok=(s&&s.data&&s.data.session&&s.data.session.access_token)||'';}
       if(!tok){done('Please sign in to your dashboard first.');return;}
-      var d=await callAi({mode:'owner',message:t,history:HIST.slice(-10),assistant:A_NAME,brand:A_BRAND,nav:A_NAV},tok);
+      var d=await callAi({mode:'owner',message:t,history:HIST.slice(-10),assistant:A_NAME,brand:A_BRAND,nav:A_NAV,ctx:window.bpLisaCtx?bpLisaCtx():undefined},tok);
       var reply=d.reply||d.error||'Sorry, something went wrong.';
       done(reply);HIST.push({role:'assistant',content:reply});
-      if(d.navigate&&typeof window.bpNav==='function'){try{bpNav(d.navigate);}catch(e){}}
+      /* a task: the app opens it filled in for the owner to check (portal/lisa-do.js); Lisa never sends */
+      if(d.task&&window.bpLisaDo){try{bpLisaDo(d.task,node);}catch(e){}}
+      else if(d.navigate&&typeof window.bpNav==='function'){try{bpNav(d.navigate);}catch(e){}}
     }catch(e){done('Connection issue — please try again.');}
   }
   document.getElementById('oawGo').onclick=send;
+  window.bpLisaAsk=function(text){var i=document.getElementById('oawIn');if(!i||!text)return;i.value=text;send();};
   document.getElementById('oawIn').addEventListener('keydown',function(e){if(e.key==='Enter')send();});
 })();
 </script>
@@ -14970,7 +14973,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply-kits.js?v=20260919cq"></script>
 <script src="portal/supply-dir.js?v=20261024q36"></script>
 <script src="portal/matlists.js?v=20261119c"></script>
-<script src="portal/quote.js?v=20261119b"></script>
+<script src="portal/quote.js?v=20261122a"></script>
 <link rel="stylesheet" href="portal/quote.css?v=20261118f">
 <script src="portal/prices.js?v=20261118f"></script>
 <script src="portal/dash.js?v=20261120c"></script>
@@ -15008,11 +15011,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261120r"></script>
 <script src="portal/website.js?v=20261118f"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261122-20261122e"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261122-20261122e"></script>
-<script src="site/vendor/SplitText.min.js?v=20261122-20261122e"></script>
-<script src="site/site.js?v=20261122-20261122e"></script>
-<script src="site/present.js?v=20261122-20261122e"></script>
+<script src="site/vendor/gsap.min.js?v=20261122-lisa-do"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261122-lisa-do"></script>
+<script src="site/vendor/SplitText.min.js?v=20261122-lisa-do"></script>
+<script src="site/site.js?v=20261122-lisa-do"></script>
+<script src="site/present.js?v=20261122-lisa-do"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261118f">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261120c">
@@ -15053,5 +15056,6 @@ window.bpRepCopy=function(text,btn){
 <script src="site/silk.js?v=20261118f"></script>
 <script src="portal/appbg.js?v=20261113d"></script>
 <script src="portal/celebrate.js?v=20261122d"></script>
+<script src="portal/lisa-do.js?v=20261122b"></script>
 <!--/app-only-->
 </html>

@@ -181,7 +181,7 @@ async function ownerSnapshot(uid: string): Promise<string> {
   );
 }
 
-function ownerSystem(assistant: string, brand: string, navList: string, snapshot: string): string {
+function ownerSystem(assistant: string, brand: string, navList: string, snapshot: string, work = ""): string {
   return (
     `You are ${assistant}, the built-in AI assistant inside the ${brand} client dashboard. ` +
     `The person you're talking to is the BUSINESS OWNER (your boss's client) using their private portal — NOT a website visitor. ` +
@@ -194,11 +194,36 @@ function ownerSystem(assistant: string, brand: string, navList: string, snapshot
     `- When they want to see or do something a section covers ("where do I add a contact?", "show my calendar"), include a navigate action to that section and tell them what they'll find there.\n` +
     `- If the data doesn't cover something, say so plainly and point them to the right section — never invent numbers.\n` +
     `- Friendly, concise: 1–4 short sentences, plain text (no markdown).\n\n` +
-    `Respond ONLY as JSON: {"reply":"<message>","navigate":null|"<section key from the list>"}`
+    (work ? work + `\n` : ``) +
+    `YOU CAN ALSO DO WORK IN THE APP. When they ask you to make or add something, return a "task" and the app opens it filled in for them to check.\n` +
+    `You never send, save, charge or text anything yourself: the owner checks what you filled in and taps the button. Say so in your reply (for example: I filled in the estimate, check it and tap Send).\n` +
+    `Task types (one per turn; leave out what you don't know; never invent prices they didn't give):\n` +
+    `- {"type":"estimate","customer":"<name>","title":"<what the job is>","address":"","lines":[{"name":"<line>","price":<customer price number>}],"note":""}\n` +
+    `- {"type":"invoice","customer":"<name>","job":"<job id from JOBS if it matches>","amount":<number>,"what":"<what it is for, e.g. Deposit>"}\n` +
+    `- {"type":"contact","name":"","phone":"","email":"","note":""}\n` +
+    `- {"type":"job","customer":"<name>","title":"","address":"","price":<number>}\n` +
+    `- {"type":"visit","customer":"<name>","title":"<e.g. Roof inspection>","date":"YYYY-MM-DD","time":"HH:MM 24h","address":""}\n` +
+    `- {"type":"expense","job":"<job id from JOBS if it is for a job>","amount":<number>,"category":"Materials|Labor|Permits|Subcontractor|Equipment|Fuel|Other","note":"<store or what>"}\n` +
+    `Match names to the JOBS and CUSTOMERS lists when you can, using their exact spelling. Relative dates (Thursday, tomorrow) become real dates from today's date.\n\n` +
+    `Respond ONLY as JSON: {"reply":"<message>","navigate":null|"<section key from the list>","task":null|{...}}`
   );
 }
+const TASK_TYPES = new Set(["estimate", "invoice", "contact", "job", "visit", "expense"]);
+// deno-lint-ignore no-explicit-any
+function cleanTask(t: any): Record<string, unknown> | null {
+  if (!t || typeof t !== "object" || !TASK_TYPES.has(String(t.type))) return null;
+  const str = (v: unknown, n = 160) => (v == null ? "" : String(v).slice(0, n).trim());
+  const numv = (v: unknown) => { const x = Number(String(v ?? "").replace(/[^0-9.]/g, "")); return isFinite(x) && x > 0 ? Math.round(x * 100) / 100 : 0; };
+  const out: Record<string, unknown> = { type: String(t.type) };
+  for (const k of ["customer", "title", "address", "note", "name", "phone", "email", "what", "job", "category", "date", "time"]) { const v = str(t[k], k === "note" ? 600 : 160); if (v) out[k] = v; }
+  for (const k of ["amount", "price"]) { const v = numv(t[k]); if (v) out[k] = v; }
+  if (Array.isArray(t.lines)) out.lines = t.lines.slice(0, 20).map((l: Record<string, unknown>) => ({ name: str(l?.name, 120), price: numv(l?.price) })).filter((l: { name: string }) => l.name);
+  if (out.date && !/^\d{4}-\d{2}-\d{2}$/.test(String(out.date))) delete out.date;
+  if (out.time && !/^\d{1,2}:\d{2}$/.test(String(out.time))) delete out.time;
+  return out;
+}
 
-async function handleOwner(req: Request, payload: { message?: string; history?: Array<{ role: string; content: string }>; assistant?: string; brand?: string; nav?: Array<{ key: string; label: string; desc?: string }> }) {
+async function handleOwner(req: Request, payload: { message?: string; history?: Array<{ role: string; content: string }>; assistant?: string; brand?: string; nav?: Array<{ key: string; label: string; desc?: string }>; ctx?: unknown }) {
   const user0 = await verifyUser(req);
   const user = user0 ? await effectiveOwner(user0.id, (user0 as { email?: string }).email) : user0;
   if (!user) return json({ error: "not signed in", reply: "Please sign in to your dashboard first." }, 401);
@@ -215,7 +240,13 @@ async function handleOwner(req: Request, payload: { message?: string; history?: 
   ];
   const navList = nav.slice(0, 12).map((n) => `- "${n.key}" → ${n.label}${n.desc ? ": " + n.desc : ""}`).join("\n");
   const snapshot = await ownerSnapshot(user.id);
-  const system = ownerSystem(assistant, brand, navList, snapshot);
+  // the app sends its own job and customer lists so a task can name the right one
+  // deno-lint-ignore no-explicit-any
+  const ctx: any = (payload as any).ctx || {};
+  const jl = Array.isArray(ctx.jobs) ? ctx.jobs.slice(0, 40).map((j: Record<string, unknown>) => `• id ${String(j.id).slice(0, 40)} · ${String(j.name || "").slice(0, 60)} · ${String(j.title || "").slice(0, 60)} · ${String(j.status || "")}${j.estimate ? " · price $" + j.estimate : ""}${j.collected ? " · paid $" + j.collected : ""}`).join("\n") : "";
+  const cl = Array.isArray(ctx.contacts) ? ctx.contacts.slice(0, 80).map((c: unknown) => String(c).slice(0, 60)).join(", ") : "";
+  const work = (jl ? `JOBS:\n${jl}\n` : "") + (cl ? `CUSTOMERS: ${cl}\n` : "");
+  const system = ownerSystem(assistant, brand, navList, snapshot, work);
 
   const history = (Array.isArray(payload.history) ? payload.history : [])
     .filter((m) => m && (m.role === "user" || m.role === "assistant") && m.content)
@@ -225,15 +256,16 @@ async function handleOwner(req: Request, payload: { message?: string; history?: 
   const r = await gemini({
     systemInstruction: { parts: [{ text: system }] },
     contents: [...history, { role: "user", parts: [{ text: message }] }],
-    generationConfig: { maxOutputTokens: 400, temperature: 0.5, responseMimeType: "application/json" },
+    generationConfig: { maxOutputTokens: 900, temperature: 0.3, responseMimeType: "application/json" },
   });
   if (!r.ok) return json({ error: "model error", detail: (await r.text()).slice(0, 300) }, 502);
   const data = await r.json();
   const raw = (data?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "").trim();
-  let out: { reply?: string; navigate?: string | null };
+  let out: { reply?: string; navigate?: string | null; task?: unknown };
   out = parseOut(raw);
   const allowed = new Set(nav.map((n) => n.key));
-  return json({ reply: out.reply || "Sure, what would you like to check?", navigate: out.navigate && allowed.has(out.navigate) ? out.navigate : null });
+  const task = cleanTask(out.task);
+  return json({ reply: out.reply || (task ? "I filled that in for you. Check it over." : "Sure, what would you like to check?"), navigate: !task && out.navigate && allowed.has(out.navigate) ? out.navigate : null, task });
 }
 // =================== end OWNER MODE ===================
 
