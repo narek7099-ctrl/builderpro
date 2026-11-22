@@ -452,3 +452,5 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-21: Before the phone home with two looks (Sections list / Sidebar menu), BuilderPro logo, even header buttons, no money card. main = 43f1c19
 
 - 2026-11-22: Before the phone dashboard with action lists (Needs you, Today, Jobs in progress, New leads to call, Waiting on a yes) and the sidebar as the default phone menu. main = 2f4fca0
+
+- 2026-11-22: Before completion celebrations (portal/celebrate.js: green check card / pill on phase, job, to-do, deal won, sends, crew finish, wages paid) and progress rings on the phone dashboard. main = 52aebe7

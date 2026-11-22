@@ -271,7 +271,12 @@
       : '<div class="mh5-empty">' + (d.appts === undefined ? 'Loading today…' : 'Nothing booked today.') + (allows('calendar') ? ' <button type="button" class="mh5-link" onclick="bpMobile.book()">Book a visit</button>' : '') + '</div>');
     var jobRows = act.slice().sort(function (a, b) { return (Math.max((+b.estimate || 0) - (+b.collected || 0), 0)) - (Math.max((+a.estimate || 0) - (+a.collected || 0), 0)); }).slice(0, 3).map(function (j) {
       var est = +j.estimate || 0, got1 = +j.collected || 0, pc = est ? Math.min(100, Math.round(got1 / est * 100)) : 0, left = Math.max(est - got1, 0);
-      return '<button type="button" class="mh5-row" onclick="bpProjOpen&&bpProjOpen(\'' + esc(j.id) + '\')"><span class="mh5-t"><b>' + esc(j.name || 'Project') + '</b><small>' + esc(j.title || '') + '</small><span class="mh5-bar"><i style="width:' + pc + '%"></i></span></span>'
+      /* how far the work is: phases ticked off when the job has a plan, else how much is paid */
+      var ph = j.plan && j.plan.phases && j.plan.phases.length ? j.plan.phases : null, dn = ph ? ph.filter(function (x) { return x.doneAt; }).length : 0;
+      var wk = ph ? Math.round(dn / ph.length * 100) : pc, nxt = ph ? ph.filter(function (x) { return !x.doneAt; })[0] : null;
+      var C = 2 * Math.PI * 16, rg = '<span class="mh5-ring' + (wk >= 100 ? ' full' : '') + '"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" class="t"/><circle cx="20" cy="20" r="16" class="a" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + (C * (1 - wk / 100)).toFixed(1) + '"/></svg><b>' + (wk >= 100 ? '<span class="ms">check</span>' : wk + '%') + '</b></span>';
+      var sub = ph ? (nxt ? 'Next: ' + esc(nxt.name) + ' · ' + dn + ' of ' + ph.length + ' phases' : 'All ' + ph.length + ' phases done') : esc(j.title || '') + (est ? ' · ' + pc + '% paid' : '');
+      return '<button type="button" class="mh5-row" onclick="bpProjOpen&&bpProjOpen(\'' + esc(j.id) + '\')">' + rg + '<span class="mh5-t"><b>' + esc(j.name || 'Project') + '</b><small>' + sub + '</small></span>'
         + '<span class="mh5-amt">' + (left ? money(left) + '<small>left</small>' : '<small>paid</small>') + '</span></button>';
     }).join('');
     var jobsCard = allows('activejobs') ? card('Jobs in progress', 'activejobs', act.length > 3 ? 'All ' + act.length : 'All jobs', jobRows || '<div class="mh5-empty">No active jobs. <button type="button" class="mh5-link" onclick="bpMobile.quick(\'activejobs\',\'bpAddJobOpen\')">Add a job</button></div>') : '';
