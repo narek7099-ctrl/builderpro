@@ -501,3 +501,31 @@
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-ring.full{background:#16c79a;border-radius:50%}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-ring.full>b,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-ring.full>b .ms{color:#fff !important;font-size:22px !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .mh5-ring>b{color:#5ee0bb}
+
+/* =====================================================================
+   Project screens, 2026-11-22
+   ===================================================================== */
+/* fields inside a job's grouped rows: clean rows, no box (the general field style put boxes back) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app :is([data-pj-pane="details"],.pjs-mrows,.pjs-exp,.pjs-fold,.pjs-days) :is(input:not([type=checkbox]):not([type=radio]),select,textarea){border:0 !important;border-radius:0 !important;background-color:transparent !important;box-shadow:none !important;padding-left:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app :is([data-pj-pane="details"],.pjs-mrows,.pjs-exp,.pjs-fold,.pjs-days) :is(input,select,textarea):focus{box-shadow:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app [data-pj-pane="details"] textarea{min-height:64px !important;padding-top:10px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app :is(.pjs-mrows) input{text-align:right !important;padding-right:12px !important}
+/* the job header: how far the work is, as a ring in the corner (mint, the brand's "done" colour) */
+#bpx#bpx#bpx#bpx .pjs-ring .fg{stroke:#16c79a !important}
+#bpx#bpx#bpx#bpx .pjs-ring .tr{stroke:rgba(22,199,154,.16) !important}
+#bpx#bpx#bpx#bpx .pjs-ring b{color:#08775d !important}
+#bpx#bpx#bpx#bpx.bpx-dark .pjs-ring b{color:#5ee0bb !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .pjs-hero{position:relative !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .pjs-hero .pjs-ring{display:block !important;position:absolute;top:10px;right:16px;width:62px !important;height:62px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .pjs-hero .pjs-ring b{font-size:15px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .pjs-hero .pjs-ring small{font-size:8.5px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .pjs-hero-t{padding-right:72px !important}
+/* crew: round ticks, like picking people on an iPhone */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .cw-row>input[type=checkbox]{-webkit-appearance:none;appearance:none;flex:0 0 24px !important;width:24px !important;height:24px !important;min-height:0 !important;max-height:24px !important;align-self:center !important;padding:0 !important;margin:0 12px 0 0 !important;border-radius:50% !important;border:2px solid #c3cbd6 !important;background:transparent !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .cw-row>input[type=checkbox]:checked{border-color:#006fff !important;background:#006fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center/16px no-repeat !important}
+/* the AI's "Recommended" card hides when it has nothing to recommend */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app #pjs-reco:not(:has(.rc-list,.ceo-wait)){display:none !important}
+/* materials list steps on one line */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .ml-steps{flex-wrap:nowrap !important;gap:4px !important;font-size:13px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .ml-steps>button{white-space:nowrap;padding:0 !important;font-size:13px !important;min-height:32px !important;height:32px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .ml-steps .ml-stl{flex:1 1 8px;min-width:8px}
