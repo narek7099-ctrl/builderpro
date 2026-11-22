@@ -456,3 +456,5 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-22: Before completion celebrations (portal/celebrate.js: green check card / pill on phase, job, to-do, deal won, sends, crew finish, wages paid) and progress rings on the phone dashboard. main = 52aebe7
 
 - 2026-11-22: Before the immersive homeowner page (photo header with progress ring, photo strip, crew card, full-screen photo viewer, a celebration when a phase finished since last visit). main = 669bb61
+
+- 2026-11-22: Before project screen fixes (clean field rows, mint work ring in the job header on phones, round crew ticks, hide empty Recommended, materials steps on one line). main = 4a3bf3e
