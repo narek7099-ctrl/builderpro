@@ -35,8 +35,8 @@
   function bizName() { var c = sets().company || {}; return c.name || 'My business'; }
   /* Home has two looks on a phone: 'list' (every section as a list on Home) or 'sidebar'
      (a menu button opens the same sidebar as the computer). Kept on this phone. */
-  function look() { try { return localStorage.getItem('bpHomeLook') === 'sidebar' ? 'sidebar' : 'list'; } catch (e) { return 'list'; } }
-  M.setLook = function (v) { try { localStorage.setItem('bpHomeLook', v); } catch (e) {} var x = $('bpx'); if (x) x.classList.toggle('bp-look-sb', v === 'sidebar'); if (window.bpDashboard) bpDashboard(); };
+  function look() { try { return localStorage.getItem('bpHomeLook') === 'list' ? 'list' : 'sidebar'; } catch (e) { return 'sidebar'; } }   /* sidebar is the default since 2026-11-22 */
+  M.setLook = function (v) { try { localStorage.setItem('bpHomeLook', v); } catch (e) {} var x = $('bpx'); if (x) x.classList.toggle('bp-look-sb', v === 'sidebar'); lookPick(); if (window._bpCurView === 'dashboard' && window.bpDashboard) bpDashboard(); };
   function ownerFirst() { var o = sets().owner || {}; return String(o.first || o.name || '').trim().split(/\s+/)[0] || ''; }
   function initials(s) { var p = String(s || '').replace(/\([^)]*\)/g, ' ').replace(/[^\p{L}\p{N}\s]/gu, ' ').trim().split(/\s+/).filter(Boolean); return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase(); }
   function money(n) { n = Math.round(+n || 0); return (n < 0 ? '−' : '') + '$' + Math.abs(n).toLocaleString(); }
@@ -226,6 +226,7 @@
   function circ(ic, label, fn, msIcon) {
     return '<button type="button" class="mh-c" onclick="' + fn + '"><span class="mh-c-r">' + (msIcon ? '<span class="ms">' + ic + '</span>' : ico(ic)) + '</span><span>' + esc(label) + '</span></button>';
   }
+  M.book = function () { bpNav('calendar'); setTimeout(function () { var d = document.querySelector('#bpxViewArea .cal-add'); if (d) d.open = true; }, 500); };
   M.quick = function (v, fn, arg) {
     bpNav(v);
     if (locked(v)) return;
@@ -260,18 +261,50 @@
     var qb = function (go, fn, ic, label) { if (!allows(go)) return ''; return '<button type="button" class="mh3-q" onclick="bpMobile.quick(\'' + go + '\',\'' + fn + '\')"><span class="ms">' + ic + '</span><span>' + label + '</span>' + (locked(go) ? '<span class="ms bp-lk" aria-label="Not on your plan">lock</span>' : '') + '</button>'; };
     var todayList = needs.slice(0, 3).map(function (r) { return row(r.go, r.tone || '', r.t, ''); }).join('')
       + todayRows.map(function (r) { return '<button type="button" class="mh2-today" onclick="bpNav(\'' + r.go + '\')"><span class="mh2-tt">' + (r.t || '') + '</span><span class="mh2-rt"><b>' + r.w + '</b><small>' + r.s + '</small></span></button>'; }).join('');
-    el.innerHTML = '<div class="mh2 mh3">'
+    /* 2026-11-22: the phone dashboard is short lists you act on, no money stats:
+       what needs you, today, jobs in progress, new leads to call, estimates waiting on a yes */
+    var card = function (title, go, more, body, extra) { return '<section class="mh5-card"><div class="mh5-h"><b>' + title + '</b>' + (extra || '') + (go ? '<button type="button" class="mh5-all" onclick="bpNav(\'' + go + '\')">' + (more || 'See all') + '</button>' : '') + '</div>' + body + '</section>'; };
+    var needCard = needs.length ? card('Needs you', '', '', needs.slice(0, 3).map(function (r) { return row(r.go, r.tone || '', r.t, ''); }).join('')
+      + (needs.length > 3 ? '<button type="button" class="mh5-more" onclick="bpShell.notes&&bpShell.notes(document.getElementById(\'hlBell\'))">See all ' + needs.length + '</button>' : ''), '<span class="mh5-n">' + needs.length + '</span>') : '';
+    var todayCard = card('Today', allows('calendar') ? 'calendar' : '', 'Calendar', todayRows.length
+      ? todayRows.map(function (r) { return '<button type="button" class="mh5-row" onclick="bpNav(\'' + r.go + '\')"><span class="mh5-time">' + (r.t || '') + '</span><span class="mh5-t"><b>' + r.w + '</b><small>' + r.s + '</small></span><span class="ms mh5-go">chevron_right</span></button>'; }).join('')
+      : '<div class="mh5-empty">' + (d.appts === undefined ? 'Loading today…' : 'Nothing booked today.') + (allows('calendar') ? ' <button type="button" class="mh5-link" onclick="bpMobile.book()">Book a visit</button>' : '') + '</div>');
+    var jobRows = act.slice().sort(function (a, b) { return (Math.max((+b.estimate || 0) - (+b.collected || 0), 0)) - (Math.max((+a.estimate || 0) - (+a.collected || 0), 0)); }).slice(0, 3).map(function (j) {
+      var est = +j.estimate || 0, got1 = +j.collected || 0, pc = est ? Math.min(100, Math.round(got1 / est * 100)) : 0, left = Math.max(est - got1, 0);
+      return '<button type="button" class="mh5-row" onclick="bpProjOpen&&bpProjOpen(\'' + esc(j.id) + '\')"><span class="mh5-t"><b>' + esc(j.name || 'Project') + '</b><small>' + esc(j.title || '') + '</small><span class="mh5-bar"><i style="width:' + pc + '%"></i></span></span>'
+        + '<span class="mh5-amt">' + (left ? money(left) + '<small>left</small>' : '<small>paid</small>') + '</span></button>';
+    }).join('');
+    var jobsCard = allows('activejobs') ? card('Jobs in progress', 'activejobs', act.length > 3 ? 'All ' + act.length : 'All jobs', jobRows || '<div class="mh5-empty">No active jobs. <button type="button" class="mh5-link" onclick="bpMobile.quick(\'activejobs\',\'bpAddJobOpen\')">Add a job</button></div>') : '';
+    var leadHost = allows('contacts') ? '<div id="mh5Leads">' + leadCards() + '</div>' : '';
+    el.innerHTML = '<div class="mh2 mh3 mh5">'
       + '<section class="mh3-hi"><h2>' + (hiH < 12 ? 'Good morning' : hiH < 17 ? 'Good afternoon' : 'Good evening') + (name ? ', ' + esc(name) : '') + '</h2>'
         + '<small>' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + '</small></section>'
       + '<section class="mh3-qs">' + qb('estimates', 'bpEstOpen', 'request_quote', 'Estimate') + qb('activejobs', 'bpAddJobOpen', 'add_business', 'Job') + qb('invoices', 'bpInvOpen', 'receipt_long', 'Invoice') + '</section>'
       + setupCard()
-      + '<section class="mh2-card mh3-today"><div class="mh2-h"><b>Today</b>' + (needs.length ? '<span class="mh2-n">' + needs.length + ' to do</span>' : '') + '</div>'
-        + (todayList || '<div class="mh2-empty"><span class="ms">check_circle</span>' + (d.appts === undefined ? 'Loading today…' : 'All caught up. Nothing booked today.') + '</div>')
-        + (needs.length > 3 ? '<button type="button" class="mh2-more" onclick="bpShell.notes&&bpShell.notes(document.getElementById(\'hlBell\'))">See all ' + needs.length + '</button>' : '')
-      + '</section>'
+      + needCard + todayCard + jobsCard + leadHost
       + (look() === 'sidebar' ? '' : sectionsCard())
-      + lookSwitch()
       + '</div>';
+    if (allows('contacts') && !(window._bpContacts && _bpContacts.length) && window.bpEnsureContacts) {
+      bpEnsureContacts().then(function () { var h = $('mh5Leads'); if (h && window._bpCurView === 'dashboard') h.innerHTML = leadCards(); });
+    }
+  }
+  /* new leads to call, and estimates out waiting on a yes (from the contacts already loaded for Leads) */
+  function leadCards() {
+    var all = (window._bpContacts || []).filter(function (c) { return c && c.name; }), grp = window.bpCtGroup || function () { return ''; };
+    if (!all.length) return '';
+    var by = function (g) { return all.filter(function (c) { try { return grp(c) === g; } catch (e) { return false; } }).sort(function (a, b) { return String(b.dateAdded || '').localeCompare(String(a.dateAdded || '')); }); };
+    var fresh = by('new'), out = by('quoted');
+    var when = function (c) { var t = Date.parse(c.dateAdded || ''); if (!isFinite(t)) return ''; var dd = Math.round((Date.now() - t) / 864e5); return dd <= 0 ? 'today' : dd === 1 ? 'yesterday' : dd < 7 ? dd + ' days ago' : new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
+    var row = function (c, sub) {
+      var tel = String(c.phone || '').replace(/[^\d+]/g, '');
+      return '<div class="mh5-row mh5-lead"><button type="button" class="mh5-t" onclick="bpContactPage&&bpContactPage(\'' + esc(c.id) + '\')"><b>' + esc(c.name) + '</b><small>' + sub(c) + '</small></button>'
+        + (tel ? '<a class="mh5-cb" href="tel:' + esc(tel) + '" aria-label="Call ' + esc(c.name) + '"><span class="ms">call</span></a><a class="mh5-cb" href="sms:' + esc(tel) + '" aria-label="Text ' + esc(c.name) + '"><span class="ms">sms</span></a>' : '') + '</div>';
+    };
+    var c1 = fresh.length ? '<section class="mh5-card"><div class="mh5-h"><b>New leads to call</b><span class="mh5-n">' + fresh.length + '</span><button type="button" class="mh5-all" onclick="window._bpCtStage=\'new\';bpNav(\'contacts\')">See all</button></div>'
+      + fresh.slice(0, 3).map(function (c) { return row(c, function (x) { var w = when(x); return 'New lead' + (w ? ' · came in ' + w : ''); }); }).join('') + '</section>' : '';
+    var c2 = out.length ? '<section class="mh5-card"><div class="mh5-h"><b>Waiting on a yes</b><span class="mh5-n">' + out.length + '</span><button type="button" class="mh5-all" onclick="window._bpCtStage=\'quoted\';bpNav(\'contacts\')">See all</button></div>'
+      + out.slice(0, 3).map(function (c) { return row(c, function (x) { var st = ''; try { st = window.bpStageOf ? bpStageOf(x)[0] : ''; } catch (e) {} return esc(st || 'Estimate sent') + ' · follow up'; }); }).join('') + '</section>' : '';
+    return c1 + c2;
   }
   /* Look A: every section of the software as one list, the same order as the sidebar */
   function sectionsCard() {
@@ -289,12 +322,20 @@
     return rows ? '<section class="mh4-secs"><div class="mh4-h">Sections</div><div class="mh4-list">' + rows + '</div></section>' : '';
   }
   /* the switch between the two looks, at the bottom of Home */
+  /* the switch lives in Settings > Appearance (it was on Home, which is for work) */
+  function lookPick() {
+    if (!M.on()) return;
+    var sec = document.getElementById('set-sec-appearance'); if (!sec) return;
+    var old = sec.querySelector('.mh4-look'); var html = lookSwitch();
+    if (old) { old.outerHTML = html; return; }
+    var div = document.createElement('div'); div.innerHTML = html; sec.appendChild(div.firstChild);
+  }
   function lookSwitch() {
     var l = look();
-    return '<section class="mh4-look"><div class="mh4-h">Home style</div><div class="mh4-seg" role="tablist">'
-      + '<button type="button" role="tab" aria-selected="' + (l === 'list') + '" class="' + (l === 'list' ? 'on' : '') + '" onclick="bpMobile.setLook(\'list\')">Sections list</button>'
-      + '<button type="button" role="tab" aria-selected="' + (l === 'sidebar') + '" class="' + (l === 'sidebar' ? 'on' : '') + '" onclick="bpMobile.setLook(\'sidebar\')">Sidebar menu</button></div>'
-      + '<small>' + (l === 'sidebar' ? 'Tap the menu button at the top left for every section.' : 'Every section is listed above, like the sidebar on a computer.') + '</small></section>';
+    return '<section class="mh4-look"><div class="mh4-h">Phone menu</div><div class="mh4-seg" role="tablist">'
+      + '<button type="button" role="tab" aria-selected="' + (l === 'list') + '" class="' + (l === 'list' ? 'on' : '') + '" onclick="bpMobile.setLook(\'list\')">List on Home</button>'
+      + '<button type="button" role="tab" aria-selected="' + (l === 'sidebar') + '" class="' + (l === 'sidebar' ? 'on' : '') + '" onclick="bpMobile.setLook(\'sidebar\')">Sidebar</button></div>'
+      + '<small>' + (l === 'sidebar' ? 'The menu button at the top left opens every section.' : 'Every section is listed at the bottom of Home.') + '</small></section>';
   }
   /* the first week decides whether a new account sticks: the same setup steps as the computer
      dashboard (portal/dash.js), so a phone-only owner sees what is left and can tap straight to it */
@@ -460,7 +501,7 @@
       if (cs.position === 'sticky' && cs.bottom !== 'auto') { e._bpsb = 1; e.classList.add('bp-stickbot'); }
     });
   }
-  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); settingsHook(); jobsHook(); clampLong(); stickBottom(); }, 80); }
+  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); settingsHook(); jobsHook(); clampLong(); stickBottom(); lookPick(); }, 80); }
   function watch() {
     var a = $('bpxViewArea'); if (!a || a._bpmw || !window.MutationObserver) return;
     a._bpmw = 1; new MutationObserver(function () { if (M.on()) tidy(); }).observe(a, { childList: true, subtree: true });
