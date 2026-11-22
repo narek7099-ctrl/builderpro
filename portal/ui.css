@@ -461,3 +461,34 @@
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea section:is(.mh4-secs,.mh4-look){padding:0 !important;margin-top:0 !important;min-height:0 !important;background:none !important;box-shadow:none !important;border:0 !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh4-ic svg{fill:none !important;stroke:currentColor !important;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .bp-mlogo img{filter:brightness(1.7) saturate(1.1)}
+
+/* phone dashboard, 2026-11-22: short lists to act on (portal/mobile.js home) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea section.mh5-card{padding:4px 0 2px !important;margin:0 !important;border:0 !important;border-radius:16px !important;background:var(--fl-2,#fff) !important;box-shadow:0 0 0 .5px rgba(16,24,40,.08),0 1px 2px rgba(16,24,40,.05) !important;overflow:hidden;min-height:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-h{display:flex;align-items:center;gap:8px;padding:12px 16px 6px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-h>b{font-size:17px;font-weight:700;color:var(--ink,#0b1526)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-n{min-width:22px;height:22px;padding:0 7px;border-radius:11px;background:rgba(0,111,255,.12);color:#006fff;font-size:12.5px;font-weight:700;display:inline-grid;place-items:center}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-all{all:unset;margin-left:auto;color:#006fff;font-size:15px;font-weight:500;cursor:pointer;padding:6px 0}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-row{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;min-height:58px;padding:9px 16px;cursor:pointer;position:relative}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m :is(.mh5-row,.mh5-card .mh2-row)+:is(.mh5-row,.mh2-row)::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--fl-line,rgba(16,24,40,.1))}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-row:active{background:rgba(0,111,255,.05)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-t{all:unset;flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;cursor:pointer}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-t b{font-size:16px;font-weight:600;color:var(--ink,#0b1526);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-t small{font-size:13.5px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-time{flex:none;width:62px;font-size:14px;font-weight:700;color:#006fff}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-go{flex:none;color:#b8c0cc;font-size:22px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-bar{display:block;height:4px;border-radius:2px;background:rgba(16,24,40,.08);margin-top:6px;overflow:hidden}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-bar>i{display:block;height:100%;background:#16c79a;border-radius:2px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-amt{flex:none;text-align:right;font-size:16px;font-weight:700;color:var(--ink,#0b1526);font-variant-numeric:tabular-nums;display:flex;flex-direction:column;align-items:flex-end}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-amt small{font-size:12.5px;font-weight:500;color:#6b7280}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-lead{cursor:default}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-cb{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(0,111,255,.1);color:#006fff !important;text-decoration:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-cb .ms{font-size:20px !important;color:#006fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-empty{padding:8px 16px 16px;font-size:15px;color:#6b7280}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-link{all:unset;color:#006fff;font-weight:600;cursor:pointer}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-more{all:unset;display:block;padding:12px 16px;color:#006fff;font-size:15px;font-weight:500;border-top:.5px solid var(--fl-line,rgba(16,24,40,.1));cursor:pointer}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-card .mh2-row{padding:12px 16px !important;min-height:52px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea section.mh5-card{background:#15181e !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .mh5-t b,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .mh5-h>b,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .mh5-amt{color:#f1f5f9}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .mh5-bar{background:rgba(255,255,255,.1)}
+/* Settings > Appearance: the phone menu switch */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea #set-sec-appearance section.mh4-look{margin-top:18px !important;padding:0 !important}
