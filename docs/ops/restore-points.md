@@ -458,3 +458,5 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-22: Before the immersive homeowner page (photo header with progress ring, photo strip, crew card, full-screen photo viewer, a celebration when a phase finished since last visit). main = 669bb61
 
 - 2026-11-22: Before project screen fixes (clean field rows, mint work ring in the job header on phones, round crew ticks, hide empty Recommended, materials steps on one line). main = 4a3bf3e
+
+- 2026-11-22: Before homeowner portal review fixes (dark mode, Pay tab paid bar and call-to-pay, no Pay button without card payments, PDF labels, decline as a text button). main = c6b939f

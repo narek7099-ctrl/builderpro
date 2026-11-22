@@ -94,9 +94,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261122-20261122d">
-<link rel="stylesheet" href="site/present.css?v=20261122-20261122d">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261122-20261122d"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261122-20261122e">
+<link rel="stylesheet" href="site/present.css?v=20261122-20261122e">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261122-20261122e"}}</script>
 
 
 <style id="bpi-icons">
@@ -9288,6 +9288,7 @@ window.bpHpView=function(i){
   document.onkeydown=function(e){if(!v.classList.contains('on'))return;if(e.key==='Escape')bpHpViewClose();if(e.key==='ArrowRight')bpHpView(i+1);if(e.key==='ArrowLeft')bpHpView(i-1);};
 };
 window.bpHpViewClose=function(){var v=document.getElementById('hpView');if(v)v.classList.remove('on');document.body.style.overflow='';};
+function bpHpIsPdf(x){return x.type==='pdf'||/\.pdf(\?|$)/i.test(String(x.name||x.url||''));}
 function bpHpPane(t){
   var d=_bpHp.d,j=d.job||{},m=d.money||{},b=d.business||{};
   if(t==='pros')return bpPrPane();
@@ -9339,7 +9340,8 @@ function bpHpPane(t){
       +'<div class="hx-big"><b>'+bpHpMoney(m.paid).replace(/\.00$/,'')+'</b><span>paid of '+bpHpMoney(m.contract).replace(/\.00$/,'')+'</span></div>'
       +'<div class="hx-bar"><i style="width:'+paidPct+'%"></i></div>'
       +'<div class="hx-next'+(due?' due':'')+'"><span class=ms>'+(due?'payments':'schedule')+'</span><div>'+payLine+'</div></div>'
-      +(due?'<button type="button" class="hx-btn pri" onclick="bpHpTab(\'pay\')"><span class=ms>credit_card</span>Pay '+bpHpMoney(left(due))+'</button>':'')+'</section>';
+      +(due?(d.canPay?'<button type="button" class="hx-btn pri" onclick="bpHpTab(\'pay\')"><span class=ms>credit_card</span>Pay '+bpHpMoney(left(due))+'</button>'
+        :(b.phone?'<a class="hx-btn" href="'+bpHpTel(b)+'"><span class=ms>call</span>Call '+bpEsc(b.name||'your contractor')+' to pay</a>':'')):'')+'</section>';
     /* four shortcuts */
     var docsN=(d.docs||[]).length+(d.contracts||[]).length, photoN=(d.photos||[]).length;
     var tile=function(go,ico,label,n){return '<button type="button" class="hx-tile" onclick="bpHpTab(\''+go+'\')"><span class=ms>'+ico+'</span><b>'+label+'</b>'+(n?'<em>'+n+'</em>':'')+'</button>';};
@@ -9370,7 +9372,7 @@ function bpHpPane(t){
         return '<a class="hp-row" href="'+bpHpEscA(c.link)+'" target="_blank" rel="noopener"><span class="ms hp-ic">contract</span><div><b>'+bpEsc(c.title||'Agreement')+'</b><span>'+(c.status==='signed'?'Signed '+bpEsc(bpHpDay(c.signed_at,{month:'short',day:'numeric',year:'numeric'})):'Ready for your signature')+'</span></div>'+(c.status==='signed'?'<span class="hp-tag ok">Signed</span>':'<span class="hp-tag warn">Sign</span>')+'</a>';
       }).join(''):'<p class="hp-fine hp-none">No contracts yet.</p>')
       +bpHpCard('Documents',dc.length?dc.map(function(x){
-        return '<a class="hp-row" href="'+bpHpEscA(x.url)+'" target="_blank" rel="noopener"><span class="ms hp-ic">'+(x.type==='pdf'?'picture_as_pdf':'image')+'</span><div><b>'+bpEsc(x.name)+'</b><span>'+(x.type==='pdf'?'PDF':'Image')+'</span></div><span class="ms">open_in_new</span></a>';
+        return '<a class="hp-row" href="'+bpHpEscA(x.url)+'" target="_blank" rel="noopener"><span class="ms hp-ic">'+(bpHpIsPdf(x)?'picture_as_pdf':'image')+'</span><div><b>'+bpEsc(x.name)+'</b><span>'+(bpHpIsPdf(x)?'PDF':'Image')+'</span></div><span class="ms">open_in_new</span></a>';
       }).join(''):'<p class="hp-fine hp-none">No other documents yet.</p>')
       +(pm.length?bpHpCard('Permits',pm.map(function(p){
         return '<div class="hp-row"><span class="ms hp-ic">assignment</span><div><b>'+bpEsc(p.type||'Permit')+(p.number?' · #'+bpEsc(p.number):'')+'</b><span>'+bpEsc(p.status||'')+(p.expires?' · expires '+bpEsc(bpHpDay(p.expires,{month:'short',day:'numeric',year:'numeric'})):'')+'</span></div></div>';
@@ -9378,10 +9380,12 @@ function bpHpPane(t){
   }
   if(t==='pay'){
     var pays=m.payments||[];
-    return bpHpCard('Balance',''
+    var pp=m.contract>0?Math.min(100,Math.round((m.paid||0)/m.contract*100)):0;
+    return bpHpCard('Balance','<span class="hx-paypct">'+pp+'% paid</span>'
+        +'<div class="hx-bar hx-paybar"><i style="width:'+pp+'%"></i></div>'
         +'<div class="hp-money big"><div><small>Contract total</small><b>'+bpHpMoney(m.contract).replace(/\.00$/,'')+'</b>'+(m.changeOrders?'<span>includes '+bpHpMoney(m.changeOrders).replace(/\.00$/,'')+' in approved changes</span>':'')+'</div><div><small>Paid so far</small><b>'+bpHpMoney(m.paid).replace(/\.00$/,'')+'</b></div><div class="due"><small>Balance due</small><b>'+bpHpMoney(m.due).replace(/\.00$/,'')+'</b></div></div>'
         +(m.due>0?(d.canPay?'<div class="sg-msg" id="hpPayMsg"></div><button class="hp-btn lg" id="hpPay" onclick="bpHpPay()"><span class=ms>credit_card</span>Pay my invoice</button><div class="hp-fine"><span class=ms>lock</span>Opens your invoice from '+bpEsc(b.name||'your contractor')+' on a secure payment page. Your card details never reach this site.</div>'
-          :'<div class="hp-fine">To pay, contact '+bpEsc(b.name||'your contractor')+'.</div>'):'<div class="hp-note ok"><span class=ms>check_circle</span>You\'re all paid up.</div>'))
+          :(b.phone?'<a class="hp-btn ghost lg" href="'+bpHpTel(b)+'"><span class=ms>call</span>Call '+bpEsc(b.name||'your contractor')+' to pay</a>':'<div class="hp-fine">To pay, contact '+bpEsc(b.name||'your contractor')+'.</div>')):'<div class="hp-note ok"><span class=ms>check_circle</span>You\'re all paid up.</div>'))
       +bpHpPlan(d)
       +(!pays.length?'':bpHpCard('Card payments',pays.map(function(p){return '<div class="hp-row"><span class="ms hp-ic">receipt_long</span><div><b>'+bpHpMoney(p.amount)+'</b><span>'+bpEsc(bpHpDay(p.at,{month:'short',day:'numeric',year:'numeric'}))+'</span></div><span class="hp-tag ok">Paid</span></div>';}).join('')
         ));
@@ -15004,11 +15008,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261120r"></script>
 <script src="portal/website.js?v=20261118f"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261122-20261122d"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261122-20261122d"></script>
-<script src="site/vendor/SplitText.min.js?v=20261122-20261122d"></script>
-<script src="site/site.js?v=20261122-20261122d"></script>
-<script src="site/present.js?v=20261122-20261122d"></script>
+<script src="site/vendor/gsap.min.js?v=20261122-20261122e"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261122-20261122e"></script>
+<script src="site/vendor/SplitText.min.js?v=20261122-20261122e"></script>
+<script src="site/site.js?v=20261122-20261122e"></script>
+<script src="site/present.js?v=20261122-20261122e"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261118f">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261120c">
@@ -15045,7 +15049,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/flat.css?v=20261121l">
 <link rel="stylesheet" href="portal/shell4.css?v=20261120t">
 <link rel="stylesheet" href="portal/ui.css?v=20261122d">
-<link rel="stylesheet" href="portal/homeowner.css?v=20261122i">
+<link rel="stylesheet" href="portal/homeowner.css?v=20261122l">
 <script src="site/silk.js?v=20261118f"></script>
 <script src="portal/appbg.js?v=20261113d"></script>
 <script src="portal/celebrate.js?v=20261122d"></script>

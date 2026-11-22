@@ -91,3 +91,42 @@
 @media (max-width:899px){#bpSign.hp section.hx-hero{min-height:330px}}
 body>.hp-view.on:not(#bpSign):not(#x1):not(#x2){display:flex !important;visibility:visible !important}
 .hp-view .ms{font-family:'Material Symbols Rounded' !important;font-weight:400;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;white-space:nowrap;direction:ltr;-webkit-font-feature-settings:'liga';font-feature-settings:'liga';-webkit-font-smoothing:antialiased}
+/* the Pay tab's paid bar */
+#bpSign.hp .hx-paypct{display:block;font-size:13px;font-weight:700;color:#08775d;margin:-4px 0 6px}
+#bpSign.hp .hx-paybar{margin-bottom:12px}
+#bpSign.hp .sg-decline{text-decoration:none !important;color:var(--hp-grey,#6b7280) !important;font-weight:600;min-height:40px}
+
+/* =====================================================================
+   Dark mode for the homeowner page: follows the phone's own setting
+   ===================================================================== */
+@media (prefers-color-scheme:dark){
+  #bpSign.hp{--hp-bg:#08090c;--hp-card:#15181e;--hp-line:rgba(255,255,255,.09);--hp-line2:rgba(255,255,255,.06);--hp-ink:#f1f5f9;--hp-ink2:#cbd5e1;--hp-grey:#98a2b3;--hp-grey2:#6b7280;--hp-soft:#1d2129;--hp-bluesoft:#132544 !important;--hp-blue2:#6aa6ff !important;color-scheme:dark}
+  body.bp-home{background:#08090c !important}
+  #bpSign.hp :is(.hp-bar,.pr-pbar){background:rgba(13,15,19,.9) !important;border-color:var(--hp-line) !important}
+  #bpSign.hp .hp-tabbar{background:rgba(13,15,19,.94) !important;border-color:var(--hp-line) !important}
+  #bpSign.hp .hp-side{background:#0d0f13 !important;border-color:var(--hp-line) !important}
+  #bpSign.hp :is(.hp-avi:not(.mono),.pr-logo.has,.pr-cover-logo){background:#fff}
+  #bpSign.hp .hp-avi.mono{background:var(--hp-blue,#006fff) !important;color:#fff !important;border-color:transparent !important}
+  #bpSign.hp .hp-iconbtn,#bpSign.hp .hp-mob-b:not(.pri),#bpSign.hp .hp-btn.ghost,#bpSign.hp .hx-btn:not(.pri),#bpSign.hp .hx-tile{background:var(--hp-soft) !important;border-color:var(--hp-line) !important;color:var(--hp-ink) !important}
+  #bpSign.hp :is(.hx-tl-tag.late,.hx-next.due,.pr-smp-note,.hp-note){background:#132544 !important;color:#cfe0ff !important;border-color:transparent !important}
+  #bpSign.hp .hp-note.ok{background:#0f2a22 !important;color:#8ff0cf !important}
+  #bpSign.hp :is(input,textarea,select){background:#1d2129 !important;color:var(--hp-ink) !important;border-color:var(--hp-line) !important}
+  #bpSign.hp .hp-bub{background:#23272f;color:var(--hp-ink)}
+  #bpSign.hp .hp-msg.me .hp-bub{background:var(--hp-blue,#006fff);color:#fff}
+  #bpSign.hp .hx-av{box-shadow:0 0 0 3px #15181e,0 0 0 4px rgba(255,255,255,.08)}
+  #bpSign.hp .hx-paypct{color:#5ee0bb}
+  #bpSign.hp :is(h1,h2,h3,b,strong){color:inherit}
+  #bpSign.hp .hx-hero :is(h1,b){color:#fff}
+  #bpSign.hp :is(.hp-chat-h,.hp-compose){background:#15181e !important;border-color:var(--hp-line) !important}
+  #bpSign.hp .hp-chat-h :is(b,strong){color:var(--hp-ink) !important}
+  #bpSign.hp .hp-dt{background:#1d2129 !important;color:var(--hp-ink) !important}
+  #bpSign.hp [class*=seg]>.on,#bpSign.hp [role=tablist]>.on,#bpSign.hp .hp-view-t>.on{background:#2a303b !important;color:#fff !important}
+  #bpSign.hp :is(.hp-tag.ok,.hx-tl-tag.ok){background:rgba(22,199,154,.16) !important;color:#5ee0bb !important}
+  #bpSign.hp .hp-tag:not(.ok):not(.warn){background:rgba(255,255,255,.08) !important;color:var(--hp-ink2) !important}
+  #bpSign.hp .hp-tag.warn{background:#132544 !important;color:#9cc3ff !important}
+  #bpSign.hp .hp-thread{background:#0f1115 !important}
+  #bpSign.hp .hp-seg{background:rgba(255,255,255,.08) !important}
+  #bpSign.hp .hp-seg>.on{background:#2a303b !important;color:#fff !important}
+  #bpSign.hp :is(.hx-dot.ok,.hp-chip.ok){background:rgba(22,199,154,.16) !important;color:#5ee0bb !important}
+  #bpSign.hp :is(.now,.up)>i{background:#15181e !important}
+}
