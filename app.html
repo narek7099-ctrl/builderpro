@@ -94,9 +94,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261122-20261122b">
-<link rel="stylesheet" href="site/present.css?v=20261122-20261122b">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261122-20261122b"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261122-20261122c">
+<link rel="stylesheet" href="site/present.css?v=20261122-20261122c">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261122-20261122c"}}</script>
 
 
 <style id="bpi-icons">
@@ -9190,6 +9190,13 @@ function bpHpRender(){
     +(_bpHp.more?bpHpMoreSheet():'')
   +'</div>';
   _bpHp.anim=false;
+  setTimeout(function(){var a=h.querySelector('.hx-hero-ring .a');if(a)a.style.strokeDashoffset=a.getAttribute('data-off');},60);
+  /* something finished since the homeowner last looked: celebrate it with them once */
+  try{var jx=d.job||{},phx=(jx.phases||[]),dn=phx.filter(function(p){return p.done;}),k='bpHpPh:'+_bpHp.token,was=localStorage.getItem(k);
+    if(!_bpHp.cel&&was!=null&&dn.length>(+was||0)){_bpHp.cel=1;var lastP=dn[dn.length-1],pc=jx.status==='done'?100:(jx.progress!=null?jx.progress:Math.round(dn.length/Math.max(1,phx.length)*100)),tries=0;
+      (function cheer(){ if(!window.bpCelebrate){ if(++tries<20) setTimeout(cheer,250); return; }
+        setTimeout(function(){bpCelebrate(jx.status==='done'?'Your project is complete':(lastP.name||'A phase')+' finished',jx.status==='done'?'Thank you for choosing '+((d.business||{}).name||'us')+'.':'Your project is '+pc+'% done.',{big:true,pct:pc,of:dn.length+' of '+phx.length+' phases',ms:2600});},600); })();}
+    localStorage.setItem(k,String(dn.length));}catch(e){}
   if(_bpHp.tab==='msgs'){var l=document.getElementById('hpThread');if(l)l.scrollTop=l.scrollHeight;}
   if(_bpHp.co)bpHpCoSign(_bpHp.co,true);
 }
@@ -9234,6 +9241,53 @@ function bpHpDayLabel(at){
   return diff===0?'Today':diff===1?'Yesterday':d.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric',year:d.getFullYear()===t.getFullYear()?undefined:'numeric'});
 }
 function bpHpTime(at){var d=new Date(at);return isNaN(d)?'':d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}
+/* 2026-11-22: the overview feels like the homeowner's own project. A photo
+   header (their house, latest progress photo) with a ring for how far along
+   it is, a strip of progress photos to swipe, and who is coming next. */
+function bpHxHero(d,pct,done,cur,later,fin){
+  var j=d.job||{},b=d.business||{},ph=(d.photos||[]),last=ph.length?ph[ph.length-1]:null;
+  var p=done?100:(pct!=null?pct:0),C=2*Math.PI*44,off=C*(1-p/100);
+  var dleft=j.finish&&!done?bpHpDiff(bpHpToday(),j.finish):null;
+  var nv=j.next_visit&&!done?bpHpDiff(bpHpToday(),j.next_visit):null;
+  var chip=function(ic,t){return '<span class="hx-hchip"><span class=ms>'+ic+'</span>'+t+'</span>';};
+  var chips=(done?chip('task_alt','Complete'):chip('construction',cur?'Now: '+bpEsc(cur.name||'Next phase'):'Getting started'))
+    +(dleft!=null?chip('flag',dleft<=0?'Finishing today':dleft===1?'Finishes tomorrow':'Finishes in '+dleft+' days'):'')
+    +(nv!=null&&nv>=0?chip('event',(nv===0?'Crew here today':nv===1?'Crew here tomorrow':'Next visit in '+nv+' days')):'');
+  return '<section class="hx-hero'+(last?' has-ph':'')+'">'
+    +(last?'<img class="hx-hero-img" src="'+bpHpEscA(last.url)+'" alt="" loading="eager">':'')
+    +'<div class="hx-hero-in">'
+      +'<div class="hx-hero-t"><small>'+((j.customer||(d.customer||{}).name)?'Hi '+bpEsc(String(j.customer||(d.customer||{}).name).split(/\s+/)[0])+', here\'s your project':'Your project')+'</small><h1>'+bpEsc(j.title||'Your project')+'</h1>'+(j.addr?'<span><span class=ms>location_on</span>'+bpEsc(j.addr)+'</span>':'')+'</div>'
+      +'<div class="hx-hero-ring" role="img" aria-label="'+p+'% complete"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" class="t"/><circle cx="50" cy="50" r="44" class="a" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+C.toFixed(1)+'" data-off="'+off.toFixed(1)+'"/></svg>'
+        +(done?'<b class="ok"><span class=ms>check</span></b>':'<b>'+p+'<i>%</i></b>')+'<small>'+(done?'done':'complete')+'</small></div>'
+    +'</div>'
+    +'<div class="hx-hero-chips">'+chips+'</div>'
+  +'</section>';
+}
+function bpHxStrip(d){
+  var ph=(d.photos||[]); if(!ph.length)return '';
+  var list=ph.map(function(p,i){return {p:p,i:i};}).reverse().slice(0,8);
+  return '<section class="hx-strip"><div class="hx-h"><small>Latest photos</small><button type="button" class="hx-link" onclick="bpHpTab(\'photos\')">All '+ph.length+'</button></div>'
+    +'<div class="hx-strip-row">'+list.map(function(x){return '<button type="button" class="hx-shot" onclick="bpHpView('+x.i+')"><img loading="lazy" src="'+bpHpEscA(x.p.url)+'" alt="'+bpHpEscA(x.p.caption||'Project photo')+'"><span>'+(x.p.caption?'<b>'+bpEsc(x.p.caption)+'</b>':'')+(x.p.at?'<small>'+bpEsc(bpHpDay(String(x.p.at).slice(0,10),{month:'short',day:'numeric'}))+'</small>':'')+'</span></button>';}).join('')+'</div></section>';
+}
+function bpHxCrew(d,done){
+  var c=(d.crew||[]); if(!c.length||done)return '';
+  return '<section class="hx-card hx-crew"><div class="hx-h"><small>Your crew</small></div><div class="hx-crew-row">'+c.slice(0,4).map(function(x){
+    return '<div class="hx-mate"><span class="hx-av">'+bpEsc(bpHpInitials(x.name))+'</span><div><b>'+bpEsc(x.name||'')+'</b><span>'+bpEsc(x.trade||'Crew')+'</span></div></div>';}).join('')+'</div></section>';
+}
+/* a full-screen photo viewer: swipe or tap the arrows, caption under it */
+window.bpHpView=function(i){
+  var ph=((_bpHp.d||{}).photos||[]); if(!ph.length)return;
+  i=(i+ph.length)%ph.length; var p=ph[i];
+  var v=document.getElementById('hpView'); if(!v){v=document.createElement('div');v.id='hpView';v.className='hp-view';document.body.appendChild(v);}
+  v.innerHTML='<button type="button" class="hp-view-x" aria-label="Close" onclick="bpHpViewClose()"><span class=ms>close</span></button>'
+    +'<img src="'+bpHpEscA(p.url)+'" alt="'+bpHpEscA(p.caption||'Project photo')+'">'
+    +(ph.length>1?'<button type="button" class="hp-view-n l" aria-label="Previous photo" onclick="bpHpView('+(i-1)+')"><span class=ms>chevron_left</span></button><button type="button" class="hp-view-n r" aria-label="Next photo" onclick="bpHpView('+(i+1)+')"><span class=ms>chevron_right</span></button>':'')
+    +'<div class="hp-view-c">'+(p.caption?'<b>'+bpEsc(p.caption)+'</b>':'')+'<span>'+(p.at?bpEsc(bpHpDay(String(p.at).slice(0,10),{weekday:'short',month:'short',day:'numeric'}))+' · ':'')+(i+1)+' of '+ph.length+'</span></div>';
+  v.classList.add('on'); document.body.style.overflow='hidden';
+  var x0=null; v.ontouchstart=function(e){x0=e.touches[0].clientX;}; v.ontouchend=function(e){if(x0==null)return;var dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>50)bpHpView(i+(dx<0?1:-1));};
+  document.onkeydown=function(e){if(!v.classList.contains('on'))return;if(e.key==='Escape')bpHpViewClose();if(e.key==='ArrowRight')bpHpView(i+1);if(e.key==='ArrowLeft')bpHpView(i-1);};
+};
+window.bpHpViewClose=function(){var v=document.getElementById('hpView');if(v)v.classList.remove('on');document.body.style.overflow='';};
 function bpHpPane(t){
   var d=_bpHp.d,j=d.job||{},m=d.money||{},b=d.business||{};
   if(t==='pros')return bpPrPane();
@@ -9299,13 +9353,14 @@ function bpHpPane(t){
     var latest=feed.length?'<section class="hx-card"><div class="hx-h"><small>Latest</small></div>'+feed.slice(0,3).map(function(x){
         return '<div class="hx-feed"><span class="hx-dot '+x.k+'"><span class=ms>'+x.ico+'</span></span><div><b>'+x.t+'</b>'+(x.s?'<span>'+bpEsc(x.s)+'</span>':'')+'</div></div>';}).join('')+'</section>':'';
     return (pend?'<button type="button" class="hp-note warn" onclick="bpHpTab(\'changes\')"><span class=ms>edit_document</span><span>Your contractor sent '+(pend===1?'a change':pend+' changes')+' for you to review</span><span class="ms hp-go">chevron_right</span></button>':'')
-      +'<div class="hx-hi"><span>'+(j.customer?'Hi '+bpEsc(j.customer)+', here\'s your project':'Here\'s your project')+'</span><h1>'+bpEsc(j.title||'Your project')+'</h1>'+(j.addr?'<small>'+bpEsc(j.addr)+'</small>':'')+'</div>'
-      +'<div class="hx-cols"><div class="hx-col">'+hero+visit+tiles+'</div><div class="hx-col">'+money+latest+bpHpAcctCard()+'</div></div>';
+      +bpHxHero(d,pct,done,cur,later,fin)
+      +bpHxStrip(d)
+      +'<div class="hx-cols"><div class="hx-col">'+hero+visit+bpHxCrew(d,done)+tiles+'</div><div class="hx-col">'+money+latest+bpHpAcctCard()+'</div></div>';
   }
   if(t==='sched')return bpHpSched();
   if(t==='photos'){
     var n=(d.photos||[]).length;
-    return bpHpCard('Progress photos'+(n?' <span class="hp-count">'+n+'</span>':''),n?'<div class="hp-ph-grid">'+d.photos.map(function(p){return '<a href="'+bpHpEscA(p.url)+'" target="_blank" rel="noopener"><img loading="lazy" src="'+bpHpEscA(p.url)+'" alt="Project photo"></a>';}).join('')+'</div>'
+    return bpHpCard('Progress photos'+(n?' <span class="hp-count">'+n+'</span>':''),n?'<div class="hp-ph-grid hx-grid">'+d.photos.map(function(p,i){return {p:p,i:i};}).reverse().map(function(x){var p=x.p;return '<button type="button" class="hx-gph" onclick="bpHpView('+x.i+')"><img loading="lazy" src="'+bpHpEscA(p.url)+'" alt="'+bpHpEscA(p.caption||'Project photo')+'">'+(p.caption||p.at?'<span>'+(p.caption?'<b>'+bpEsc(p.caption)+'</b>':'')+(p.at?'<small>'+bpEsc(bpHpDay(String(p.at).slice(0,10),{month:'short',day:'numeric'}))+'</small>':'')+'</span>':'')+'</button>';}).join('')+'</div>'
       :bpHpEmpty('photo_camera','No photos shared yet. Your contractor will add progress photos here.'));
   }
   if(t==='docs'){
@@ -14949,11 +15004,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261120r"></script>
 <script src="portal/website.js?v=20261118f"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261122-20261122b"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261122-20261122b"></script>
-<script src="site/vendor/SplitText.min.js?v=20261122-20261122b"></script>
-<script src="site/site.js?v=20261122-20261122b"></script>
-<script src="site/present.js?v=20261122-20261122b"></script>
+<script src="site/vendor/gsap.min.js?v=20261122-20261122c"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261122-20261122c"></script>
+<script src="site/vendor/SplitText.min.js?v=20261122-20261122c"></script>
+<script src="site/site.js?v=20261122-20261122c"></script>
+<script src="site/present.js?v=20261122-20261122c"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261118f">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261120c">
@@ -14990,8 +15045,9 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/flat.css?v=20261121l">
 <link rel="stylesheet" href="portal/shell4.css?v=20261120t">
 <link rel="stylesheet" href="portal/ui.css?v=20261122b">
+<link rel="stylesheet" href="portal/homeowner.css?v=20261122i">
 <script src="site/silk.js?v=20261118f"></script>
 <script src="portal/appbg.js?v=20261113d"></script>
-<script src="portal/celebrate.js?v=20261122a"></script>
+<script src="portal/celebrate.js?v=20261122d"></script>
 <!--/app-only-->
 </html>

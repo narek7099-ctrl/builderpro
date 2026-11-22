@@ -55,6 +55,7 @@
       '.bpcel-pill .bpcel-ring .chk{stroke-width:3.2}',
       '.bpcel-pill small{display:block;font-size:12.5px;font-weight:500;color:#6b7280;margin-top:1px}',
       '.bpcel-pill .t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      'body>.bpcel-bg:not(#bpSign):not(#x1):not(#x2){display:grid!important;visibility:visible!important}body>.bpcel-pill:not(#bpSign):not(#x1):not(#x2){display:flex!important;visibility:visible!important}',
       '@keyframes bpcelFade{from{opacity:0}to{opacity:1}}@keyframes bpcelFadeOut{to{opacity:0}}',
       '@keyframes bpcelPop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}',
       '@keyframes bpcelDot{from{transform:scale(0)}to{transform:scale(1)}}',
