@@ -586,3 +586,37 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards[data-hl="employees"] .emp-name b{font-size:16px;font-weight:600}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards[data-hl="employees"] .emp-who .bpx-mut{font-size:13.5px !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark table.bp-mcards[data-hl="employees"] td[data-l="Rate"]{color:#f1f5f9}
+/* ===== App feel, round 2 (2026-11-23) ===== */
+/* number tiles: one grouped card split by thin lines, like a phone's summary screen, not loose boxes */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-stats,.rcp-stats){gap:0 !important;padding:0 !important;background:var(--fl-2,#fff) !important;border:0 !important;border-radius:16px !important;overflow:hidden !important;box-shadow:0 0 0 .5px rgba(16,24,40,.08),0 1px 2px rgba(16,24,40,.05) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat){background:transparent !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;margin:0 !important;padding:14px 16px !important;min-width:0}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat):nth-child(odd){box-shadow:inset -.5px 0 0 rgba(16,24,40,.1) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat):nth-child(n+3){border-top:.5px solid rgba(16,24,40,.1) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat):last-child:nth-child(odd){grid-column:1/-1;box-shadow:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-stats,.rcp-stats){background:#15181e !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat):nth-child(odd){box-shadow:inset -.5px 0 0 rgba(255,255,255,.08) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat):nth-child(n+3){border-top-color:rgba(255,255,255,.08) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat):last-child:nth-child(odd){box-shadow:none !important}
+/* Calendar: Add becomes a round + next to Today (it still opens the same menu) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea#bpxViewArea .cal-acts .cal-add>summary.bpx-btn.bp-iconadd{width:44px !important;height:44px !important;min-width:44px !important;min-height:44px !important;padding:0 !important;border-radius:50% !important;justify-content:center !important;gap:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea#bpxViewArea .cal-acts .cal-add>summary.bp-iconadd .ms{font-size:26px !important;margin:0 !important;color:#fff !important}
+/* Invoices and Estimates: the waiting items are rows in their card, not a card inside a card */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-panel .pjl>.pjl-r{border:0 !important;box-shadow:none !important;background:transparent !important;border-radius:0 !important;margin:0 !important;padding-left:0 !important;padding-right:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-panel .pjl>.pjl-r+.pjl-r{border-top:.5px solid rgba(16,24,40,.1) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-panel .pjl{border:0 !important;box-shadow:none !important;background:transparent !important;padding:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea .bpx-panel .pjl>.pjl-r+.pjl-r{border-top-color:rgba(255,255,255,.08) !important}
+/* Reputation and Marketing connections: one short row each (logo, name, status, a small Connect), not a big box */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .rp-plat.off{display:grid !important;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:12px 14px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .rp-plat.off>.bpx-mut{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .rp-plat.off .rp-plat-h{margin:0 !important;flex-wrap:wrap;row-gap:2px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .rp-plat.off .rp-plat-h .bpx-badge{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .rp-plat.off>button{margin:0 !important;width:auto !important;min-height:36px !important;height:auto !important;padding:7px 14px !important;font-size:14px !important;border-radius:999px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-mk-card{display:grid !important;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 12px;padding:12px 14px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-mk-card>.bpx-mk-top{grid-column:1;grid-row:1;margin:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-mk-card>.bpx-mk-acts{grid-column:2;grid-row:1/span 2;margin:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-mk-card>.bpx-mk-acts .bpx-btn{border-radius:999px !important;padding:9px 16px !important;font-size:14px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-mk-card>div:not([class]){grid-column:1;grid-row:2;padding-left:52px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-mk-card>div:not([class]):has(.bpx-mk-st.off){display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-mk-card{min-height:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-mk-card>.bpx-mk-acts{grid-row:1 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .rcp-si{background:rgba(0,111,255,.16) !important;color:#7db4ff !important}#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .rcp-si .ms{color:#7db4ff !important}
