@@ -462,3 +462,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-22: Before homeowner portal review fixes (dark mode, Pay tab paid bar and call-to-pay, no Pay button without card payments, PDF labels, decline as a text button). main = c6b939f
 - 2026-11-22 before Lisa does tasks + voice (estimate, invoice, contact, job, visit, expense; mic in Ask AI): main was 8a65336
 - 2026-11-23 before AI Team model split (daily brief and teammate questions on Haiku 5.5, falls back to Sonnet): main was 09146c7
+- 2026-11-23 before removing the AI Team daily brief (morning run now only works open tasks; site and app text updated): main was 307d0cb
