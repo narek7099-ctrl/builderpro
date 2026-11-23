@@ -22,6 +22,10 @@ import { SB_URL, sb, callGHL } from "./ghl.ts";
 
 const SONNET = Deno.env.get("AITEAM_MODEL") ?? "claude-sonnet-5-5";
 const OPUS = Deno.env.get("AITEAM_HEAVY_MODEL") ?? "claude-opus-5-5";
+// the small, cheap model for routine work nobody reads word by word: the daily
+// brief (runs by itself every day for every account) and quick questions one
+// assistant asks another. If it fails, that call is retried on SONNET.
+const LIGHT = Deno.env.get("AITEAM_LIGHT_MODEL") ?? "claude-haiku-5-5";
 // fallback when plan_limits can't be read
 const CAP = Number(Deno.env.get("AITEAM_MONTHLY_MESSAGES") ?? "150");
 async function capFor(uid: string): Promise<number> {
@@ -319,8 +323,9 @@ const workspaceId = (key: string) => WS ??= (async () => {
   } catch { WS = null; return ""; }
 })();
 
-async function run(acct: Acct, a: Agent, thread: string, text: string, opts: { heavy?: boolean; effort?: string; count?: boolean; depth?: number } = {}) {
-  const model = opts.heavy ? OPUS : SONNET;
+async function run(acct: Acct, a: Agent, thread: string, text: string, opts: { heavy?: boolean; light?: boolean; effort?: string; count?: boolean; depth?: number } = {}) {
+  let model = opts.heavy ? OPUS : opts.light ? LIGHT : SONNET;
+  const small = (m: string) => /haiku/i.test(m);
   const apiKey = (Deno.env.get("ANTHROPIC_API_KEY") ?? "").replace(/\s+/g, ""), ws = await workspaceId(apiKey);
   const client = new Anthropic({ apiKey, defaultHeaders: ws ? { "anthropic-workspace-id": ws } : undefined });
   const messages = await history(thread);
@@ -328,7 +333,9 @@ async function run(acct: Acct, a: Agent, thread: string, text: string, opts: { h
   if (lastM && lastM.role === "user") (lastM.content as unknown[]).push({ type: "text", text }); else messages.push({ role: "user", content: text });
   await save(thread, "user", text);
   const tools: Anthropic.Messages.ToolUnion[] = toolsFor(a);
-  if (a.web) tools.push({ type: "web_search_20260209", name: "web_search", max_uses: 4 } as unknown as Anthropic.Messages.ToolUnion);
+  // Haiku takes the basic web search; the newer one is for Sonnet and Opus
+  const webTool = (m: string) => ({ type: small(m) ? "web_search_20250305" : "web_search_20260209", name: "web_search", max_uses: 4 } as unknown as Anthropic.Messages.ToolUnion);
+  if (a.web) tools.push(webTool(model));
   const approvals: unknown[] = [];
   let reply = "", counted = false;
   for (let i = 0; i < 8; i++) {
@@ -336,9 +343,24 @@ async function run(acct: Acct, a: Agent, thread: string, text: string, opts: { h
       model, max_tokens: 12000, system: [{ type: "text", text: system(a, acct), cache_control: { type: "ephemeral" } }], messages, tools,
       thinking: { type: "adaptive" }, output_config: { effort: opts.effort ?? (opts.heavy ? "high" : "medium") },
     };
-    params.betas = ["server-side-fallback-2026-07-01"]; params.fallbacks = "default";
+    // server-side fallback on a refusal is for Sonnet and Opus; Haiku has none
+    if (!small(model)) { params.betas = ["server-side-fallback-2026-07-01"]; params.fallbacks = "default"; }
     // deno-lint-ignore no-explicit-any
-    const res: any = await client.beta.messages.create(params as any);
+    let res: any;
+    try {
+      // deno-lint-ignore no-explicit-any
+      res = await client.beta.messages.create(params as any);
+    } catch (e) {
+      // the light model refused the request (a bad parameter, not available): do it on Sonnet
+      const st = Number((e as { status?: number }).status ?? 0);
+      if (model !== LIGHT || !(st >= 400 && st < 500) || st === 429) throw e;
+      console.error("light model failed, using " + SONNET, st, String(e).slice(0, 200));
+      model = SONNET;
+      if (a.web) tools[tools.length - 1] = webTool(model);
+      params.model = model; params.betas = ["server-side-fallback-2026-07-01"]; params.fallbacks = "default";
+      // deno-lint-ignore no-explicit-any
+      res = await client.beta.messages.create(params as any);
+    }
     await addUsage(acct.user_id, String(res.model ?? model), res.usage ?? {}, opts.count && !counted ? 1 : 0); counted = true;
     messages.push({ role: "assistant", content: res.content }); await save(thread, "assistant", res.content, model);
     const t = (res.content as { type: string; text?: string }[]).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
@@ -362,7 +384,7 @@ async function run(acct: Acct, a: Agent, thread: string, text: string, opts: { h
         if (!t || t.key === a.key) return { type: "tool_result", tool_use_id: u.id, content: "No such assistant.", is_error: true };
         try {
           const th = await newThread(acct.user_id, t.key, `From ${a.name}: ` + String(input.question).slice(0, 60), "team");
-          const out = await run(acct, t, th, `${a.name} asks you: ${String(input.question)}\nAnswer them directly and briefly, using your tools if needed.`, { depth: 1, effort: "low" });
+          const out = await run(acct, t, th, `${a.name} asks you: ${String(input.question)}\nAnswer them directly and briefly, using your tools if needed.`, { depth: 1, effort: "low", light: true });
           approvals.push(...out.approvals);
           return { type: "tool_result", tool_use_id: u.id, content: JSON.stringify({ assistant: t.name, answer: out.reply }).slice(0, 20000) };
         } catch (e) { return { type: "tool_result", tool_use_id: u.id, content: "Couldn't reach them: " + String(e).slice(0, 200), is_error: true }; }
@@ -437,7 +459,7 @@ async function briefs() {
     await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ ai_brief_at: new Date().toISOString() }) });
     try {
       const th = await newThread(a.user_id, "office", "Daily brief " + day, "brief");
-      await run(a, AGENTS.office, th, `Write today's brief for ${a.full_name}. Check today's appointments, new contacts and conversations from the last day, and open opportunities that have gone quiet for 3+ days. Then give: 1) today at a glance, 2) who to call or text first and why, 3) up to 3 follow-up messages ready to send (queue them with conversations.send so the owner can approve with one tap). Keep it under 200 words plus the drafts.`, { effort: "low" });
+      await run(a, AGENTS.office, th, `Write today's brief for ${a.full_name}. Check today's appointments, new contacts and conversations from the last day, and open opportunities that have gone quiet for 3+ days. Then give: 1) today at a glance, 2) who to call or text first and why, 3) up to 3 follow-up messages ready to send (queue them with conversations.send so the owner can approve with one tap). Keep it under 200 words plus the drafts.`, { effort: "low", light: true });
       done.push(a.email);
       // then the morning stand-up: up to 2 open tasks, while under the plan's message limit
       const tk = await sb(`cai_tasks?owner=eq.${a.user_id}&status=eq.open&tries=lt.3&select=*&order=created_at.asc&limit=10`);
