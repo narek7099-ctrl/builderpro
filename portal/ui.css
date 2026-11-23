@@ -529,3 +529,47 @@
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .ml-steps{flex-wrap:nowrap !important;gap:4px !important;font-size:13px}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .ml-steps>button{white-space:nowrap;padding:0 !important;font-size:13px !important;min-height:32px !important;height:32px !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .ml-steps .ml-stl{flex:1 1 8px;min-width:8px}
+
+/* ===== App feel (2026-11-23): glass top bar, a bolder title, fewer buttons, taps that press in, screens that slide in ===== */
+html{overscroll-behavior-y:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m{-webkit-tap-highlight-color:transparent}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m :is(#hlTop,#hlTabs,#bpTabbar,button,.hl-tab,.bp-tab){-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* the top bar: see-through, so the page shows faintly under it as it scrolls */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #hlTop{background:rgba(255,255,255,.78) !important;-webkit-backdrop-filter:saturate(1.8) blur(20px) !important;backdrop-filter:saturate(1.8) blur(20px) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #hlTop{background:rgba(16,18,22,.78) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #hlTop .hl-ttl h1{font-size:19px !important;font-weight:800 !important;letter-spacing:-.3px}
+/* Settings is in the menu and behind your picture: the gear only stays on Home */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bp-m-home) #bpMGear{display:none !important}
+/* taps press in */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m :is(.bpx-btn,.bp-cta,.bpx-addbtn,.bpx-donebtn,.mh3-q,.mh5-cb,.mh5-jc,.hl-rb,.hl-burger,.hl-av,.hl-tab,.bp-macct,.fin-new-incm,.fin-new-exp,.oaw-mic,button[class*="btn"]:not([class*="row"])):not(:disabled){transition:transform .12s ease,background-color .15s ease,opacity .15s ease}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m :is(.bpx-btn,.bp-cta,.bpx-addbtn,.bpx-donebtn,.mh3-q,.mh5-cb,.mh5-jc,.hl-rb,.hl-burger,.hl-av,.hl-tab,.bp-macct,.fin-new-incm,.fin-new-exp,.oaw-mic,button[class*="btn"]:not([class*="row"])):not(:disabled):active{transform:scale(.96)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpTabbar .bp-tab:not(.bp-tab-new):active .bp-tab-i{transform:scale(.86);transition:transform .12s ease}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.pjl>.mj,.fl-row,.cl-row,.ct-row,.mh4-row,.mh5-row,[onclick]:not(button):not(a):not(input):not(select)):active{background-color:rgba(0,111,255,.05) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.pjl>.mj,.fl-row,.cl-row,.ct-row,.mh4-row,.mh5-row,[onclick]:not(button):not(a):not(input):not(select)):active{background-color:rgba(255,255,255,.05) !important}
+/* a new screen slides up a touch and fades in */
+@keyframes bpEnter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea.bp-enter{animation:bpEnter .28s cubic-bezier(.2,.8,.2,1) both}
+@media (prefers-reduced-motion:reduce){#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea.bp-enter{animation:none}#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m :is(.bpx-btn,.bp-cta,.bpx-addbtn,.bpx-donebtn,.mh3-q,.mh5-cb,.mh5-jc,.hl-rb,.hl-burger,.hl-av,.hl-tab,.bp-macct,.fin-new-incm,.fin-new-exp,.oaw-mic,button[class*="btn"]:not([class*="row"])):active{transform:none}}
+
+/* Home: jobs in progress as cards you swipe sideways (2026-11-23) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea section.mh5-sec{margin:0 !important;padding:0 !important;background:none !important;border:0 !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-sec>.mh5-h{padding:6px 4px 10px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-car{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -16px;padding:2px 16px 8px;scroll-padding-left:16px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-car::-webkit-scrollbar{display:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jc{all:unset;box-sizing:border-box;flex:0 0 74%;max-width:300px;scroll-snap-align:start;display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:18px;background:var(--fl-2,#fff);box-shadow:0 0 0 .5px rgba(16,24,40,.08),0 2px 8px rgba(16,24,40,.06);cursor:pointer;min-width:0}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jc .mh5-jtop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jc>.mh5-jn{margin-bottom:-8px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jc .mh5-ring{width:54px;height:54px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jc .mh5-ring>b{font-size:13px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jc .mh5-amt{font-size:18px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jc .mh5-jn{font-size:17px;font-weight:700;color:var(--ink,#0b1526);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jc .mh5-js{display:flex;flex-direction:column;gap:2px;font-size:13.5px;color:#6b7280;line-height:1.35;min-width:0}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jc .mh5-js>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1.35em}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jc .mh5-js>span+span{color:#08775d;font-weight:600}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .mh5-jc .mh5-js>span+span{color:#5ee0bb}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jc.mh5-jadd{flex-basis:44%;align-items:center;justify-content:center;text-align:center;color:#006fff;font-weight:600;font-size:15px;box-shadow:inset 0 0 0 1.5px rgba(0,111,255,.25);background:rgba(0,111,255,.04)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jc.mh5-jadd .ms{font-size:28px !important;color:#006fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .mh5-jc{background:#15181e;box-shadow:0 0 0 .5px rgba(255,255,255,.06)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .mh5-jc .mh5-jn{color:#f1f5f9}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .mh5-jc .mh5-js{color:#9aa4b2}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .mh5-jc.mh5-jadd{background:rgba(0,111,255,.08)}

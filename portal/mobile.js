@@ -123,6 +123,9 @@
     if (tt && M.on() && role() === 'crew' && (v || window._bpCurView) === 'crewdash' && /^Home$/.test(tt.textContent.trim())) tt.textContent = 'Today';
     /* the bottom tab says Inbox, and "Conversations" does not fit next to the header buttons */
     if (tt && M.on() && /^Conversations$/.test(tt.textContent.trim())) tt.textContent = 'Inbox';
+    /* the Jobs page had two "Active"s (the page tab and the Active / Completed switch): the tab says Jobs */
+    var at = document.querySelector('#hlTabs .hl-tab[onclick*="\'activejobs\'"]');
+    if (at && M.on() && role() === 'owner' && at.textContent.trim() === 'Active') at.textContent = 'Jobs';
     var av0 = $('hlAv');
     if (av0 && role() === 'owner' && !av0._m) { av0._m = 1; var po = av0.onclick; av0.onclick = function (e) { if (M.on()) { e.preventDefault(); M.apps(); } else if (po) po.call(av0, e); }; }
     var acts = $('hlTacts');
@@ -269,17 +272,23 @@
     var todayCard = card('Today', allows('calendar') ? 'calendar' : '', 'Calendar', todayRows.length
       ? todayRows.map(function (r) { return '<button type="button" class="mh5-row" onclick="bpNav(\'' + r.go + '\')"><span class="mh5-time">' + (r.t || '') + '</span><span class="mh5-t"><b>' + r.w + '</b><small>' + r.s + '</small></span><span class="ms mh5-go">chevron_right</span></button>'; }).join('')
       : '<div class="mh5-empty">' + (d.appts === undefined ? 'Loading today…' : 'Nothing booked today.') + (allows('calendar') ? ' <button type="button" class="mh5-link" onclick="bpMobile.book()">Book a visit</button>' : '') + '</div>');
-    var jobRows = act.slice().sort(function (a, b) { return (Math.max((+b.estimate || 0) - (+b.collected || 0), 0)) - (Math.max((+a.estimate || 0) - (+a.collected || 0), 0)); }).slice(0, 3).map(function (j) {
+    var jobRows = act.slice().sort(function (a, b) { return (Math.max((+b.estimate || 0) - (+b.collected || 0), 0)) - (Math.max((+a.estimate || 0) - (+a.collected || 0), 0)); }).slice(0, 8).map(function (j) {
       var est = +j.estimate || 0, got1 = +j.collected || 0, pc = est ? Math.min(100, Math.round(got1 / est * 100)) : 0, left = Math.max(est - got1, 0);
       /* how far the work is: phases ticked off when the job has a plan, else how much is paid */
       var ph = j.plan && j.plan.phases && j.plan.phases.length ? j.plan.phases : null, dn = ph ? ph.filter(function (x) { return x.doneAt; }).length : 0;
       var wk = ph ? Math.round(dn / ph.length * 100) : pc, nxt = ph ? ph.filter(function (x) { return !x.doneAt; })[0] : null;
       var C = 2 * Math.PI * 16, rg = '<span class="mh5-ring' + (wk >= 100 ? ' full' : '') + '"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" class="t"/><circle cx="20" cy="20" r="16" class="a" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + (C * (1 - wk / 100)).toFixed(1) + '"/></svg><b>' + (wk >= 100 ? '<span class="ms">check</span>' : wk + '%') + '</b></span>';
       var sub = ph ? (nxt ? 'Next: ' + esc(nxt.name) + ' · ' + dn + ' of ' + ph.length + ' phases' : 'All ' + ph.length + ' phases done') : esc(j.title || '') + (est ? ' · ' + pc + '% paid' : '');
-      return '<button type="button" class="mh5-row" onclick="bpProjOpen&&bpProjOpen(\'' + esc(j.id) + '\')">' + rg + '<span class="mh5-t"><b>' + esc(j.name || 'Project') + '</b><small>' + sub + '</small></span>'
-        + '<span class="mh5-amt">' + (left ? money(left) + '<small>left</small>' : '<small>paid</small>') + '</span></button>';
+      /* 2026-11-23: a card you swipe through, like an app */
+      return '<button type="button" class="mh5-jc" onclick="bpProjOpen&&bpProjOpen(\'' + esc(j.id) + '\')"><span class="mh5-jtop">' + rg
+        + '<span class="mh5-amt">' + (left ? money(left) + '<small>left</small>' : '<small>paid</small>') + '</span></span>'
+        + '<span class="mh5-jn">' + esc(j.name || 'Project') + '</span><span class="mh5-js"><span>' + esc(j.title || 'Job') + '</span><span>'
+        + (ph ? (nxt ? 'Next: ' + esc(nxt.name) + ' · ' + dn + ' of ' + ph.length : 'All ' + ph.length + ' phases done') : (est ? pc + '% paid' : '')) + '</span></span></button>';
     }).join('');
-    var jobsCard = allows('activejobs') ? card('Jobs in progress', 'activejobs', act.length > 3 ? 'All ' + act.length : 'All jobs', jobRows || '<div class="mh5-empty">No active jobs. <button type="button" class="mh5-link" onclick="bpMobile.quick(\'activejobs\',\'bpAddJobOpen\')">Add a job</button></div>') : '';
+    var addJob = '<button type="button" class="mh5-jc mh5-jadd" onclick="bpMobile.quick(\'activejobs\',\'bpAddJobOpen\')"><span class="ms">add_circle</span>New job</button>';
+    var jobsCard = !allows('activejobs') ? '' : jobRows
+      ? '<section class="mh5-sec"><div class="mh5-h"><b>Jobs in progress</b><span class="mh5-n">' + act.length + '</span><button type="button" class="mh5-all" onclick="bpNav(\'activejobs\')">All jobs</button></div><div class="mh5-car">' + jobRows + addJob + '</div></section>'
+      : card('Jobs in progress', 'activejobs', 'All jobs', '<div class="mh5-empty">No active jobs. <button type="button" class="mh5-link" onclick="bpMobile.quick(\'activejobs\',\'bpAddJobOpen\')">Add a job</button></div>');
     var leadHost = allows('contacts') ? '<div id="mh5Leads">' + leadCards() + '</div>' : '';
     el.innerHTML = '<div class="mh2 mh3 mh5">'
       + '<section class="mh3-hi"><h2>' + (hiH < 12 ? 'Good morning' : hiH < 17 ? 'Good afternoon' : 'Good evening') + (name ? ', ' + esc(name) : '') + '</h2>'
@@ -512,6 +521,16 @@
     a._bpmw = 1; new MutationObserver(function () { if (M.on()) tidy(); }).observe(a, { childList: true, subtree: true });
   }
 
+  /* 2026-11-23: a new screen slides in a little, like an app (not when the same page redraws) */
+  var lastV = '';
+  function enter(v) {
+    v = v || window._bpCurView; if (!M.on() || !v || v === lastV) { lastV = v || lastV; return; }
+    lastV = v;
+    var va = $('bpxViewArea'); if (!va) return;
+    va.classList.remove('bp-enter'); void va.offsetWidth; va.classList.add('bp-enter');
+    clearTimeout(va._bpE); va._bpE = setTimeout(function () { va.classList.remove('bp-enter'); }, 400);
+  }
+
   /* ----------------------------------------------------------- hooks --- */
   function apply() {
     var x = $('bpx'); if (!x) return;
@@ -523,7 +542,7 @@
     var sh = window.bpShell; if (!sh || sh._mob) return !!(sh && sh._mob);
     sh._mob = true;
     var sync = sh.sync;
-    sh.sync = function (v, quiet) { var r = sync.apply(this, arguments); if (!quiet) M.appsClose(); paintTabs(v); paintTop(v); watch(); tidy(); return r; };
+    sh.sync = function (v, quiet) { var r = sync.apply(this, arguments); if (!quiet) M.appsClose(); paintTabs(v); paintTop(v); watch(); tidy(); if (!quiet) enter(v); return r; };
     var build = sh.buildNav;
     sh.buildNav = function () { var r = build.apply(this, arguments); apply(); return r; };
     var dash = window.bpDashboard;
