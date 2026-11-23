@@ -620,3 +620,11 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-mk-card{min-height:0 !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-mk-card>.bpx-mk-acts{grid-row:1 !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .rcp-si{background:rgba(0,111,255,.16) !important;color:#7db4ff !important}#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .rcp-si .ms{color:#7db4ff !important}
+/* detail pages: a back arrow in the top bar instead of the menu (2026-11-23) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-mback{all:unset;box-sizing:border-box;flex:none;width:40px;height:44px;display:grid;place-items:center;margin-left:-6px;cursor:pointer;color:#006fff;border-radius:12px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-mback[hidden]{display:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-mback .ms{font-size:34px !important;color:#006fff !important;font-variation-settings:'wght' 500}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-mback:active{background:rgba(0,111,255,.08)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bp-m-detail) .bp-mback{display:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bp-m-detail #hlTop .hl-burger{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bp-m-detail #bpxViewArea :is(.ctp-back,.eq-back,.qx-back):not(.qs-head .qx-back){display:none !important}

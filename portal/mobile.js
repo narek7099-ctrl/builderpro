@@ -515,7 +515,27 @@
       if (cs.position === 'sticky' && cs.bottom !== 'auto') { e._bpsb = 1; e.classList.add('bp-stickbot'); }
     });
   }
-  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); settingsHook(); jobsHook(); clampLong(); stickBottom(); lookPick(); iconAdds(); }, 80); }
+  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); settingsHook(); jobsHook(); clampLong(); stickBottom(); lookPick(); iconAdds(); backHook(); }, 80); }
+  /* a page you opened from a list (a contact, a machine, an estimate, an invoice) gets a back arrow
+     in the top bar, like an app, in place of the menu; the "← All contacts" link in the page goes */
+  var BACKS = '.ctp-back,.eq-back,.qx-back';
+  function backHook() {
+    var x = $('bpx'), top = $('hlTop'); if (!x || !top) return;
+    var lk = null;
+    if (M.on() && role() === 'owner') Array.prototype.some.call(document.querySelectorAll('#bpxViewArea :is(' + BACKS + ')'), function (e) { if (e.closest('.qs-head')) return false; lk = e; return true; });
+    x.classList.toggle('bp-m-detail', !!lk);
+    var b = $('bpMBack');
+    if (!lk) { if (b) b.hidden = true; return; }
+    if (!b) {
+      b = document.createElement('button'); b.type = 'button'; b.id = 'bpMBack'; b.className = 'bp-mback';
+      b.innerHTML = '<span class="ms">chevron_left</span>';
+      var bg = top.querySelector('.hl-burger'); top.insertBefore(b, bg || top.firstChild);
+    }
+    var name = (lk.textContent || '').replace(/[←\u2190]/g, '').replace(/arrow_back|chevron_left/g, '').trim();
+    b.setAttribute('aria-label', 'Back to ' + (name || 'the list'));
+    b.hidden = false; b.onclick = function () { lk.click(); };
+  }
+
   /* Calendar's "+ Add" is a round + on the phone (the word goes, the menu stays) */
   function iconAdds() {
     document.querySelectorAll('#bpxViewArea .cal-add>summary').forEach(function (sm) {
