@@ -588,15 +588,15 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark table.bp-mcards[data-hl="employees"] td[data-l="Rate"]{color:#f1f5f9}
 /* ===== App feel, round 2 (2026-11-23) ===== */
 /* number tiles: one grouped card split by thin lines, like a phone's summary screen, not loose boxes */
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-stats,.rcp-stats){gap:0 !important;padding:0 !important;background:var(--fl-2,#fff) !important;border:0 !important;border-radius:16px !important;overflow:hidden !important;box-shadow:0 0 0 .5px rgba(16,24,40,.08),0 1px 2px rgba(16,24,40,.05) !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat){background:transparent !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;margin:0 !important;padding:14px 16px !important;min-width:0}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat):nth-child(odd){box-shadow:inset -.5px 0 0 rgba(16,24,40,.1) !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat):nth-child(n+3){border-top:.5px solid rgba(16,24,40,.1) !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat):last-child:nth-child(odd){grid-column:1/-1;box-shadow:none !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-stats,.rcp-stats){background:#15181e !important;box-shadow:none !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat):nth-child(odd){box-shadow:inset -.5px 0 0 rgba(255,255,255,.08) !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat):nth-child(n+3){border-top-color:rgba(255,255,255,.08) !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat):last-child:nth-child(odd){box-shadow:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-stats,.rcp-stats,.sb-kp,.cl-tiles){gap:0 !important;padding:0 !important;background:var(--fl-2,#fff) !important;border:0 !important;border-radius:16px !important;overflow:hidden !important;box-shadow:0 0 0 .5px rgba(16,24,40,.08),0 1px 2px rgba(16,24,40,.05) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat,.sb-kp>div,.cl-tiles>.cl-tile){background:transparent !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;margin:0 !important;padding:14px 16px !important;min-width:0}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat,.sb-kp>div,.cl-tiles>.cl-tile):nth-child(odd){box-shadow:inset -.5px 0 0 rgba(16,24,40,.1) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat,.sb-kp>div,.cl-tiles>.cl-tile):nth-child(n+3){border-top:.5px solid rgba(16,24,40,.1) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat,.sb-kp>div,.cl-tiles>.cl-tile):last-child:nth-child(odd){grid-column:1/-1;box-shadow:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-stats,.rcp-stats,.sb-kp,.cl-tiles){background:#15181e !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat,.sb-kp>div,.cl-tiles>.cl-tile):nth-child(odd){box-shadow:inset -.5px 0 0 rgba(255,255,255,.08) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat,.sb-kp>div,.cl-tiles>.cl-tile):nth-child(n+3){border-top-color:rgba(255,255,255,.08) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-stats>.bpx-stat,.rcp-stats>.rcp-stat,.sb-kp>div,.cl-tiles>.cl-tile):last-child:nth-child(odd){box-shadow:none !important}
 /* Calendar: Add becomes a round + next to Today (it still opens the same menu) */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea#bpxViewArea .cal-acts .cal-add>summary.bpx-btn.bp-iconadd{width:44px !important;height:44px !important;min-width:44px !important;min-height:44px !important;padding:0 !important;border-radius:50% !important;justify-content:center !important;gap:0 !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea#bpxViewArea .cal-acts .cal-add>summary.bp-iconadd .ms{font-size:26px !important;margin:0 !important;color:#fff !important}
