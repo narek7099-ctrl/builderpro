@@ -464,3 +464,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-23 before AI Team model split (daily brief and teammate questions on Haiku 5.5, falls back to Sonnet): main was 09146c7
 - 2026-11-23 before removing the AI Team daily brief (morning run now only works open tasks; site and app text updated): main was 307d0cb
 - 2026-11-23 before phone app feel (glass top bar, fewer header buttons, taps press in, screens slide in, Jobs tab, swipeable job cards on Home): main was cbe47fc
+- 2026-11-23 before compact Employees rows on the phone and menu logo room: main was b0b58c3

@@ -573,3 +573,16 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .mh5-jc .mh5-jn{color:#f1f5f9}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .mh5-jc .mh5-js{color:#9aa4b2}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .mh5-jc.mh5-jadd{background:rgba(0,111,255,.08)}
+/* the menu: room above the logo so it isn't cut off (2026-11-23) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxSide{padding-top:calc(env(safe-area-inset-top,0px) + 12px) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxSide #hlAcct{min-height:52px;overflow:visible}
+/* Employees on the phone: one tidy row each (name and job, pay, the ⋯ menu); the profile has the rest */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards[data-hl="employees"] tr{grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:4px 12px;padding:12px 10px 12px 14px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards[data-hl="employees"] td:is([data-l="Contact"],[data-l="Reviews"],[data-l="Type"],[data-l="Cost to you"]){display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards[data-hl="employees"] td[data-l="Rate"]{grid-column:2;grid-row:1;font-size:15px;font-weight:700;color:var(--ink,#0b1526)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards[data-hl="employees"] td[data-l="Rate"]::before{display:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards[data-hl="employees"] td[data-l=""]{grid-column:3;grid-row:1}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards[data-hl="employees"] .emp-who{display:flex;align-items:center;gap:12px;min-width:0}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards[data-hl="employees"] .emp-name b{font-size:16px;font-weight:600}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards[data-hl="employees"] .emp-who .bpx-mut{font-size:13.5px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark table.bp-mcards[data-hl="employees"] td[data-l="Rate"]{color:#f1f5f9}
