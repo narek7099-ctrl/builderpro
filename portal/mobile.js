@@ -515,7 +515,15 @@
       if (cs.position === 'sticky' && cs.bottom !== 'auto') { e._bpsb = 1; e.classList.add('bp-stickbot'); }
     });
   }
-  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); settingsHook(); jobsHook(); clampLong(); stickBottom(); lookPick(); }, 80); }
+  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); settingsHook(); jobsHook(); clampLong(); stickBottom(); lookPick(); iconAdds(); }, 80); }
+  /* Calendar's "+ Add" is a round + on the phone (the word goes, the menu stays) */
+  function iconAdds() {
+    document.querySelectorAll('#bpxViewArea .cal-add>summary').forEach(function (sm) {
+      if (sm._bpi) return; sm._bpi = 1;
+      Array.prototype.slice.call(sm.childNodes).forEach(function (n) { if (n.nodeType === 3 && n.textContent.trim()) n.textContent = ''; });
+      sm.setAttribute('aria-label', 'Add to the calendar'); sm.classList.add('bp-iconadd');
+    });
+  }
   function watch() {
     var a = $('bpxViewArea'); if (!a || a._bpmw || !window.MutationObserver) return;
     a._bpmw = 1; new MutationObserver(function () { if (M.on()) tidy(); }).observe(a, { childList: true, subtree: true });
