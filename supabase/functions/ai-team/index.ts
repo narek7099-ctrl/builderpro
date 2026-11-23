@@ -2,7 +2,7 @@
 // Eight assistants work on that contractor's own business only:
 //   Sales       leads, quotes, follow-ups          (web search)
 //   Marketing   ads, posts, promotions, reviews    (web search)
-//   Office      schedule, reminders, invoices, the daily brief
+//   Office      schedule, reminders, invoices
 //   Client Care progress updates, complaints, reviews
 //   Research    marketing tactics, competitor prices (web search)
 //   Workflows   leads and quotes stuck in the pipeline
@@ -15,16 +15,16 @@
 // (ai_team_msgs: trial 50, Foundation/OS add-on 150, Enterprise 250).
 //
 //   POST (signed-in contractor) { op: status | subscribe | chat | threads | thread | approvals | approve | reject }
-//   POST ?brief  (pg_cron, x-cron-key) runs each account's 7am daily brief
+//   POST ?brief  (pg_cron, x-cron-key) the morning run: works up to 2 open tasks per account
+//                (the daily brief was removed 2026-11-23; owners ask the AI CEO instead)
 // Secrets: ANTHROPIC_API_KEY, STRIPE_SECRET_KEY, GHL_API_KEY, GHL_COMPANY_ID
 import Anthropic from "npm:@anthropic-ai/sdk";
 import { SB_URL, sb, callGHL } from "./ghl.ts";
 
 const SONNET = Deno.env.get("AITEAM_MODEL") ?? "claude-sonnet-5-5";
 const OPUS = Deno.env.get("AITEAM_HEAVY_MODEL") ?? "claude-opus-5-5";
-// the small, cheap model for routine work nobody reads word by word: the daily
-// brief (runs by itself every day for every account) and quick questions one
-// assistant asks another. If it fails, that call is retried on SONNET.
+// the small, cheap model for quick questions one assistant asks another.
+// If it fails, that call is retried on SONNET.
 const LIGHT = Deno.env.get("AITEAM_LIGHT_MODEL") ?? "claude-haiku-5-5";
 // fallback when plan_limits can't be read
 const CAP = Number(Deno.env.get("AITEAM_MONTHLY_MESSAGES") ?? "150");
@@ -49,7 +49,7 @@ const AGENTS: Record<string, Agent> = {
   ceo: { key: "ceo", name: "AI CEO", web: true, role: "You manage the whole AI Team for the owner: Sales, Marketing, Office, Client Care, Research, Workflows, Permits, Projects, Dispatch and Estimator. Turn what the owner wants into work: ask a teammate with ask_teammate when you need an answer now, or put longer work on the task board with assign_task (one owner per task, a clear outcome, the details needed). Check finished tasks with tasks_list, and pull the team's answers into one clear recommendation for the owner. Start from the business snapshot (ceo_snapshot) when you need the big picture." },
   sales: { key: "sales", name: "Sales", web: true, role: "You help win jobs: follow up on new leads and open quotes, write texts and emails that get replies, suggest who to call today, draft call scripts, and spot quotes going cold." },
   marketing: { key: "marketing", name: "Marketing", web: true, role: "You bring in customers: write Facebook and Google ads, social posts, promotions, review requests and replies, and ideas that fit a local contractor. Look at what nearby competitors do when it helps." },
-  office: { key: "office", name: "Office", web: false, role: "You keep the business running: today's schedule, appointments, reminders, overdue invoices and quotes, tasks, and the daily brief. Be brief and practical." },
+  office: { key: "office", name: "Office", web: false, role: "You keep the business running: today's schedule, appointments, reminders, overdue invoices and quotes, and tasks. Be brief and practical." },
   clients: { key: "clients", name: "Client Care", web: false, role: "You look after customers who already hired the business: check on active jobs and recent conversations, draft progress updates, reply to questions and complaints calmly, ask happy customers for reviews and referrals, and flag anyone who has gone unanswered. Use the projects tool to see where each job stands." },
   research: { key: "research", name: "Market Research", web: true, role: "You research how to grow: marketing tactics that work for local contractors, what competitors nearby charge and promote, seasonal demand, ad channels and budgets, and new services worth offering. Back claims with what you find on the web and turn findings into a short plan the owner can act on this month." },
   workflows: { key: "workflows", name: "Workflow Tracker", web: false, role: "You watch the sales pipeline and automations: find leads stuck in a stage, quotes with no follow-up, contacts missing tags or next steps, appointments without an outcome, and anything the automations should have caught. List what is stuck, how long, and the one action that unsticks each." },
@@ -233,7 +233,7 @@ async function runTool(acct: Acct, name: string, input: Record<string, unknown>,
     if ((open.ok ? await open.json() : []).length >= 15) return { error: "The board already has 15 open tasks. Finish or cancel some first." };
     const r = await sb("cai_tasks", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({ owner: acct.user_id, assigned_by: agent, assignee: who, title: String(input.title).slice(0, 200), detail: String(input.detail ?? "").slice(0, 4000), priority: ["low", "normal", "high"].includes(String(input.priority)) ? input.priority : "normal" }) });
     const row = r.ok ? (await r.json())[0] : null;
-    return row ? { ok: true, id: row.id, note: `On the board for ${AGENTS[who].name}. The owner can start it now from the Tasks tab, or it runs with the morning brief.` } : { error: "Couldn't add it." };
+    return row ? { ok: true, id: row.id, note: `On the board for ${AGENTS[who].name}. The owner can start it now from the Tasks tab, or it runs the next morning.` } : { error: "Couldn't add it." };
   }
   if (name === "ceo_snapshot") {
     const [snap, rep] = await Promise.all([
@@ -442,31 +442,30 @@ async function runTask(acct: Acct, t: Task) {
   }
 }
 
-// 7am in the contractor's time zone: the Office assistant writes the day's brief
+// Mornings (7 to 10am in the contractor's time zone): work up to 2 open tasks
+// from the board, while under the plan's message limit. No brief is written.
 async function briefs() {
   const r = await sb("accounts?or=(ai_addon.eq.active,and(plan.eq.enterprise,status.in.(trial,active)))&select=*");
   const rows: (Acct & { ai_brief_at: string | null })[] = r.ok ? await r.json() : [];
   const done: string[] = [];
   for (const a of rows) {
     const tz = String(a.profile?.timezone || "America/Chicago");
-    let hour = 0, day = "";
+    let hour = 0;
     try {
-      const f = new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", hour12: false, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
-      hour = Number(f.find((x) => x.type === "hour")?.value); day = `${f.find((x) => x.type === "year")?.value}-${f.find((x) => x.type === "month")?.value}-${f.find((x) => x.type === "day")?.value}`;
+      const f = new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", hour12: false }).formatToParts(new Date());
+      hour = Number(f.find((x) => x.type === "hour")?.value);
     } catch { continue; }
     if (hour < 7 || hour > 10) continue;
     if (a.ai_brief_at && Date.now() - Date.parse(a.ai_brief_at) < 20 * 3600e3) continue;
+    const tk = await sb(`cai_tasks?owner=eq.${a.user_id}&status=eq.open&tries=lt.3&select=*&order=created_at.asc&limit=10`);
+    const open: Task[] = tk.ok ? await tk.json() : [];
+    if (!open.length) continue;
     await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ ai_brief_at: new Date().toISOString() }) });
     try {
-      const th = await newThread(a.user_id, "office", "Daily brief " + day, "brief");
-      await run(a, AGENTS.office, th, `Write today's brief for ${a.full_name}. Check today's appointments, new contacts and conversations from the last day, and open opportunities that have gone quiet for 3+ days. Then give: 1) today at a glance, 2) who to call or text first and why, 3) up to 3 follow-up messages ready to send (queue them with conversations.send so the owner can approve with one tap). Keep it under 200 words plus the drafts.`, { effort: "low", light: true });
-      done.push(a.email);
-      // then the morning stand-up: up to 2 open tasks, while under the plan's message limit
-      const tk = await sb(`cai_tasks?owner=eq.${a.user_id}&status=eq.open&tries=lt.3&select=*&order=created_at.asc&limit=10`);
-      const open: Task[] = tk.ok ? await tk.json() : [];
       open.sort((x, y) => (y.priority === "high" ? 1 : 0) - (x.priority === "high" ? 1 : 0));
       for (const t of open.slice(0, 2)) { if (((await usage(a.user_id)).messages ?? 0) >= (await capFor(a.user_id))) break; await runTask(a, t); }
-    } catch (e) { console.error("brief", a.email, e); }
+      done.push(a.email);
+    } catch (e) { console.error("morning tasks", a.email, e); }
   }
   return done;
 }

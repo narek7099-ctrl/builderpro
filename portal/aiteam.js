@@ -20,7 +20,7 @@
       h: ['Who should I follow up with today?', 'Write a text for a quote that went quiet', 'Give me a call script for a new lead'] },
     marketing: { n: 'Marketing', ic: 'campaign', d: 'Writes your ads, posts and promotions.',
       h: ['Write 3 Facebook ads for this month', 'Plan a week of social posts', 'What are competitors near me offering?'] },
-    office: { n: 'Office', ic: 'event_note', d: 'Your schedule, reminders, invoices and the 7am daily brief.',
+    office: { n: 'Office', ic: 'event_note', d: 'Your schedule, reminders, overdue invoices and tasks.',
       h: ['What’s on my schedule this week?', 'Which quotes and invoices need chasing?', 'Summarize yesterday for me'] },
     clients: { n: 'Client Care', ic: 'handshake', d: 'Keeps customers updated, answered and happy, and asks for reviews.',
       h: ['Which customers need a progress update?', 'Draft a reply to an upset customer', 'Who should I ask for a review this week?'] },
@@ -195,7 +195,7 @@
     var list = '<div class="aib-list">' + ['ceo'].concat(RING).map(function (k) { return nodeHtml(k, k === 'ceo' ? ' aib-ceo' : '', ''); }).join('') + '</div>';
     var nt = A.st && A.st.tasks ? Object.keys(A.st.tasks).reduce(function (s, k) { return s + A.st.tasks[k].open + A.st.tasks[k].doing; }, 0) : 0;
     return '<div class="aib"><div class="aib-wrap"><div class="aib-in"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' + svg + '</svg>' + rails + nodes + '</div></div>' + list
-      + '<div class="aib-foot"><span class="aib-on">' + (live ? 'online' : 'preview') + '</span>' + (live ? '<span>' + A.st.used + ' of ' + A.st.cap + ' messages this month</span><span>' + nt + ' on the task board</span><span>' + (A.st.pending || 0) + ' waiting for you</span><span>daily brief 7am</span>' : '<span>AI CEO + ' + RING.length + ' assistants</span><span>you approve before anything sends</span>') + '</div></div>';
+      + '<div class="aib-foot"><span class="aib-on">' + (live ? 'online' : 'preview') + '</span>' + (live ? '<span>' + A.st.used + ' of ' + A.st.cap + ' messages this month</span><span>' + nt + ' on the task board</span><span>' + (A.st.pending || 0) + ' waiting for you</span><span>ask the AI CEO anything</span>' : '<span>AI CEO + ' + RING.length + ' assistants</span><span>you approve before anything sends</span>') + '</div></div>';
   }
   function boardCss() {
     if (document.getElementById('aib-css')) return; var c = document.createElement('style'); c.id = 'aib-css';
@@ -565,7 +565,7 @@
     if (!st || !st.ok) { host.innerHTML = '<div class="bpx-panel"><div class="bpx-mut">' + esc((st && st.error) || 'Could not load.') + '</div></div>'; return; }
     host.innerHTML = '<div class="bpx-panel"><div class="ai-hero"><div class="pitch">'
       + '<h2>Your AI Team</h2><div class="bpx-mut" style="max-width:52ch">An AI CEO who manages ten assistants that know your business: leads, customers, marketing, estimates, crews and routes, projects and permits. The CEO hands out tasks and the assistants ask each other. You approve anything before it goes to a customer.</div>'
-      + '<div class="price">$' + (st.price || 49) + '<small> / month</small></div><div class="bpx-mut" style="font-size:13px">Up to ' + st.cap + ' messages a month, plus a daily brief every morning. Cancel any time.</div>'
+      + '<div class="price">$' + (st.price || 49) + '<small> / month</small></div><div class="bpx-mut" style="font-size:13px">Up to ' + st.cap + ' messages a month. Cancel any time.</div>'
       + '<div style="margin-top:18px;display:flex;gap:10px;align-items:center"><button class="bpx-btn" id="aiAdd">' + (st.addon === 'checkout' ? 'Finish checkout' : st.addon === 'past_due' ? 'Update payment' : 'Add AI Team') + '</button><span class="bpx-mmsg" id="aiMsg"></span></div>'
       + (st.crm ? '' : '<div class="bpx-mut" style="font-size:12.5px;margin-top:10px">Your CRM is still being set up. Your assistants connect to it as soon as it is ready.</div>')
       + '</div><div style="flex:1;min-width:300px">' + boardHtml(false) + '</div><div class="ai-cards" style="display:none">'
@@ -646,7 +646,7 @@
       var t = $('tkT').value.trim(); if (!t) { $('tkMsg').textContent = 'Write what they should do.'; return; }
       this.disabled = true; var r = await api({ op: 'task_create', assistant: $('tkWho').value, title: t, detail: $('tkD').value.trim(), priority: $('tkP').value }); this.disabled = false;
       if (!r.ok) { $('tkMsg').textContent = r.error || 'Could not add it.'; return; }
-      $('tkT').value = ''; $('tkD').value = ''; $('tkMsg').textContent = 'Added. Start it now, or it runs with your 7am brief.'; tkLoad();
+      $('tkT').value = ''; $('tkD').value = ''; $('tkMsg').textContent = 'Added. Start it now, or it runs tomorrow morning.'; tkLoad();
     };
     tkLoad();
   }
