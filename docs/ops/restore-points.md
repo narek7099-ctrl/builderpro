@@ -477,3 +477,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-24 before iPhone readiness (theme color matches the top bar, keyboard hides the tab bar and scrolls the field into view, landscape clear of the notch): main was 6976e21
 - 2026-11-24 before Calendar phone fix (Inspections/Jobs buttons no longer cover the Day/Week/Month switch): main was 8150300
 - 2026-11-24 before Calendar phone: Inspections/Jobs use one row (Day/Week/Month, Today, round + with Book and Closed days / Schedule a crew): main was f713440
+- 2026-11-24 visual pass (slim zero tiles, mint main buttons, phone row buttons, grouped employees): restore to 312fcfe

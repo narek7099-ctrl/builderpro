@@ -662,3 +662,22 @@ html{overscroll-behavior-y:none}
    Day / Week / Month, Today and a round +; the + holds Book inspection and Closed days (or Book job and
    Schedule a crew). The original buttons stay in the page for the computer. */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .cal-acts>.bp-mhide{display:none !important}
+/* all-zero number tiles: one slim strip (portal/shell.js adds .bp-zstats) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats{gap:8px !important;margin-bottom:12px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats>.bpx-stat,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats>.pjk-stat{padding:10px 14px !important;min-height:0 !important;display:flex !important;flex-direction:row !important;align-items:center !important;justify-content:space-between !important;gap:8px !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats .lbl,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats .pjk-stat>span{margin:0 !important;font-size:12.5px !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats .val,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats .pjk-stat>b{font-size:15px !important;color:#94a3b8 !important;font-weight:600 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats .note,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats .pjk-stat>small,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats svg,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats canvas{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .bp-zstats .val,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .bp-zstats .pjk-stat>b{color:#64748b !important}
+/* one colour rule: the page's main "+ New" button is mint (Estimates tab too) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea[data-fin="estimates"] .fin-new-est{background:radial-gradient(120% 120% at 30% 0%,rgba(255,255,255,.45),transparent 55%),linear-gradient(180deg,#3fe0b6,#16c79a 55%,#0fa880) !important;color:#001530 !important;border:1px solid rgba(255,255,255,.55) !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -1px 0 rgba(0,90,60,.18),0 8px 20px -10px rgba(22,199,154,.85) !important}
+/* phone: row buttons on estimate/invoice rows are small pills on the right, not two big slabs */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjl-r:has(.pjl-a .pjl-b):not(.qb-ivr) .pjl-a{justify-content:flex-end !important;gap:8px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjl-r:has(.pjl-a .pjl-b):not(.qb-ivr) .pjl-a .pjl-b{flex:0 0 auto !important;min-height:38px !important;height:38px;font-size:14px !important;padding:0 18px !important;margin:0 !important;border-radius:999px !important}
+/* phone: Employees list is one grouped list with hairlines, not a card per person */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards[data-hl="employees"] tbody{gap:0 !important;border:1px solid var(--line,#e5e7eb);border-radius:14px;overflow:hidden;background:var(--card,#fff)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards[data-hl="employees"] tr{border:0 !important;border-radius:0 !important;box-shadow:none !important;background:transparent !important;border-bottom:1px solid var(--line,#eef0f3) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards[data-hl="employees"] tr:last-child{border-bottom:0 !important}
+/* phone: page intros stay on one line */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead .bpx-ptitle .lg2{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjl-r:has(.pjl-a .pjl-b):not(.qb-ivr) .pjl-a .pjl-b.pri{background:#006fff !important;color:#fff !important;border-color:#006fff !important;box-shadow:none !important}

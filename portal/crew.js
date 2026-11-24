@@ -169,7 +169,7 @@
       + (S.emps.length > 1 ? '<label class="emp-sort">Sort<select onchange="bpEmpSort(this.value)">'
           + [['name', 'Name'], ['rating', 'Rating'], ['jobs', 'Jobs done'], ['exp', 'Experience']].map(function (o) {
               return '<option value="' + o[0] + '"' + (S.sort === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' : '')
-      + '<button class="bpx-btn" style="width:auto;margin:0;padding:9px 16px;font-size:13px" onclick="bpEmpOpen()">+ Add someone</button></span></div>';
+      + '<button class="bpx-addbtn" onclick="bpEmpOpen()">+ Add someone</button></span></div>';
 
     if (S.sample) head += '<div class="emp-sample"><span class="ms">info</span><span>Sample crew. Sign in and your own people, their completed jobs and client ratings show here.</span></div>';
     head += '<div id="bpClockNow"></div>';
@@ -221,9 +221,7 @@
     var warn = noBurden
       ? '<div class="bg-warn" style="margin-top:12px"><span class="ms">warning</span>'
         + '<span>' + noBurden + ' ' + (noBurden === 1 ? 'person has' : 'people have')
-        + ' no payroll tax or workers’ comp added, so their hours are costed at the bare wage. Those typically add '
-        + '25–50% on top, and roofing comp rates are among the highest there are — jobs will look more profitable than they are. '
-        + 'Your accountant or comp policy has the real figure.</span></div>'
+        + ' no payroll tax or workers’ comp added. That usually adds 25–50% to their cost, so jobs look more profitable than they are. Add it under Edit on each person.</span></div>'
       : '';
 
     el.innerHTML = head
