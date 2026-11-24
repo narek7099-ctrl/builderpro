@@ -148,7 +148,7 @@
         + Object.keys(sups).map(function (k) { return '<option value="' + esc(k) + '"' + (SP.rcFilter === k ? ' selected' : '') + '>' + esc(sups[k]) + '</option>'; }).join('') + '</select>' : '') + '</div>';
     var cr = SP.rcCrewAll();
     if (SP.rcFilter) cr = cr.filter(function (x) { var s = crewSup(x.r); return s && s.id === SP.rcFilter; });
-    if (!rs.length && !cr.length) return h + '<div class="bpx-panel rc-empty bpx-mut">No receipts yet. Tap &ldquo;Upload receipt&rdquo; after you buy something.</div>';
+    if (!rs.length && !cr.length) return h + '<div class="bpx-panel"><div class="bpx-empty2"><b>No receipts yet</b>Snap one after you buy something and it lands on the job as a materials cost. <a onclick="SP.rcOpen()">Upload receipt</a></div></div>';
     var rows = rs.map(function (r) { return { d: String(r.date || ''), at: +r.at || 0, h: rowHtml(r) }; })
       .concat(cr.map(function (x) { return { d: ymd(x.r.at), at: +x.r.at || 0, h: crewRow(x.j, x.r) }; }))
       .sort(function (a, b) { return b.d.localeCompare(a.d) || b.at - a.at; });

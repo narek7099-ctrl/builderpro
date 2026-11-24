@@ -310,6 +310,7 @@
     var step = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(iw / 58))));
     var xlab = x.values.map(function (lbl, i) {
       if (i % step && i !== n - 1) return '';
+      if (i !== n - 1 && n - 1 - i < step * 0.7) return '';   /* too close to the last date: it would print on top of it */
       return '<text class="bpc-ax" x="' + px(i).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(lbl) + '</text>';
     }).join('');
 
@@ -396,7 +397,7 @@
         var top = Math.max.apply(null, series.map(function (s) { return Math.max(0, +s.values[i] || 0); }));
         bars += '<text class="bpc-cap-v" x="' + (x0 + grpW / 2).toFixed(1) + '" y="' + (py(top) - 6).toFixed(1) + '" text-anchor="middle">' + esc(o.groupCaps[i]) + '</text>';
       }
-      if (!(i % step) || i === n - 1) {
+      if ((!(i % step) && (i === n - 1 || n - 1 - i >= step * 0.7)) || i === n - 1) {
         var t = String(lbl);
         var maxCh = Math.max(4, Math.floor(band * step / 6.4));
         if (t.length > maxCh) t = t.slice(0, maxCh - 1) + '…';

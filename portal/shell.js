@@ -794,8 +794,8 @@
 (function () {
   var Z = /^(\$?0(\.0+)?%?|—|-|–)$/;
   function pass(area) {
-    [].forEach.call(area.querySelectorAll('.bpx-stats,.pjk-stats'), function (g) {
-      var vs = g.querySelectorAll('.bpx-stat .val,.bpx-stat>b,.pjk-stat>b'); if (!vs.length) return;
+    [].forEach.call(area.querySelectorAll('.bpx-stats,.pjk-stats,.rcp-stats'), function (g) {
+      var vs = g.querySelectorAll('.bpx-stat .val,.bpx-stat>b,.pjk-stat>b,.rcp-stat>b'); if (!vs.length) return;
       var all = true; for (var i = 0; i < vs.length; i++) if (!Z.test((vs[i].textContent || '').replace(/\s+/g, ''))) { all = false; break; }
       g.classList.toggle('bp-zstats', all);
     });

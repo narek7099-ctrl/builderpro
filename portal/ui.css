@@ -754,3 +754,11 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-cs-tg,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-cs-tg .ms{color:#6aa8ff}
 }
 @media (max-width:760px){#bpx .pjs-cs-tg{display:none !important}}
+/* receipts tiles all zero: same slim strip */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats>.rcp-stat{padding:10px 14px !important;min-height:0 !important;display:flex !important;flex-direction:row !important;align-items:center !important;justify-content:space-between !important;gap:8px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats>.rcp-stat>:is(.rcp-si,em){display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats>.rcp-stat>small{margin:0 !important;font-size:12.5px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats>.rcp-stat>b{font-size:15px !important;color:#94a3b8 !important;font-weight:600 !important;margin:0 !important}
+/* phone Income/Expenses: the add button lives on the list header only (it was shown twice) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea:is([data-fin="income"],[data-fin="expense"]) .bpx-finrow-btns:has(.fin-new-incm,.fin-new-exp){display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea:is([data-fin="income"],[data-fin="expense"]) .bpx-finrow-btns :is(.fin-new-incm,.fin-new-exp){display:none !important}
