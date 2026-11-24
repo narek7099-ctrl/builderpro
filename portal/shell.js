@@ -788,3 +788,22 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watch); else watch();
 })();
+/* number tiles that are all zero ($0, 0, —) shrink to one slim strip,
+   so an empty page doesn't open on four big blank boxes */
+(function () {
+  var Z = /^(\$?0(\.0+)?%?|—|-|–)$/;
+  function pass(area) {
+    [].forEach.call(area.querySelectorAll('.bpx-stats,.pjk-stats'), function (g) {
+      var vs = g.querySelectorAll('.bpx-stat .val,.pjk-stat>b'); if (!vs.length) return;
+      var all = true; for (var i = 0; i < vs.length; i++) if (!Z.test((vs[i].textContent || '').replace(/\s+/g, ''))) { all = false; break; }
+      g.classList.toggle('bp-zstats', all);
+    });
+  }
+  var q = 0;
+  function watch() {
+    var area = document.getElementById('bpxViewArea'); if (!area || !window.MutationObserver) return;
+    pass(area);
+    new MutationObserver(function () { if (!q) q = requestAnimationFrame(function () { q = 0; pass(area); }); }).observe(area, { childList: true, subtree: true, characterData: true });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watch); else watch();
+})();
