@@ -715,3 +715,10 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-a2p{flex-wrap:wrap !important;align-items:flex-start !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-a2p>div{flex:1 1 calc(100% - 40px) !important;min-width:0}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-a2p>:is(button,a){margin-left:34px !important}
+/* phone: a contact's name gets the room; Edit is a round pencil */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .ctp3-head .ctp3-et{display:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .ctp3-head .ctp3-edit{width:42px !important;height:42px !important;min-height:42px !important;padding:0 !important;border-radius:50% !important;display:grid !important;place-items:center !important;flex:none !important;align-self:flex-start}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .ctp3-head .ctp3-edit .ms{margin:0 !important;font-size:20px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .ctp3-head .ctp3-who h2{font-size:21px !important;line-height:1.2 !important}
+/* dark: tabs that aren't picked stay readable (contact and job pages) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-tabs .pjs-tab:not(.on):not([aria-selected="true"]),#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-tabs .pjs-tab:not(.on):not([aria-selected="true"]) *{color:#9aa6b8 !important}
