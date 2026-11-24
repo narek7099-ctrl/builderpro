@@ -127,7 +127,7 @@
       + (window.bpAvatar ? bpAvatar(c.name || '?', 52) : '')
       + '<div class="ctp3-who"><h2>' + esc(c.name || 'Unnamed contact') + '</h2>'
       + '<div class="ctp3-meta"><span class="ctp-stage"><i></i>' + esc(stage[0]) + '</span>' + (added ? '<span>' + esc(since(c.dateAdded)) + '</span>' : '') + '</div></div>'
-      + '<button type="button" class="ctp3-edit" onclick="bpOpenEdit(\'' + c.id + '\')"><span class="ms">edit</span>Edit</button>'
+      + '<button type="button" class="ctp3-edit" aria-label="Edit contact" onclick="bpOpenEdit(\'' + c.id + '\')"><span class="ms">edit</span><span class="ctp3-et">Edit</span></button>'
       + '</section>'
       + '<div class="ctp3-bs">' + big('tel:' + c.phone, 'call', 'Call', !!c.phone) + big('sms:' + c.phone, 'sms', 'Text', !!c.phone) + big('', 'mail', 'Email', !!c.email, 'bpCtpMail()') + '</div>';
 

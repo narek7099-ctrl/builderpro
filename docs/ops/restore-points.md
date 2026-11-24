@@ -480,3 +480,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-24 visual pass (slim zero tiles, mint main buttons, phone row buttons, grouped employees): restore to 312fcfe
 - 2026-11-24 AI Team assistant picker, shorter phone people rows, dark AI chat readability: restore to 2d05462
 - 2026-11-24 slim zero tiles on Lead Sources, Settings brand colour row and header, phone Inbox banner: restore to 4c1c2b4
+- 2026-11-24 contact page phone header, dark unpicked tabs readable, shorter Lead Sources empty note: restore to e776dfa
