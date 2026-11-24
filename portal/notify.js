@@ -79,7 +79,7 @@
     job_new:                 { g: 1, t: 'New project added',                  ic: 'work',            r: 'o' },
     job_done:                { g: 1, t: 'Project finished',                   ic: 'done',        r: 'ocs' },
     job_assigned:            { g: 1, t: 'You are put on a project',           ic: 'assign',  r: 'c' },
-    ceo_report:              { g: 1, t: 'AI CEO morning briefing',            ic: 'note',      r: 'o' },
+    ceo_report:              { g: 1, t: 'AI CEO briefing',                    ic: 'note',      r: 'o', off: 1 },   /* no daily briefings since 2026-11-24; kept so old ones still show */
     plan_limit:              { g: 1, t: 'A plan limit was reached',           ic: 'flag',      r: 'o' },
     payment_received:        { g: 2, t: 'Payment received',                   ic: 'pay',        r: 'o' },
     sub_invoice_unpaid:      { g: 2, t: 'Approved sub invoice still unpaid',  ic: 'wait',   r: 'o' },
@@ -401,7 +401,7 @@
     if (!N.prefs) { host.innerHTML = '<div class="nt-empty"><span>Loading…</span></div>'; prefsLoad().then(function () { N.settings(host, compact); }); return; }
     var p = N.prefs, r = role(), ds = desktopState();
     var groups = GROUPS.map(function (gname, gi) {
-      var ks = Object.keys(KINDS).filter(function (k) { return KINDS[k].g === gi && KINDS[k].r.indexOf(r) >= 0; });
+      var ks = Object.keys(KINDS).filter(function (k) { return KINDS[k].g === gi && KINDS[k].r.indexOf(r) >= 0 && !KINDS[k].off; });
       if (!ks.length) return '';
       return '<fieldset class="nt-grp"><legend>' + esc(gname) + '</legend>' + ks.map(function (k) {
         return sw('nt-k-' + k, p.prefs[k] !== 'off', esc(KINDS[k].t), '', 'data-nt-kind="' + k + '"');

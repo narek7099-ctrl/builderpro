@@ -765,3 +765,5 @@ html{overscroll-behavior-y:none}
 /* Equipment empty: both ways to add, side by side */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .eq-empty-acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .eq-empty-acts>*{margin:0 !important}
+/* Settings → Hours: room for "Wednesday" beside its checkbox */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bp-m) .st-hrs .bpx-hrs-row{grid-template-columns:92px 26px 1fr !important;column-gap:8px}
