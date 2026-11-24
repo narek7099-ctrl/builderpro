@@ -802,3 +802,47 @@ html{overscroll-behavior-y:none}
 /* dashboard: cards stacked under each other always get a gap */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .mh5 section.mh5-card+section.mh5-card{margin-top:12px !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .cal-grid.bpx-grid{border:0 !important;border-radius:0 !important;box-shadow:none !important}
+/* phone: section tabs are one fixed row; tabs that don't fit sit behind "More" (portal/mobile.js tabsFade) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs{overflow-x:hidden !important;-webkit-mask-image:none !important;mask-image:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs .hl-tab.bp-tovf{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs .bp-tabmore{position:static !important;margin:0 0 0 auto !important;width:auto !important;height:36px !important;padding:0 10px 0 14px !important;border-radius:999px !important;display:inline-flex !important;align-items:center;gap:2px;background:transparent !important;box-shadow:none !important;color:var(--blue,#006fff);font:inherit;font-size:15px;font-weight:600;flex:0 0 auto;align-self:center}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs .bp-tabmore[hidden]{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs .bp-tabmore svg{width:18px !important;height:18px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs .bp-tabmore::before,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs .bp-tabmore::after{display:none !important}
+#bpx #bpTabsMore .bp-create-list button{font-size:16px}
+/* phone: wide chip rows become one dropdown (portal/mobile.js wideChips) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bp-chipsrow{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bp-chipsel{position:relative;display:block;margin:0 0 12px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bp-chipsel select{width:100%;min-height:44px !important;padding:0 40px 0 14px !important;border-radius:12px !important;border:0 !important;background:rgba(118,118,128,.12) !important;background-image:none !important;font-size:16px !important;font-weight:600 !important;color:var(--ink,#0b1526) !important;-webkit-appearance:none;appearance:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea .bp-chipsel select{background:rgba(118,118,128,.24) !important;color:#e9eef6 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bp-chipsel .ms{position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#64748b}
+/* tabs a little tighter so more fit before "More" */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs .hl-tab{padding:0 12px !important}
+/* phone dashboard: jobs in progress as rows in one card */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jlist{background:var(--card,#fff);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jr{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--line,#eef0f3)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jr:last-child{border-bottom:0}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jr:active{background:rgba(0,111,255,.05)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jr .mh5-ring{flex:0 0 auto;width:44px;height:44px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jr .mh5-ring b{font-size:11px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jrt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jrt b{font-size:16px;font-weight:600;color:var(--ink,#0b1526);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jrt small{font-size:13px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jr .mh5-amt{flex:0 0 auto;text-align:right;font-size:15px;font-weight:700;color:var(--ink,#0b1526);display:flex;flex-direction:column;align-items:flex-end}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-jr .mh5-amt small{font-size:12px;font-weight:500;color:#64748b}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .mh5-jlist{background:#16191f;box-shadow:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark :is(.mh5-jrt b,.mh5-jr .mh5-amt){color:#e9eef6}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .mh5-jr{border-color:rgba(255,255,255,.07)}
+/* phone AI Team: the tab row wraps onto two lines instead of scrolling sideways */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .ai-top{flex-wrap:wrap !important;overflow:visible !important;-webkit-mask-image:none !important;mask-image:none !important;gap:8px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .ai-top .ai-use{display:none !important}
+/* phone Automations: the flow reads top to bottom and fits the screen (no sideways panning) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .wa-canvas{overflow:hidden !important;min-height:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .wa-stage{width:100% !important;min-width:0 !important;padding:16px 12px 20px !important;box-sizing:border-box}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .wa-trigs{flex-direction:column !important;align-items:center}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m :is(.wa-tcard,.wa-node){width:100% !important;max-width:300px;box-sizing:border-box}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .ai-top .ai-tab{padding:7px 12px !important;font-size:14px !important;gap:5px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .ai-top .ai-tab>.ms:first-child{display:none !important}
+/* phone: a page's own switch (People/Crews/Hours, Active/Completed, Day/Week/Month) stays pinned under the tabs */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bp-mpin{position:sticky !important;z-index:6 !important;box-shadow:0 0 0 8px var(--bp-pagebg,#eef1f5) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bp-mpin.bp-mpinwrap{background:var(--bp-pagebg,#eef1f5) !important;box-shadow:0 0 0 8px var(--bp-pagebg,#eef1f5) !important;padding-bottom:4px}

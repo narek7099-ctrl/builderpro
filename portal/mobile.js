@@ -277,22 +277,21 @@
     var todayCard = card('Today', allows('calendar') ? 'calendar' : '', 'Calendar', todayRows.length
       ? todayRows.map(function (r) { return '<button type="button" class="mh5-row" onclick="bpNav(\'' + r.go + '\')"><span class="mh5-time">' + (r.t || '') + '</span><span class="mh5-t"><b>' + r.w + '</b><small>' + r.s + '</small></span><span class="ms mh5-go">chevron_right</span></button>'; }).join('')
       : '<div class="mh5-empty">' + (d.appts === undefined ? 'Loading today…' : 'Nothing booked today.') + (allows('calendar') ? ' <button type="button" class="mh5-link" onclick="bpMobile.book()">Book a visit</button>' : '') + '</div>');
-    var jobRows = act.slice().sort(function (a, b) { return (Math.max((+b.estimate || 0) - (+b.collected || 0), 0)) - (Math.max((+a.estimate || 0) - (+a.collected || 0), 0)); }).slice(0, 8).map(function (j) {
+    var jobRows = act.slice().sort(function (a, b) { return (Math.max((+b.estimate || 0) - (+b.collected || 0), 0)) - (Math.max((+a.estimate || 0) - (+a.collected || 0), 0)); }).slice(0, 3).map(function (j) {
       var est = +j.estimate || 0, got1 = +j.collected || 0, pc = est ? Math.min(100, Math.round(got1 / est * 100)) : 0, left = Math.max(est - got1, 0);
       /* how far the work is: phases ticked off when the job has a plan, else how much is paid */
       var ph = j.plan && j.plan.phases && j.plan.phases.length ? j.plan.phases : null, dn = ph ? ph.filter(function (x) { return x.doneAt; }).length : 0;
       var wk = ph ? Math.round(dn / ph.length * 100) : pc, nxt = ph ? ph.filter(function (x) { return !x.doneAt; })[0] : null;
       var C = 2 * Math.PI * 16, rg = '<span class="mh5-ring' + (wk >= 100 ? ' full' : '') + '"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" class="t"/><circle cx="20" cy="20" r="16" class="a" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + (C * (1 - wk / 100)).toFixed(1) + '"/></svg><b>' + (wk >= 100 ? '<span class="ms">check</span>' : wk + '%') + '</b></span>';
       var sub = ph ? (nxt ? 'Next: ' + esc(nxt.name) + ' · ' + dn + ' of ' + ph.length + ' phases' : 'All ' + ph.length + ' phases done') : esc(j.title || '') + (est ? ' · ' + pc + '% paid' : '');
-      /* 2026-11-23: a card you swipe through, like an app */
-      return '<button type="button" class="mh5-jc" onclick="bpProjOpen&&bpProjOpen(\'' + esc(j.id) + '\')"><span class="mh5-jtop">' + rg
-        + '<span class="mh5-amt">' + (left ? money(left) + '<small>left</small>' : '<small>paid</small>') + '</span></span>'
-        + '<span class="mh5-jn">' + esc(j.name || 'Project') + '</span><span class="mh5-js"><span>' + esc(j.title || 'Job') + '</span><span>'
-        + (ph ? (nxt ? 'Next: ' + esc(nxt.name) + ' · ' + dn + ' of ' + ph.length : 'All ' + ph.length + ' phases done') : (est ? pc + '% paid' : '')) + '</span></span></button>';
+      /* 2026-11-24: rows in one card, not a sideways swipe: nothing on the phone scrolls sideways */
+      return '<button type="button" class="mh5-jr" onclick="bpProjOpen&&bpProjOpen(\'' + esc(j.id) + '\')">' + rg
+        + '<span class="mh5-jrt"><b>' + esc(j.name || 'Project') + '</b>' + '<small>' + esc(j.title || 'Job') + (ph ? ' · ' + (nxt ? 'Next: ' + esc(nxt.name) : 'all phases done') : (est ? ' · ' + pc + '% paid' : '')) + '</small></span>'
+        + '<span class="mh5-amt">' + (left ? money(left) + '<small>left</small>' : '<small>paid</small>') + '</span></button>';
     }).join('');
     var addJob = '<button type="button" class="mh5-jc mh5-jadd" onclick="bpMobile.quick(\'activejobs\',\'bpAddJobOpen\')"><span class="ms">add_circle</span>New job</button>';
     var jobsCard = !allows('activejobs') ? '' : jobRows
-      ? '<section class="mh5-sec"><div class="mh5-h"><b>Jobs in progress</b><span class="mh5-n">' + act.length + '</span><button type="button" class="mh5-all" onclick="bpNav(\'activejobs\')">All jobs</button></div><div class="mh5-car">' + jobRows + addJob + '</div></section>'
+      ? '<section class="mh5-sec"><div class="mh5-h"><b>Jobs in progress</b><span class="mh5-n">' + act.length + '</span><button type="button" class="mh5-all" onclick="bpNav(\'activejobs\')">All jobs</button></div><div class="mh5-jlist">' + jobRows + '</div></section>'
       : card('Jobs in progress', 'activejobs', 'All jobs', '<div class="mh5-empty">No active jobs. <button type="button" class="mh5-link" onclick="bpMobile.quick(\'activejobs\',\'bpAddJobOpen\')">Add a job</button></div>');
     var leadHost = allows('contacts') ? '<div id="mh5Leads">' + leadCards() + '</div>' : '';
     el.innerHTML = '<div class="mh2 mh3 mh5">'
@@ -416,18 +415,100 @@
       });
     });
   }
-  /* the section tabs scroll sideways: show that there is more, and keep the open one in view */
+  /* The section tabs never scroll sideways on a phone: the tabs that fit stay in one fixed row
+     (the open one always among them) and the rest sit behind a "More" button that opens a list. */
   function tabsFade() {
     var t = document.querySelector('#bpx .hl-tabs'); if (!t) return;
-    /* the shadow alone was easy to miss: an arrow sits at the right edge while more tabs are hidden, and a tap slides them in */
     var mb = t.querySelector('.bp-tabmore');
-    if (!mb) { mb = document.createElement('button'); mb.type = 'button'; mb.className = 'bp-tabmore'; mb.setAttribute('aria-label', 'More tabs'); mb.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
-      mb.onclick = function (e) { e.stopPropagation(); t.scrollBy({ left: Math.max(120, t.clientWidth * 0.6), behavior: 'smooth' }); }; t.appendChild(mb); }
-    var upd = function () { var more = t.scrollWidth - t.clientWidth - t.scrollLeft > 6; t.classList.toggle('bp-more', more); t.classList.toggle('bp-less', t.scrollLeft > 6); mb.hidden = !more || !M.on(); };
-    if (!t._bpf) { t._bpf = 1; t.addEventListener('scroll', upd, { passive: true }); }
-    var on = t.querySelector('.hl-tab.on');
-    if (on && M.on()) { var l = on.offsetLeft - 48, r = on.offsetLeft + on.offsetWidth - t.clientWidth + 48;   /* clear of the soft edges */ if (t.scrollLeft > l) t.scrollLeft = l; else if (t.scrollLeft < r) t.scrollLeft = r; }
-    upd();
+    if (!mb) {
+      mb = document.createElement('button'); mb.type = 'button'; mb.className = 'bp-tabmore'; mb.setAttribute('aria-label', 'More tabs');
+      mb.innerHTML = '<span>More</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+      mb.onclick = function (e) { e.stopPropagation(); tabsSheet(t); }; t.appendChild(mb);
+    }
+    var tabs = Array.prototype.filter.call(t.querySelectorAll('.hl-tab'), function (x) { return !x.classList.contains('bp-tabmore'); });
+    tabs.forEach(function (x) { x.classList.remove('bp-tovf'); });
+    t.classList.remove('bp-more', 'bp-less');
+    if (!M.on()) { mb.hidden = true; return; }
+    mb.hidden = true;
+    var cs = getComputedStyle(t), room = t.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    var gap = parseFloat(cs.columnGap) || 0, w = tabs.map(function (x) { return x.offsetWidth + gap; });
+    var total = w.reduce(function (a, b) { return a + b; }, 0);
+    if (total <= room + 2) return;
+    mb.hidden = false;
+    room -= mb.offsetWidth + gap;
+    var on = tabs.filter(function (x) { return x.classList.contains('on'); })[0], oi = tabs.indexOf(on);
+    var keep = [], used = on ? w[oi] : 0;
+    tabs.forEach(function (x, i) { if (x === on) return; if (used + w[i] <= room) { keep.push(x); used += w[i]; } });
+    tabs.forEach(function (x) { if (x !== on && keep.indexOf(x) < 0) x.classList.add('bp-tovf'); });
+    mb.classList.toggle('on', false);
+  }
+  function tabsSheet(t) {
+    var old = $('bpTabsMore'); if (old) { old.remove(); return; }
+    var rest = Array.prototype.filter.call(t.querySelectorAll('.hl-tab.bp-tovf'), function () { return true; });
+    var el = document.createElement('div'); el.id = 'bpTabsMore'; el.className = 'bp-create';
+    el.innerHTML = '<div class="bp-create-bg"></div><div class="bp-create-sh" role="dialog" aria-label="More tabs"><i class="bp-create-grab"></i>'
+      + '<div class="bp-create-h"><b>More</b><button type="button" class="bp-create-x" aria-label="Close"><span class="ms">close</span></button></div>'
+      + '<div class="bp-create-list">' + rest.map(function (x, i) { return '<button type="button" data-i="' + i + '">' + esc((x.textContent || '').trim()) + '<span class="ms" style="margin-left:auto;opacity:.45">chevron_right</span></button>'; }).join('') + '</div></div>';
+    var close = function () { el.remove(); };
+    el.querySelector('.bp-create-bg').onclick = close; el.querySelector('.bp-create-x').onclick = close;
+    Array.prototype.forEach.call(el.querySelectorAll('[data-i]'), function (b) { b.onclick = function () { close(); rest[+b.getAttribute('data-i')].click(); }; });
+    ($('bpx') || document.body).appendChild(el);
+  }
+  window.addEventListener('resize', function () { if (M.on()) tabsFade(); });
+  /* the page's own switch (the first segmented control near the top) stays pinned under the tabs
+     while the list scrolls. It is lifted out of any card it sits in, since a pinned row only stays
+     pinned inside its own box. */
+  /* what's behind a pinned row is the page's own colour, so the list slides under it cleanly */
+  function pageBg() {
+    var els = [document.querySelector('#bpx .bpx-main'), document.querySelector('#bpx .bpx-app'), $('bpx'), document.body];
+    for (var i = 0; i < els.length; i++) { if (!els[i]) continue; var c = getComputedStyle(els[i]).backgroundColor; if (c && c !== 'transparent' && !/rgba\([^)]*,\s*0\)$/.test(c)) return c; }
+    return '#eef1f5';
+  }
+  function pinBg(pin, wrap) {
+    var c = pageBg(); pin.style.setProperty('--bp-pagebg', c);
+    pin.classList.toggle('bp-mpinwrap', !!wrap);
+  }
+  function pinSwitch() {
+    var a = $('bpxViewArea'); if (!a) return;
+    Array.prototype.forEach.call(a.querySelectorAll('.bp-mpin'), function (x) { if (!M.on()) x.classList.remove('bp-mpin'); });
+    if (!M.on()) return;
+    var sw = null;
+    Array.prototype.some.call(a.querySelectorAll('.bpx-jobtabs,.cal-view,.insp-ctabs'), function (x) {
+      if (x.classList.contains('bp-chipsrow') || x.closest('.bpx-modal,.pjs-app,.ctp')) return false;
+      var r = x.getBoundingClientRect(); if (!r.height) return false;
+      sw = x; return true;
+    });
+    if (!sw) return;
+    var tb = document.querySelector('#bpx .hl-tabs'), top = tb && getComputedStyle(tb).display !== 'none' ? 104 : 52;
+    var pin = sw, up = sw.parentElement;
+    /* a small header wrapper (the calendar's two control rows) is pinned whole */
+    while (up && up !== a && up.parentElement && up.parentElement !== a && !up.parentElement.classList.contains('bpx-in')) up = up.parentElement;
+    if (up && up !== a && up !== sw && up.getBoundingClientRect().height < 220 && !up.classList.contains('bpx-panel')) pin = up;
+    if (pin.classList.contains('bp-mpin')) { pin.style.setProperty('top', top + 'px', 'important'); pinBg(pin, pin !== sw); return; }
+    var host = sw.parentElement;
+    if (pin === sw && host && host !== a && host.classList.contains('bpx-panel') && host.children.length > 1 && host.firstElementChild === sw) { host.parentNode.insertBefore(sw, host); }
+    pin.classList.add('bp-mpin'); pin.style.setProperty('top', top + 'px', 'important');
+    pinBg(pin, pin !== sw);
+  }
+  /* a row of filter chips too wide for the screen becomes one dropdown (the phone's own picker),
+     so nothing on the page scrolls sideways */
+  function wideChips() {
+    var a = $('bpxViewArea'); if (!a) return;
+    Array.prototype.forEach.call(a.querySelectorAll('.bpx-jobtabs,.ct-stages'), function (row) {
+      if (row.closest('.bpx-modal,.pjs-app')) return;
+      var btns = Array.prototype.filter.call(row.children, function (b) { return /^(BUTTON|A)$/.test(b.tagName); });
+      var sel = row.previousElementSibling && row.previousElementSibling.classList.contains('bp-chipsel') ? row.previousElementSibling : null;
+      if (!M.on()) { row.classList.remove('bp-chipsrow'); if (sel) sel.remove(); return; }
+      if (!row.classList.contains('bp-chipsrow')) { if (row.scrollWidth <= row.clientWidth + 4 || btns.length < 2) { if (sel) sel.remove(); return; } }
+      row.classList.add('bp-chipsrow');
+      var lab = function (b) { return (b.textContent || '').replace(/\s+/g, ' ').trim().replace(/\s(\d+)$/, ' · $1'); };
+      var key = btns.map(lab).join('|') + '#' + btns.map(function (b) { return b.classList.contains('on') ? 1 : 0; }).join('');
+      if (!sel) { sel = document.createElement('label'); sel.className = 'bp-chipsel'; sel.innerHTML = '<select aria-label="Show"></select><span class="ms">expand_more</span>'; row.parentNode.insertBefore(sel, row); }
+      if (sel._k === key) return; sel._k = key;
+      var s = sel.querySelector('select');
+      s.innerHTML = btns.map(function (b, i) { return '<option value="' + i + '"' + (b.classList.contains('on') || b.getAttribute('aria-selected') === 'true' ? ' selected' : '') + '>' + esc(lab(b)) + '</option>'; }).join('');
+      s.onchange = function () { var b = btns[+s.value]; if (b) b.click(); };
+    });
   }
   var tidyT = null;
   /* a row of stat tiles that are all "—" (nothing connected yet) says nothing
@@ -520,7 +601,7 @@
       if (cs.position === 'sticky' && cs.bottom !== 'auto') { e._bpsb = 1; e.classList.add('bp-stickbot'); }
     });
   }
-  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); settingsHook(); jobsHook(); clampLong(); stickBottom(); lookPick(); iconAdds(); backHook(); pageAdds(); }, 80); }
+  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); settingsHook(); jobsHook(); clampLong(); stickBottom(); lookPick(); iconAdds(); backHook(); pageAdds(); wideChips(); pinSwitch(); }, 80); }
   /* a page you opened from a list (a contact, a machine, an estimate, an invoice) gets a back arrow
      in the top bar, like an app, in place of the menu; the "← All contacts" link in the page goes */
   /* One + for adding, like an app: on the phone a page's own "+ Add job" / "+ New contact" button
