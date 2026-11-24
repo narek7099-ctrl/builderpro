@@ -650,3 +650,7 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .chm-visit>div{min-width:0}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .chm-visit b{white-space:normal !important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .chm-visit>div>span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* computer: the swirl stays bright on the Dashboard; behind work pages it's faint so text and buttons read cleanly (2026-11-24) */
+#bpx#bpx#bpx:not(.bp-m):not(:has(#bpxViewArea>.db4)) #bpxRib{opacity:.18 !important;transition:opacity .4s ease}
+#bpx#bpx#bpx.bpx-dark:not(.bp-m):not(:has(#bpxViewArea>.db4)) #bpxRib{opacity:.22 !important}
+#bpx#bpx#bpx:not(.bp-m):has(#bpxViewArea>.db4) #bpxRib{transition:opacity .4s ease}
