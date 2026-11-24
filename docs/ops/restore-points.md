@@ -468,3 +468,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-23 before phone app feel round 2 (grouped number cards, round + on Calendar, rows instead of card-in-card on Invoices/Estimates, compact Connect rows on Reputation/Marketing): main was 109a983
 - 2026-11-23 before grouped number cards on Subcontractors and Calculator leads: main was c8bf855
 - 2026-11-23 before back arrow in the phone top bar on detail pages (contact, equipment, estimate, invoice): main was 5709d47
+- 2026-11-24 before Who's going on calendar bookings, logo-only phone top bar, sweep fixes (Lisa publish bar, faint icons, tap sizes): main was 2ff5d55

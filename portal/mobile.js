@@ -112,7 +112,8 @@
     }
     var logo = (sets().company || {}).logoUrl;
     /* 2026-11-21: the BuilderPro logo in the corner (the business name and its logo looked odd up here) */
-    chip.innerHTML = '<span class="bp-mlogo"><img src="assets/brand/logo-mark-64.png" alt="" width="30" height="30"><b>Builder<span>Pro</span></b></span>';
+    /* 2026-11-24: the logo on its own, no name next to it */
+    chip.innerHTML = '<span class="bp-mlogo"><img src="assets/brand/logo-mark-64.png" alt="BuilderPro" width="34" height="34"></span>';
     chip.setAttribute('aria-label', 'BuilderPro: account menu');
     var xx = $('bpx'); if (xx) xx.classList.toggle('bp-look-sb', look() === 'sidebar');
     var x = $('bpx'); if (x) x.classList.toggle('bp-m-home', homeView(v || window._bpCurView));
