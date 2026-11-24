@@ -74,6 +74,37 @@ assert 'site/site.js?v=' + VER in html, 'script block not found'
 js = SITE / 'site.js'
 js.write_text(re.sub(r"'\./hero3d\.js(\?v=[^']*)?'", "'./hero3d.js?v=%s'" % VER, js.read_text(encoding='utf-8')), encoding='utf-8')
 
+# ---------- portal styles: one file (2026-11-24) ----------
+# The portal's 31 stylesheets load as one file, portal/app.css, built here from the
+# list in portal/css-bundle.txt in the same order (so the cascade is unchanged).
+# Edit the separate files as before; this rebuilds the bundle and its version.
+import hashlib
+LIST = ROOT / 'portal' / 'css-bundle.txt'
+link_re = re.compile(r'<link rel="stylesheet" href="(portal/[a-z0-9-]+\.css)(\?v=[^"]*)?">\n?')
+if not LIST.exists():
+    files = [m.group(1) for m in link_re.finditer(html)]
+    assert files, 'no portal stylesheet links found'
+    LIST.write_text('# portal stylesheets, in load order, bundled into portal/app.css by site/assemble.py\n' + '\n'.join(files) + '\n', encoding='utf-8')
+    first = link_re.search(html).start()
+    html = link_re.sub('', html)
+    html = html[:first] + '<link rel="stylesheet" href="portal/app.css" data-bundle>\n' + html[first:]
+files = [l.strip() for l in LIST.read_text(encoding='utf-8').splitlines() if l.strip() and not l.startswith('#')]
+def squeeze(css):
+    css = re.sub(r'/\*.*?\*/', '', css, flags=re.S)          # comments
+    css = re.sub(r'\s+', ' ', css)                          # runs of spaces and newlines
+    css = re.sub(r'\s*([{};])\s*', r'\1', css)              # around braces and semicolons
+    return css.strip()
+parts = []
+for f in files:
+    src = (ROOT / f).read_text(encoding='utf-8')
+    parts.append('/* ' + f + ' */\n' + squeeze(src))
+bundle = '\n'.join(parts) + '\n'
+(ROOT / 'portal' / 'app.css').write_text(bundle, encoding='utf-8')
+h = hashlib.sha1(bundle.encode('utf-8')).hexdigest()[:10]
+html, n = re.subn(r'<link rel="stylesheet" href="portal/app\.css(\?v=[^"]*)?" data-bundle>', '<link rel="stylesheet" href="portal/app.css?v=%s" data-bundle>' % h, html)
+assert n == 1, 'bundle link not found'
+print('portal styles:', len(files), 'files ->', len(bundle), 'bytes, version', h)
+
 SRC.write_text(html, encoding='utf-8')
 print('assembled:', len(html), 'bytes, version', VER)
 
