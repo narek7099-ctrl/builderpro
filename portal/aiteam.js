@@ -92,6 +92,7 @@
       '.ai-tab.on{border-color:var(--a,#006fff);background:#e6f0ff;color:#003db8}',
       '@media(max-width:700px){.ai-top{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-left:-4px;padding:2px 4px}.ai-top::-webkit-scrollbar{display:none}.ai-tab{flex:none}.ai-use{flex:none;margin-left:8px}}',
       '.ai-see{display:flex;gap:6px;align-items:flex-start;justify-content:center;max-width:520px;margin:10px auto 0;font-size:12.5px;line-height:1.45;color:var(--mu,#788493);text-align:left}.ai-see .ms{font-size:16px;margin-top:1px}',
+      '.ai-pick{position:relative;padding-right:30px}.ai-pick select{appearance:none;-webkit-appearance:none;border:0;background:transparent;font:inherit;color:inherit;cursor:pointer;padding:0;margin:0;outline:0}.ai-pick select option{color:#0b1526;background:#fff}.ai-pick .ai-pick-dn{position:absolute;right:9px;top:50%;translate:0 -50%;font-size:18px;pointer-events:none}',
       '.ai-tab .n{background:#0970F7;color:#fff;border-radius:9px;font-size:11px;padding:0 6px}',
       '.ai-use{margin-left:auto;flex:none;padding-right:24px;font-size:13px;color:var(--mu,#788493);display:flex;align-items:center;gap:8px}',
       '.ai-use i{display:block;width:90px;height:6px;border-radius:6px;background:#e7ecf2;overflow:hidden}.ai-use i b{display:block;height:100%;background:var(--a,#006fff)}',
@@ -590,7 +591,11 @@
     var ntk = st.tasks ? Object.keys(st.tasks).reduce(function (s, k) { return s + st.tasks[k].open + st.tasks[k].doing + st.tasks[k].blocked; }, 0) : 0;
     return '<button class="ai-tab' + (A.tab === 'board' || A.tab === 'map' ? ' on' : '') + '" data-board="1"><span class="ms">account_tree</span>Your team</button>'
       + '<button class="ai-tab' + (A.tab === 'tasks' ? ' on' : '') + '" data-tasks="1"><span class="ms">checklist</span>Tasks' + (ntk ? '<span class="n">' + ntk + '</span>' : '') + '</button>' + ceo
-      + Object.keys(AG).map(function (k) { return '<button class="ai-tab' + (A.tab === 'chat' && A.agent === k ? ' on' : '') + '" data-ag="' + k + '"><span class="ms">' + AG[k].ic + '</span>' + AG[k].n + '</button>'; }).join('')
+      /* the assistants share one picker, so the row fits on any screen */
+      + '<label class="ai-tab ai-pick' + (A.tab === 'chat' ? ' on' : '') + '"><span class="ms">' + (A.tab === 'chat' && AG[A.agent] ? AG[A.agent].ic : 'forum') + '</span>'
+      + '<select data-agsel aria-label="Talk to an assistant">' + (A.tab === 'chat' ? '' : '<option value="" selected disabled>Talk to…</option>')
+      + Object.keys(AG).map(function (k) { return '<option value="' + k + '"' + (A.tab === 'chat' && A.agent === k ? ' selected' : '') + '>' + AG[k].n + '</option>'; }).join('')
+      + '</select><span class="ms ai-pick-dn">expand_more</span></label>'
       + '<button class="ai-tab' + (A.tab === 'wait' ? ' on' : '') + '" data-wait="1"><span class="ms">task_alt</span>Waiting for you' + (st.pending ? '<span class="n">' + st.pending + '</span>' : '') + '</button>'
       + '<span class="ai-use" title="Messages you sent this month">' + st.used + ' of ' + st.cap + ' messages<i><b style="width:' + pct + '%"></b></i></span>';
   }
@@ -599,6 +604,9 @@
     var c = a.querySelector('[data-ceo]'); if (c) c.onclick = function () { A.tab = 'ceo'; draw(); };
     var p = a.querySelector('[data-pitch]'); if (p) p.onclick = function () { A.tab = 'pitch'; draw(); };
     a.querySelectorAll('[data-ag]').forEach(function (b) { b.onclick = function () { A.tab = 'chat'; A.agent = b.getAttribute('data-ag'); A.thread = null; draw(); }; });
+    var top = a.querySelector('.ai-top'), cur = top && top.querySelector('.ai-tab.on');
+    if (cur && top.scrollWidth > top.clientWidth) top.scrollLeft = Math.max(0, cur.offsetLeft - 12);
+    var sel = a.querySelector('[data-agsel]'); if (sel) sel.onchange = function () { if (!sel.value) return; A.tab = 'chat'; A.agent = sel.value; A.thread = null; draw(); };
     var w = a.querySelector('[data-wait]'); if (w) w.onclick = function () { A.tab = 'wait'; draw(); };
     var bd = a.querySelector('[data-board]'); if (bd) bd.onclick = function () { A.tab = 'board'; draw(); };
     var tk = a.querySelector('[data-tasks]'); if (tk) tk.onclick = function () { A.tab = 'tasks'; draw(); };
