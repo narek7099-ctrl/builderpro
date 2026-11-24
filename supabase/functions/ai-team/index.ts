@@ -1,7 +1,8 @@
 // ai-team: the $49/month AI Team add-on inside a contractor's portal.
 // Eight assistants work on that contractor's own business only:
 //   Sales       leads, quotes, follow-ups          (web search)
-//   Marketing   ads, posts, promotions, reviews    (web search)
+//   Marketing   ads, posts, promotions, reviews    (web search) — off since 2026-11-24: out of the
+//               CEO's team list and the ask/assign tools; its own chat and old threads still work
 //   Office      schedule, reminders, invoices
 //   Client Care progress updates, complaints, reviews
 //   Research    marketing tactics, competitor prices (web search)
@@ -46,7 +47,7 @@ const month = () => new Date().toISOString().slice(0, 7);
 type Acct = { user_id: string; email: string; business: string; full_name: string; trade: string; phone: string; plan: string; ghl_location_id: string; profile: Record<string, unknown>; ai_addon: string; stripe_customer_id: string };
 type Agent = { key: string; name: string; role: string; web: boolean };
 const AGENTS: Record<string, Agent> = {
-  ceo: { key: "ceo", name: "AI CEO", web: true, role: "You manage the whole AI Team for the owner: Sales, Marketing, Office, Client Care, Research, Workflows, Permits, Projects, Dispatch and Estimator. Turn what the owner wants into work: ask a teammate with ask_teammate when you need an answer now, or put longer work on the task board with assign_task (one owner per task, a clear outcome, the details needed). Check finished tasks with tasks_list, and pull the team's answers into one clear recommendation for the owner. Start from the business snapshot (ceo_snapshot) when you need the big picture." },
+  ceo: { key: "ceo", name: "AI CEO", web: true, role: "You manage the whole AI Team for the owner: Sales, Office, Client Care, Research, Workflows, Permits, Projects, Dispatch and Estimator. Turn what the owner wants into work: ask a teammate with ask_teammate when you need an answer now, or put longer work on the task board with assign_task (one owner per task, a clear outcome, the details needed). Check finished tasks with tasks_list, and pull the team's answers into one clear recommendation for the owner. Start from the business snapshot (ceo_snapshot) when you need the big picture." },
   sales: { key: "sales", name: "Sales", web: true, role: "You help win jobs: follow up on new leads and open quotes, write texts and emails that get replies, suggest who to call today, draft call scripts, and spot quotes going cold." },
   marketing: { key: "marketing", name: "Marketing", web: true, role: "You bring in customers: write Facebook and Google ads, social posts, promotions, review requests and replies, and ideas that fit a local contractor. Look at what nearby competitors do when it helps." },
   office: { key: "office", name: "Office", web: false, role: "You keep the business running: today's schedule, appointments, reminders, overdue invoices and quotes, and tasks. Be brief and practical." },
@@ -58,6 +59,8 @@ const AGENTS: Record<string, Agent> = {
   estimator: { key: "estimator", name: "Estimator", web: false, role: "You help price jobs right: build good/better/best options from the contractor's price list and past estimates, spot estimates priced below their usual margins or missing items (tear-off, permits, disposal, materials), and say which open estimates are worth following up and why. Show your numbers line by line. You draft prices; the owner sends them." },
   projects: { key: "projects", name: "Project Issues", web: false, role: "You watch active projects for trouble: phases past their due date, jobs over budget, jobs with no crew assigned, unpaid balances on finished work, missing materials or contracts, and work scheduled with nobody on it. Rank issues by what costs the most money or time and say who should do what." },
 };
+// assistants switched off for now (Marketing, 2026-11-24): no new tasks or questions go to them
+const OFF = new Set(["marketing"]);
 // what the assistants may do without asking; everything else waits for the contractor
 const AUTO_GHL = new Set(["contacts.list", "conversations.list", "conversations.messages", "pipelines.list", "opportunities.list", "calendars.list", "appointments.list", "tags.list", "notes.create", "tasks.create"]);
 const ASK_GHL = new Set(["conversations.send", "contacts.create", "contacts.update", "contacts.tag", "opportunities.create", "opportunities.move", "opportunities.status", "appointments.create"]);
@@ -70,8 +73,8 @@ const TOOLS: Anthropic.Tool[] = [
   { name: "projects", description: "This contractor's projects in BuilderPro: status, customer, address, estimate, collected, budget and spend, phases with due dates, crew assigned, schedule, permits with inspections, materials and contract state. args.status 'active' (default), 'done' or 'all'.",
     input_schema: { type: "object", properties: { status: { type: "string", enum: ["active", "done", "all"] } } } },
   { name: "business_info", description: "This contractor's business details from BuilderPro: services, prices, hours, service area, plan.", input_schema: { type: "object", properties: {} } },
-  { name: "ask_teammate", description: "Ask another assistant on the team a question and get their answer now (they use their own tools). Use it when the answer belongs to their area. Assistants: ceo, sales, marketing, office, clients, research, workflows, permits, projects, dispatch, estimator.",
-    input_schema: { type: "object", properties: { assistant: { type: "string", enum: ["ceo", "sales", "marketing", "office", "clients", "research", "workflows", "permits", "projects", "dispatch", "estimator"] }, question: { type: "string" } }, required: ["assistant", "question"] } },
+  { name: "ask_teammate", description: "Ask another assistant on the team a question and get their answer now (they use their own tools). Use it when the answer belongs to their area. Assistants: ceo, sales, office, clients, research, workflows, permits, projects, dispatch, estimator.",
+    input_schema: { type: "object", properties: { assistant: { type: "string", enum: ["ceo", "sales", "office", "clients", "research", "workflows", "permits", "projects", "dispatch", "estimator"] }, question: { type: "string" } }, required: ["assistant", "question"] } },
   { name: "tasks_list", description: "The team's task board: what the AI CEO or the owner assigned, to whom, status (open, doing, done, blocked) and results.",
     input_schema: { type: "object", properties: { status: { type: "string", enum: ["open", "doing", "done", "blocked", "all"] } } } },
   { name: "task_update", description: "Report on a task you were given: done (with a short result), blocked (say what's needed), or doing.",
@@ -79,7 +82,7 @@ const TOOLS: Anthropic.Tool[] = [
 ];
 const CEO_TOOLS: Anthropic.Tool[] = [
   { name: "assign_task", description: "Put a task on the team's task board for one assistant. They work on it next (the owner can start it right away) and report back on the board. Give one clear outcome and the details needed.",
-    input_schema: { type: "object", properties: { assistant: { type: "string", enum: ["sales", "marketing", "office", "clients", "research", "workflows", "permits", "projects", "dispatch", "estimator"] }, title: { type: "string" }, detail: { type: "string" }, priority: { type: "string", enum: ["low", "normal", "high"] } }, required: ["assistant", "title"] } },
+    input_schema: { type: "object", properties: { assistant: { type: "string", enum: ["sales", "office", "clients", "research", "workflows", "permits", "projects", "dispatch", "estimator"] }, title: { type: "string" }, detail: { type: "string" }, priority: { type: "string", enum: ["low", "normal", "high"] } }, required: ["assistant", "title"] } },
   { name: "ceo_snapshot", description: "The business at a glance (from BuilderPro's AI CEO): money this month and last, jobs and what needs attention, unassigned work, the latest morning briefing.", input_schema: { type: "object", properties: {} } },
 ];
 const DISPATCH_TOOLS: Anthropic.Tool[] = [
@@ -196,7 +199,7 @@ function system(a: Agent, acct: Acct) {
   const p = acct.profile ?? {};
   return `You are the ${a.name} assistant on ${acct.business}'s BuilderPro AI Team. ${acct.business} is a ${acct.trade || "contracting"} business${p.city ? " in " + p.city + (p.state ? ", " + p.state : "") : ""}, owned by ${acct.full_name}. You work only for this business.
 Your job: ${a.role}
-Your team: AI CEO (manages the team and the task board), Sales, Marketing, Office, Client Care, Research, Workflows, Permits, Projects, Dispatch & Routing, Estimator. Ask a teammate with ask_teammate when the answer belongs to their area. When you were given a task, report on it with task_update.
+Your team: AI CEO (manages the team and the task board), Sales, Office, Client Care, Research, Workflows, Permits, Projects, Dispatch & Routing, Estimator. Ask a teammate with ask_teammate when the answer belongs to their area. When you were given a task, report on it with task_update.
 Their services: ${p.services || "see business_info"}. Service area: ${p.serviceArea || "see business_info"}.
 How to work: look things up with your tools rather than guessing. Anything that messages a customer or changes their records is queued for the owner to approve; when that happens, say what you drafted and why, and don't retry it. Write the way a good office manager talks to the owner: plain, short, concrete. Customer-facing drafts should sound like ${acct.full_name.split(" ")[0] || "the owner"}, not like marketing copy. Today is ${new Date().toISOString().slice(0, 10)}.`;
 }
@@ -228,7 +231,7 @@ async function runTool(acct: Acct, name: string, input: Record<string, unknown>,
   }
   if (name === "assign_task") {
     if (agent !== "ceo" && agent !== "owner") return { error: "Only the AI CEO assigns tasks." };
-    const who = String(input.assistant); if (!AGENTS[who] || who === "ceo") return { error: "No such assistant." };
+    const who = String(input.assistant); if (!AGENTS[who] || who === "ceo" || OFF.has(who)) return { error: "No such assistant." };
     const open = await sb(`cai_tasks?owner=eq.${acct.user_id}&status=in.(open,doing)&select=id`);
     if ((open.ok ? await open.json() : []).length >= 15) return { error: "The board already has 15 open tasks. Finish or cancel some first." };
     const r = await sb("cai_tasks", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({ owner: acct.user_id, assigned_by: agent, assignee: who, title: String(input.title).slice(0, 200), detail: String(input.detail ?? "").slice(0, 4000), priority: ["low", "normal", "high"].includes(String(input.priority)) ? input.priority : "normal" }) });
@@ -381,7 +384,7 @@ async function run(acct: Acct, a: Agent, thread: string, text: string, opts: { h
         // one level only: an assistant answering a teammate can't pass it on (keeps cost in check)
         if (opts.depth) return { type: "tool_result", tool_use_id: u.id, content: "You were asked by a teammate, so you can't pass this on. Answer with what you have.", is_error: true };
         const t = AGENTS[String(input.assistant)];
-        if (!t || t.key === a.key) return { type: "tool_result", tool_use_id: u.id, content: "No such assistant.", is_error: true };
+        if (!t || t.key === a.key || OFF.has(t.key)) return { type: "tool_result", tool_use_id: u.id, content: "No such assistant.", is_error: true };
         try {
           const th = await newThread(acct.user_id, t.key, `From ${a.name}: ` + String(input.question).slice(0, 60), "team");
           const out = await run(acct, t, th, `${a.name} asks you: ${String(input.question)}\nAnswer them directly and briefly, using your tools if needed.`, { depth: 1, effort: "low", light: true });

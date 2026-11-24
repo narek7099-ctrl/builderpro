@@ -490,3 +490,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-24 bell important stripe blue, phone pop-up buttons pinned, sub insurance banner amber: restore to 5231686
 - 2026-11-24 Marketing section hidden (BP_MARKETING_ON=false in app.html): restore to dd7d437
 - 2026-11-24 AI Team Marketing assistant hidden, website/pricing marketing claims removed: restore to 07cdcc7
+- 2026-11-24 ai-team v25: Marketing assistant out of CEO team list and ask/assign tools (OFF set): restore to 9a7ff61
