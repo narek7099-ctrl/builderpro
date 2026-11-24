@@ -742,3 +742,15 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .bp-emptyx.bp-emptyx-card{background:#141b2b !important;border-color:#262f45 !important}
 /* the link is repeated as the button, so it's hidden in the sentence when it sits at the end */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx .bp-emptyx-ln:last-of-type:is(:nth-last-child(2)){display:none}
+/* job Overview on a computer: Customer & site folds under one Edit row */
+@media (min-width:761px){
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-cs.pjs-cs-shut>:not(.pjs-h){display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-cs>.pjs-h{display:flex !important;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-cs.pjs-cs-shut>.pjs-h{margin:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-cs-tg{display:inline-flex;align-items:center;gap:2px;color:#006fff;font-size:13px;font-weight:600;text-transform:none;letter-spacing:0}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-cs-tg .ms{font-size:20px;color:#006fff;transition:transform .2s}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-cs:not(.pjs-cs-shut) .pjs-cs-tg .ms{transform:rotate(180deg)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-cs:not(.pjs-cs-shut) .pjs-cs-tl{display:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-cs-tg,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-cs-tg .ms{color:#6aa8ff}
+}
+@media (max-width:760px){#bpx .pjs-cs-tg{display:none !important}}

@@ -224,7 +224,18 @@
     pane.insertBefore(view, pane.firstChild);
     /* 2026-11-20: the owner wants the fill-out boxes open straight away, as they used to be;
        the customer card stays on top, the read-only Job info list only shows if pjs-ro is set */
-    Array.prototype.forEach.call(view.querySelectorAll('[data-pjs-edit]'), function (b) { b.onclick = function () { pane.classList.remove('pjs-ro'); var f = pane.querySelector('.pjs-sec:not(.pjs-view) input'); if (f) f.focus(); }; });
+    /* 2026-11-24: on a computer the customer card above already shows name, phone and
+       email, so the Customer & site boxes fold under one "Edit" row (the job's other
+       boxes stay open). On a phone the boxes are the customer info, so they stay. */
+    var cs = pane.querySelector('.pjs-sec:not(.pjs-view)'), csh = cs && cs.querySelector(':scope > .pjs-h');
+    if (csh && /customer/i.test(csh.textContent)) {
+      cs.classList.add('pjs-cs', 'pjs-cs-shut');
+      csh.setAttribute('role', 'button'); csh.tabIndex = 0;
+      csh.innerHTML = '<span>Customer &amp; site</span><span class="pjs-cs-tg"><span class="pjs-cs-tl">Edit</span><span class="ms">expand_more</span></span>';
+      csh.onclick = function () { cs.classList.toggle('pjs-cs-shut'); };
+      csh.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); csh.onclick(); } };
+    }
+    Array.prototype.forEach.call(view.querySelectorAll('[data-pjs-edit]'), function (b) { b.onclick = function () { pane.classList.remove('pjs-ro'); if (cs) cs.classList.remove('pjs-cs-shut'); var want = /email/i.test(b.textContent) ? 'input[type=email],input[id*=mail]' : /phone/i.test(b.textContent) ? 'input[type=tel],input[id*=phone]' : 'input'; var f = pane.querySelector('.pjs-sec:not(.pjs-view) ' + want) || pane.querySelector('.pjs-sec:not(.pjs-view) input'); if (f) f.focus(); }; });
   }
 
   function emptyState(ico, title, text, btn, onclick) {
