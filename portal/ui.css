@@ -767,3 +767,5 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .eq-empty-acts>*{margin:0 !important}
 /* Settings → Hours: room for "Wednesday" beside its checkbox */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bp-m) .st-hrs .bpx-hrs-row{grid-template-columns:92px 26px 1fr !important;column-gap:8px}
+/* phone pop-ups: the Cancel / Save row stays pinned at the bottom of the sheet, even on long forms */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-modalcard>.row:last-child{position:sticky;bottom:calc(-1 * env(safe-area-inset-bottom,0px));z-index:3;background:inherit;margin-top:12px;padding-top:12px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line,#eef0f3)}

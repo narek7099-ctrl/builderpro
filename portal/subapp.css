@@ -19,7 +19,7 @@
 #bpx .sa{max-width:980px}
 #bpx .sa .bpx-panel{margin:0 0 14px}
 #bpx .sa-banner{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;margin:0 0 14px;border:1px solid}
-#bpx .sa-banner.bad{background:#fdf3f2;border-color:#f5c9c4;color:#7a1a12}
+#bpx .sa-banner.bad{background:#fff7e8;border-color:#f3d79c;color:#5c3a00}   /* needs attention: amber, not alarm red */
 #bpx .sa-banner.warn{background:#eaf2fd;border-color:#aecbf1;color:#07346e}
 #bpx .sa-banner>.ms{font-size:24px;flex:none}
 #bpx .sa-banner>div{flex:1;min-width:0}
@@ -133,14 +133,14 @@
 #bpx .sj-it .sj-acts button.ok{background:#087F61;border-color:#087F61;color:#001530}
 #bpx .sj-it .sj-acts button.no{color:#b42318}
 #bpx .sj-it .sj-acts button:disabled{opacity:.5;cursor:not-allowed}
-#bpx .sj-warn{display:flex;gap:8px;align-items:center;font-size:12.5px;border-radius:10px;padding:8px 10px;margin:8px 0 0;background:#fdf3f2;color:#7a1a12;border:1px solid #f5c9c4}
+#bpx .sj-warn{display:flex;gap:8px;align-items:center;font-size:12.5px;border-radius:10px;padding:8px 10px;margin:8px 0 0;background:#fff7e8;color:#5c3a00;border:1px solid #f3d79c}
 #bpx .sj-warn.amber{background:#eaf2fd;color:#07346e;border-color:#aecbf1}
 #bpx .sj-warn .ms{font-size:18px}
 #bpx .sj-tot{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--grey);margin:0 0 12px}
 #bpx .sj-tot b{color:var(--ink)}
 
 /* ---------- dark ---------- */
-#bpx.bpx-dark .sa-banner.bad,#bpx.bpx-dark .sj-warn{background:rgba(217,45,32,.12);border-color:rgba(217,45,32,.35);color:#ffb4ab}
+#bpx.bpx-dark .sa-banner.bad,#bpx.bpx-dark .sj-warn{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.35);color:#fcd38a}
 #bpx.bpx-dark .sa-banner.warn,#bpx.bpx-dark .sj-warn.amber{background:rgba(15,106,225,.12);border-color:rgba(15,106,225,.35);color:#7aaff5}
 #bpx.bpx-dark .sa-chip.warn{background:rgba(15,106,225,.16);color:#7aaff5}
 #bpx.bpx-dark .sa-chip.bad{background:rgba(9,112,247,.16);color:#4B99FE}
