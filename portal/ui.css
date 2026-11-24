@@ -413,7 +413,7 @@
 /* the BuilderPro logo in the top left corner */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-macct{gap:0 !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-mlogo{display:flex;align-items:center;gap:8px;min-width:0}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-mlogo img{width:30px;height:30px;flex:none;border-radius:0}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-mlogo img{width:34px;height:34px;flex:none;border-radius:0}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-mlogo b{font-size:21px !important;font-weight:800 !important;letter-spacing:-.02em;color:#001530 !important;white-space:nowrap}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bp-mlogo b span{color:#006fff}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .bp-mlogo b{color:#fff !important}
@@ -628,3 +628,14 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bp-m-detail) .bp-mback{display:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bp-m-detail #hlTop .hl-burger{display:none !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bp-m-detail #bpxViewArea :is(.ctp-back,.eq-back,.qx-back):not(.qs-head .qx-back){display:none !important}
+/* 2026-11-24 sweep */
+/* the sticky "Publish to Lisa" bar was see-through: the form showed through it */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bp-m):not(.bpx-dark) #bpxViewArea .bpx-rg-pubbar{background:#fff !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;box-shadow:0 -6px 20px rgba(16,24,40,.08) !important;z-index:5}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark:not(.bp-m) #bpxViewArea .bpx-rg-pubbar{background:#161d2b !important;z-index:5}
+/* Jobs search: the magnifier was too faint */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .pjk-search>.ms{color:#6b7280 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .pjk-search>.ms{color:#9aa4b2 !important}
+/* Supply: "Change" was a 15px-tall link, hard to tap */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .sp-two .bpx-mut>a{display:inline-block;padding:10px 6px;margin:-10px -6px}
+/* Calculator leads: a good score's white number on mint was hard to read: dark number instead */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .cl-score[style*="#16C79A" i]{color:#00382a !important}

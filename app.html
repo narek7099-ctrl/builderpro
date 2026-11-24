@@ -94,9 +94,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261123-appfeel5">
-<link rel="stylesheet" href="site/present.css?v=20261123-appfeel5">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261123-appfeel5"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261124-crewbook">
+<link rel="stylesheet" href="site/present.css?v=20261124-crewbook">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261124-crewbook"}}</script>
 
 
 <style id="bpi-icons">
@@ -4972,10 +4972,39 @@ function bpCalUnsched(){
     var addr=[c.address1||c.address||'',c.city||''].filter(Boolean).join(', ');
     if(addr&&(!a.value||a.dataset.auto==='1')){ a.value=addr; a.dataset.auto='1'; }
   };
+  /* 2026-11-24: who's going, picked while booking: a crew, or one person */
+  window.bpBookCrewField=function(){
+    var cs=window.pjCrews?pjCrews():[], es=window.bpEmpsActive?bpEmpsActive():[];
+    if(!cs.length&&!es.length) return '<div class="bpx-mut" style="font-size:12.5px;margin-top:10px">Want to send a crew? Add your people under <a style="color:var(--blue,#006fff);cursor:pointer" onclick="bpCloseModal();bpNav(\'employees\')">Employees</a>.</div>';
+    var o='<option value="">Nobody yet</option>';
+    if(cs.length) o+='<optgroup label="Crews">'+cs.map(function(c){return '<option value="c:'+bpEsc(c.id)+'">'+bpEsc(c.name)+'</option>';}).join('')+'</optgroup>';
+    if(es.length) o+='<optgroup label="People">'+es.map(function(e){return '<option value="e:'+bpEsc(e.id)+'">'+bpEsc(e.name||'Employee')+(e.trade?' · '+bpEsc(e.trade):'')+'</option>';}).join('')+'</optgroup>';
+    return '<label>Who\u2019s going</label><select id="bpx-bk-crew">'+o+'</select>';
+  };
+  window.bpBookCrewName=function(){
+    var v=(q('bpx-bk-crew')||{}).value||''; if(!v) return '';
+    if(v.indexOf('c:')===0){ var c=(window.pjCrews?pjCrews():[]).filter(function(x){return x.id===v.slice(2);})[0]; return c?c.name:''; }
+    var e=window.bpEmpById?bpEmpById(v.slice(2)):null; return e?(e.name||''):'';
+  };
+  /* a job booked for a customer with an active project: that day goes on the project too, with the crew,
+     so it shows in the crew's app (the same as Schedule a crew) */
+  window.bpBookCrewJob=function(cid,day,time,dur){
+    var v=(q('bpx-bk-crew')||{}).value||'';
+    var ct=(window._bpContacts||[]).filter(function(c){return c.id===cid;})[0]||{};
+    var jobs=bpJobsGet(), low=function(x){return String(x||'').toLowerCase().replace(/\(sample\)/g,'').trim();};
+    var j=jobs.filter(function(x){return x.status==='active'&&x.contactId===cid;})[0]||jobs.filter(function(x){return x.status==='active'&&ct.name&&low(x.name)===low(ct.name);})[0];
+    if(!j||!day) return false;
+    j.sched=j.sched||{}; j.sched.dates=(j.sched.dates||[]).filter(function(x){return x!==day;}).concat([day]).sort();
+    j.sched.slots=j.sched.slots||{}; j.sched.slots[day]={t:time||'08:00',dur:dur||480};
+    if(v.indexOf('c:')===0) j.crew=v.slice(2);
+    else if(v.indexOf('e:')===0&&window.bpJobAssignees){ var id=v.slice(2), list=bpJobAssignees(j); if(!list.some(function(a){return a.employeeId===id;})){ var e=window.bpEmpById?bpEmpById(id):null; list.push(e&&window.bpJobAssigneeEntry?bpJobAssigneeEntry(e):{employeeId:id,teamId:(e&&e.team_id)||null,name:(e&&e.name)||''}); } j.assignees=list; if(Array.isArray(j.crew)) delete j.crew; }
+    bpJobsSet(jobs); return true;
+  };
   window.bpOpenBook=async function(){
     bpModal('<h3>Book\u2026</h3><div class="bpx-sub">Loading your contacts\u2026</div>');
     var _bpLd=q('bpx-modal');
     await bpEnsureContacts();
+    if(window.bpCrewLoad){ try{ await bpCrewLoad(); }catch(e){} }   /* your people, for Who's going */
     if(q('bpx-modal')!==_bpLd) return; /* closed while contacts loaded */
     /* pick who it's for (nobody picked until you do), by name; their address fills in (2026-11-19) */
     var srt=(_bpContacts||[]).slice().sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''));});
@@ -4986,7 +5015,7 @@ function bpCalUnsched(){
     if(_bpCalKind==='jobs'){
       var d=new Date(Date.now()+86400000); var dd=bpFormatLA(d).slice(0,10);
       bpModal('<h3>Book Job</h3>'+contactSel
-        +'<label>Job title</label><input id="bpx-bk-title" value="'+bpEsc(tw.job)+'">'
+        +'<label>Job title</label><input id="bpx-bk-title" value="'+bpEsc(tw.job)+'">'+bpBookCrewField()
         +'<label>Address</label><input id="bpx-bk-addr" placeholder="Job site location">'
         +'<label>Date</label><input type="date" id="bpx-bk-date" value="'+dd+'">'
         +'<label>Start Time</label><input type="time" id="bpx-bk-time" value="09:00">'
@@ -4994,7 +5023,7 @@ function bpCalUnsched(){
         +'<div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpDoBookJob()">Book Job</button></div>');
     } else {
       bpModal('<h3>Book inspection</h3>'+contactSel
-        +'<label>Title</label><input id="bpx-bk-title" value="'+bpEsc(tw.visit)+'">'
+        +'<label>Title</label><input id="bpx-bk-title" value="'+bpEsc(tw.visit)+'">'+bpBookCrewField()
         +'<label>Address</label><input id="bpx-bk-addr" placeholder="On-site location">'
         +'<div class="mdt" id="bpx-bk-slots"></div>'
         +'<div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpDoBook()">Book</button></div>');
@@ -5120,13 +5149,15 @@ function bpCalUnsched(){
       var ct=(window._bpContacts||[]).filter(function(c){return c.id===cid;})[0]||{}, addr=q('bpx-bk-addr').value.trim();
       var h=+mt.split(':')[0], tl=((h%12)||12)+':'+(mt.split(':')[1]||'00')+(h<12?' AM':' PM');
       btn.disabled=true; btn.textContent='Booking…';
-      await bpNoteAdd(md,'note',(q('bpx-bk-title').value.trim()||'Inspection')+' with '+(ct.name||'customer')+(addr?' at '+addr:'')+(ct.phone?' ('+ct.phone+')':''),tl);
+      var who=bpBookCrewName();
+      await bpNoteAdd(md,'note',(q('bpx-bk-title').value.trim()||'Inspection')+' with '+(ct.name||'customer')+(addr?' at '+addr:'')+(ct.phone?' ('+ct.phone+')':'')+(who?' · '+who+' going':''),tl);
       msg.style.color='#087F61'; msg.textContent='Booked on your calendar.'; setTimeout(function(){ bpCloseModal(); if(window.bpDrawCalendar) bpDrawCalendar(); else if(window.bpLoadCalendar) bpLoadCalendar(); },800); return;
     }
     if(!_bpSlotSel){ msg.style.color='#dc2626'; msg.textContent='Pick an open time above.'; return; }
     var startISO=_bpSlotSel; var endISO=bpFormatLA(new Date(new Date(startISO).getTime()+3600000));
     btn.disabled=true; btn.textContent='Booking\u2026';
-    var res=await bpCalWrite({action:'create',cal:'inspection',contactId:cid,startTime:startISO,endTime:endISO,title:q('bpx-bk-title').value.trim()||'Roof Inspection',address:q('bpx-bk-addr').value.trim()});
+    var who=bpBookCrewName();
+    var res=await bpCalWrite({action:'create',cal:'inspection',contactId:cid,startTime:startISO,endTime:endISO,title:(q('bpx-bk-title').value.trim()||'Roof Inspection')+(who?' · '+who:''),address:q('bpx-bk-addr').value.trim()});
     if(res.ok){ msg.style.color='#087F61'; msg.textContent=res.queued?'Booked on this phone. It goes on your calendar when you’re back online.':'Booked.'; setTimeout(function(){ bpCloseModal(); bpLoadCalendar(); },700); }
     else { msg.style.color='#dc2626'; msg.textContent=bpSlotMsg(res); btn.disabled=false; btn.textContent='Book'; }
   };
@@ -5139,8 +5170,10 @@ function bpCalUnsched(){
     if(!date||!time){ msg.style.color='#dc2626'; msg.textContent='Pick a date and start time.'; return; }
     var startISO=bpMkISO(date,time); var endISO=bpFormatLA(new Date(new Date(startISO).getTime()+dur*60000));
     btn.disabled=true; btn.textContent='Booking\u2026';
-    var res=await bpCalWrite({action:'create',cal:'jobs',contactId:cid,startTime:startISO,endTime:endISO,title:q('bpx-bk-title').value.trim()||'Roofing Job',address:q('bpx-bk-addr').value.trim(),ignoreValidation:true});
-    if(res.ok){ msg.style.color='#087F61'; msg.textContent=res.queued?'Job booked on this phone. It goes on your calendar when you’re back online.':'Job booked.'; setTimeout(function(){ bpCloseModal(); bpLoadCalendar(); },700); }
+    var who=bpBookCrewName();
+    var res=await bpCalWrite({action:'create',cal:'jobs',contactId:cid,startTime:startISO,endTime:endISO,title:(q('bpx-bk-title').value.trim()||'Roofing Job')+(who?' · '+who:''),address:q('bpx-bk-addr').value.trim(),ignoreValidation:true});
+    var onPj=false; if(res.ok&&who){ try{ onPj=bpBookCrewJob(cid,date,time,dur); }catch(e){} }
+    if(res.ok){ msg.style.color='#087F61'; msg.textContent=(res.queued?'Job booked on this phone. It goes on your calendar when you’re back online.':'Job booked.')+(onPj?' '+who+' has it on their schedule.':''); setTimeout(function(){ bpCloseModal(); bpLoadCalendar(); },onPj?1400:700); }
     else { msg.style.color='#dc2626'; msg.textContent=bpSlotMsg(res); btn.disabled=false; btn.textContent='Book Job'; }
   };
 
@@ -15011,11 +15044,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261120r"></script>
 <script src="portal/website.js?v=20261118f"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261123-appfeel5"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261123-appfeel5"></script>
-<script src="site/vendor/SplitText.min.js?v=20261123-appfeel5"></script>
-<script src="site/site.js?v=20261123-appfeel5"></script>
-<script src="site/present.js?v=20261123-appfeel5"></script>
+<script src="site/vendor/gsap.min.js?v=20261124-crewbook"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261124-crewbook"></script>
+<script src="site/vendor/SplitText.min.js?v=20261124-crewbook"></script>
+<script src="site/site.js?v=20261124-crewbook"></script>
+<script src="site/present.js?v=20261124-crewbook"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261118f">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261120c">
@@ -15037,7 +15070,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/slidetabs.js?v=20261117a"></script>
 <script src="portal/motion.js?v=20261118f"></script>
 <script src="portal/shell.js?v=20261120t"></script>
-<script src="portal/mobile.js?v=20261123e"></script>
+<script src="portal/mobile.js?v=20261124a"></script>
 <script src="portal/appfeel.js?v=20261116a"></script>
 <script src="portal/filming.js?v=20261101a"></script>
 <script src="portal/notify.js?v=20261101a"></script>
@@ -15051,7 +15084,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/dash4.css?v=20261120b">
 <link rel="stylesheet" href="portal/flat.css?v=20261121l">
 <link rel="stylesheet" href="portal/shell4.css?v=20261120t">
-<link rel="stylesheet" href="portal/ui.css?v=20261123j">
+<link rel="stylesheet" href="portal/ui.css?v=20261124b">
 <link rel="stylesheet" href="portal/homeowner.css?v=20261122l">
 <script src="site/silk.js?v=20261118f"></script>
 <script src="portal/appbg.js?v=20261113d"></script>
