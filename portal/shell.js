@@ -826,6 +826,9 @@
       el._bpe = 1; el.classList.add('bp-emptyx');
       if (!el.parentNode.closest('.bpx-panel,.bpx-cwrap,.bpx-convlist,.bpx-thread,.bpx-card,.pjk')) el.classList.add('bp-emptyx-card');
       var i = document.createElement('span'); i.className = 'bp-emptyx-ic'; i.innerHTML = '<span class="ms">' + icon(area) + '</span>';
+      /* a bold line at the very start is the headline; bold words mid-sentence stay inline */
+      var fb = el.firstChild; while (fb && fb.nodeType === 3 && !fb.textContent.trim()) fb = fb.nextSibling;
+      if (fb && fb.nodeType === 1 && fb.tagName === 'B') fb.classList.add('bp-emptyx-h');
       el.insertBefore(i, el.firstChild);
       var a = el.querySelector('a[onclick],a[href]:not([href="#"]),button[onclick]');
       if (a && !a.classList.contains('bp-emptyx-go')) {
