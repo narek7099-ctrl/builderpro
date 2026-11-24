@@ -700,3 +700,18 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .ai-top .ai-pick{min-height:0 !important}
 /* phone: AI Team message box is one rounded field, not a box inside a box */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .ai-box textarea{border:0 !important;background:transparent !important;background-color:transparent !important;box-shadow:none !important;min-height:0 !important;padding-left:6px !important}
+/* zero strip also covers tiles written as <span>label</span><b>value</b> */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats>.bpx-stat>span{margin:0 !important;font-size:12.5px !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats>.bpx-stat>b{font-size:15px !important;color:#94a3b8 !important;font-weight:600 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .bp-zstats>.bpx-stat>b{color:#64748b !important}
+/* Settings: brand colour is a small swatch, the hex box and a preview on one line */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .st-brand input[type=color]{width:44px !important;height:40px !important;min-height:40px !important;padding:3px !important;flex:0 0 44px !important;border-radius:10px !important;cursor:pointer}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .st-brand input[type=text]{width:120px !important;flex:0 0 120px !important;font-family:ui-monospace,monospace}
+/* Settings header: the business line stays on one line with … instead of running off */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-id>div{min-width:0;flex:1 1 auto;overflow:hidden}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st-id>div>*{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bp-m) .st-id>div>span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* phone: the "connect your number" banner stacks its button under the words */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-a2p{flex-wrap:wrap !important;align-items:flex-start !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-a2p>div{flex:1 1 calc(100% - 40px) !important;min-width:0}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-a2p>:is(button,a){margin-left:34px !important}
