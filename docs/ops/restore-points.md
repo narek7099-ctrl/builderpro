@@ -473,3 +473,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-24 before crew visits (crew_visits table, crew_me returns visits, crew Today shows inspections; migration 20261124000001 adds only): main was d69a8ec
 - 2026-11-24 before pull to refresh loads fresh data (jobs, money, contacts) before redrawing: main was ce060fa
 - 2026-11-24 before calmer computer background on work pages (swirl stays on Dashboard): main was ba1c115
+- 2026-11-24 before one bundled portal stylesheet (portal/app.css from portal/css-bundle.txt, built by site/assemble.py; to undo, restore the 31 link tags in app.html): main was 3aa8cf8
