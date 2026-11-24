@@ -9,6 +9,11 @@
 (function () {
   'use strict';
   var host = document.getElementById('bpx');
+  /* 2026-11-24: plain background, like serious business software. The
+     page keeps the soft white-to-grey wash (.bp-rib); the moving lines are
+     no longer drawn, which also saves the phone's and laptop's battery.
+     Set window.BP_SILK = true before this file to bring them back. */
+  if (host && !window.BP_SILK) { host.classList.add('bp-rib'); return; }
   if (!host || !window.bpSilk || document.getElementById('bpxRib')) return;
   var dark = function () { return host.classList.contains('bpx-dark'); };
   /* the threads meet just past the sidebar on a computer, further left on a phone */
