@@ -730,12 +730,12 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx{border:0 !important;background:transparent !important;padding:30px 20px 26px !important;text-align:center !important;color:#64748b !important;font-size:13.5px !important;line-height:1.55 !important;max-width:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx-ic{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;margin:0 auto 12px;background:#eef5ff;color:#006fff}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx-ic .ms{font-size:24px;color:#006fff;margin:0}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx b{display:block;color:#0b1526;font-size:15px;font-weight:600;margin-bottom:2px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx .bp-emptyx-h{display:block;color:#0b1526;font-size:15px;font-weight:600;margin-bottom:2px}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx .bp-emptyx-ln{color:inherit !important;font-weight:inherit !important;text-decoration:none !important;cursor:default}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx .bp-emptyx-go{display:flex;margin:14px auto 0;align-items:center;gap:6px;background:#eef5ff;color:#006fff;border:0;border-radius:999px;padding:9px 18px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;min-height:0}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx .bp-emptyx-go:hover{background:#dfeafe}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .bp-emptyx{color:#8b9ab0 !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .bp-emptyx b{color:#e9eef6}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .bp-emptyx .bp-emptyx-h{color:#e9eef6}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea :is(.bp-emptyx-ic,.bp-emptyx .bp-emptyx-go){background:rgba(75,153,254,.14);color:#9cc7ff}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .bp-emptyx-ic .ms{color:#9cc7ff}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx.bp-emptyx-card{background:#fff !important;border:1px solid #e6e9f0 !important;border-radius:16px !important}
@@ -784,3 +784,21 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.hl-tcount,.emp-sort){display:none !important}
 /* list headings read as iOS section labels: small, grey, above the group */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead>.bpx-ptitle{margin:4px 0 0 4px !important;font-size:13px !important;font-weight:600 !important;color:#64748b !important;text-transform:uppercase;letter-spacing:.04em}
+/* phone search fields look like iPhone search: a soft grey pill, no border, no shadow */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.hl-tsearch,.pjk-search,.ct-search,.emp-search,.eq-search,.aim-q){background:rgba(118,118,128,.12) !important;border:0 !important;box-shadow:none !important;border-radius:12px !important;min-height:40px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.hl-tsearch,.pjk-search,.ct-search,.emp-search,.eq-search,.aim-q) input{background:transparent !important;border:0 !important;box-shadow:none !important;min-height:40px !important;font-size:16px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark.bp-m #bpxViewArea :is(.hl-tsearch,.pjk-search,.ct-search,.emp-search,.eq-search,.aim-q){background:rgba(118,118,128,.24) !important}
+/* phone: Finances "Quick add" card goes (the + adds income and expenses) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .fin-quick{display:none !important}
+/* phone: Receipts — the + uploads one, so the "Bought something?" card goes */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .rcp-hero{display:none !important}
+/* phone: rows inside a titled card are one grouped list, not cards inside a card */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-panel:has(>.bpx-chead) table.bp-mcards:not([data-hl="employees"]) tbody{gap:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-panel:has(>.bpx-chead) table.bp-mcards:not([data-hl="employees"]) tr{border:0 !important;border-radius:0 !important;box-shadow:none !important;background:transparent !important;padding-left:0 !important;padding-right:0 !important;border-bottom:1px solid var(--line,#eef0f3) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-panel:has(>.bpx-chead) table.bp-mcards:not([data-hl="employees"]) tr:last-child{border-bottom:0 !important}
+/* phone: month calendar without spreadsheet gridlines, like the iPhone Calendar */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpx-calgrid,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpx-calgrid :is(.bpx-day,.bpx-dow){border-color:transparent !important;box-shadow:none !important;background-color:transparent !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpx-calgrid .bpx-day{border-top:1px solid var(--line,#eef0f3) !important}
+/* dashboard: cards stacked under each other always get a gap */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .mh5 section.mh5-card+section.mh5-card{margin-top:12px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .cal-grid.bpx-grid{border:0 !important;border-radius:0 !important;box-shadow:none !important}

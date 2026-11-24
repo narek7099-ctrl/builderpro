@@ -526,7 +526,7 @@
   /* One + for adding, like an app: on the phone a page's own "+ Add job" / "+ New contact" button
      is hidden, and the blue + in the tab bar offers that page's action first. Buttons inside
      empty states, pop-ups and open records stay where they are. */
-  var PAGEADD = '.bpx-addbtn,.fin-new-est,.tc-btn';
+  var PAGEADD = '.bpx-addbtn,.fin-new-est,.tc-btn,.rcp-up';
   function addLabel(b) {
     var c = b.cloneNode(true); Array.prototype.forEach.call(c.querySelectorAll('.ms,svg'), function (x) { x.remove(); });
     return (c.textContent || '').replace(/\s+/g, ' ').replace(/^\+\s*/, '').trim();
@@ -535,7 +535,7 @@
     var a = $('bpxViewArea'); if (!a) return;
     Array.prototype.forEach.call(a.querySelectorAll(PAGEADD), function (b) {
       if (b.closest('.bp-emptyx,.eq-empty,.bpx-empty2,.bpx-modal,.pjs-app,.ctp,.bp-create,.mh5,.db4')) return;
-      if (!/^(new|add)\b/i.test(addLabel(b))) return;
+      if (!/^(new|add|upload)\b/i.test(addLabel(b))) return;
       b.classList.toggle('bp-mpgadd', M.on());
       /* a row left holding nothing but hidden add buttons goes too */
       var row = b.parentElement;
