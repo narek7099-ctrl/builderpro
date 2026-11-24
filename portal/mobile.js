@@ -205,10 +205,14 @@
       ['activejobs', "bpMobile.quick('activejobs','bpAddJobOpen')", 'add_business', 'Job'], ['contacts', "bpMobile.quick('contacts','bpOpenAdd')", 'person_add', 'Customer']].filter(function (q) { return allows(q[0]); });
     var small = [['calendar', "window._bpApptCal='inspection';bpMobile.quick('calendar','bpOpenBook')", 'roofing', 'Book an inspection'], ['receipts', "bpMobile.createClose();bpNav('receipts');setTimeout(function(){if(window.SP&&SP.rcOpen)SP.rcOpen()},250)", 'photo_camera', 'Snap a receipt'],
       ['calendar', "bpMobile.quick('calendar','bpNoteOpen')", 'sticky_note_2', 'Note or to-do']].filter(function (q) { return allows(q[0]); });
+    var here = pageAddNow(), cur = window._bpCurView, same = big.filter(function (q) { return q[0] === cur; })[0];
+    if (same) { here = null; big.forEach(function (q) { q[4] = q === same ? 1 : 0; }); big.splice(big.indexOf(same), 1); big.unshift(same); }   /* this page's tile leads */
+    else if (here) big.forEach(function (q) { q[4] = 0; });   /* this page's own action leads instead */
     var el = document.createElement('div'); el.id = 'bpCreate'; el.className = 'bp-create';
     el.innerHTML = '<div class="bp-create-bg" onclick="bpMobile.createClose()"></div><div class="bp-create-sh" role="dialog" aria-label="Create something new"><i class="bp-create-grab"></i>'
       + '<div class="bp-create-h"><b>What do you need?</b><button type="button" class="bp-create-x" aria-label="Close" onclick="bpMobile.createClose()"><span class="ms">close</span></button></div>'
       /* not on this plan: still shown (it leads to what the upgrade adds), with a lock */
+      + (here ? '<button type="button" class="bp-create-here" onclick="bpMobile.pageAdd()"><span class="ms">add</span><b>' + esc(here.label) + '</b><span class="ms bp-create-go">chevron_right</span></button>' : '')
       + '<div class="bp-create-big">' + big.map(function (q) { return '<button type="button" class="' + (q[4] ? 'pri' : '') + '" onclick="bpMobile.createClose();' + q[1] + '"><span class="ms">' + q[2] + '</span><b>' + q[3] + '</b>' + (locked(q[0]) ? '<span class="ms bp-lk" aria-label="Not on your plan">lock</span>' : '') + '</button>'; }).join('') + '</div>'
       + '<div class="bp-create-list">' + small.map(function (q) { return '<button type="button" onclick="bpMobile.createClose();' + q[1] + '"><span class="ms">' + q[2] + '</span>' + q[3] + (locked(q[0]) ? '<span class="ms bp-lk" aria-label="Not on your plan">lock</span>' : '') + '</button>'; }).join('') + '</div></div>';
     ($('bpx') || document.body).appendChild(el);
@@ -516,9 +520,45 @@
       if (cs.position === 'sticky' && cs.bottom !== 'auto') { e._bpsb = 1; e.classList.add('bp-stickbot'); }
     });
   }
-  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); settingsHook(); jobsHook(); clampLong(); stickBottom(); lookPick(); iconAdds(); backHook(); }, 80); }
+  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); settingsHook(); jobsHook(); clampLong(); stickBottom(); lookPick(); iconAdds(); backHook(); pageAdds(); }, 80); }
   /* a page you opened from a list (a contact, a machine, an estimate, an invoice) gets a back arrow
      in the top bar, like an app, in place of the menu; the "← All contacts" link in the page goes */
+  /* One + for adding, like an app: on the phone a page's own "+ Add job" / "+ New contact" button
+     is hidden, and the blue + in the tab bar offers that page's action first. Buttons inside
+     empty states, pop-ups and open records stay where they are. */
+  var PAGEADD = '.bpx-addbtn,.fin-new-est,.tc-btn';
+  function addLabel(b) {
+    var c = b.cloneNode(true); Array.prototype.forEach.call(c.querySelectorAll('.ms,svg'), function (x) { x.remove(); });
+    return (c.textContent || '').replace(/\s+/g, ' ').replace(/^\+\s*/, '').trim();
+  }
+  function pageAdds() {
+    var a = $('bpxViewArea'); if (!a) return;
+    Array.prototype.forEach.call(a.querySelectorAll(PAGEADD), function (b) {
+      if (b.closest('.bp-emptyx,.eq-empty,.bpx-empty2,.bpx-modal,.pjs-app,.ctp,.bp-create,.mh5,.db4')) return;
+      if (!/^(new|add)\b/i.test(addLabel(b))) return;
+      b.classList.toggle('bp-mpgadd', M.on());
+      /* a row left holding nothing but hidden add buttons goes too */
+      var row = b.parentElement;
+      if (row && row !== a && !row.matches('.bpx-chead')) row.classList.toggle('bp-mpgrow', M.on() && Array.prototype.every.call(row.children, function (k) { return k.classList.contains('bp-mpgadd') || getComputedStyle(k).display === 'none'; }));
+    });
+  }
+  function pageAddNow() {
+    var a = $('bpxViewArea'); if (!a) return null;
+    var hit = null;
+    Array.prototype.some.call(a.querySelectorAll('.bp-mpgadd'), function (b) {
+      if (getComputedStyle(b).display === 'none' && !b.classList.contains('bp-mpgadd')) return false;
+      /* only the one that belongs to this tab (Finances keeps all four in one row) */
+      var cs = b.className;
+      var f = a.getAttribute('data-fin') || '';
+      if (/fin-new-inv/.test(cs) && f !== 'invoices') return false;
+      if (/fin-new-est/.test(cs) && f !== 'estimates') return false;
+      if (/fin-new-incm/.test(cs) && f !== 'income') return false;
+      if (/fin-new-exp/.test(cs) && f !== 'expense') return false;
+      hit = b; return true;
+    });
+    return hit ? { el: hit, label: addLabel(hit) } : null;
+  }
+  M.pageAdd = function () { var h = pageAddNow(); M.createClose(); if (h) h.el.click(); };
   var BACKS = '.ctp-back,.eq-back,.qx-back';
   function backHook() {
     var x = $('bpx'), top = $('hlTop'); if (!x || !top) return;

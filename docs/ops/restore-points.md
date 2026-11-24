@@ -491,3 +491,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-24 Marketing section hidden (BP_MARKETING_ON=false in app.html): restore to dd7d437
 - 2026-11-24 AI Team Marketing assistant hidden, website/pricing marketing claims removed: restore to 07cdcc7
 - 2026-11-24 ai-team v25: Marketing assistant out of CEO team list and ask/assign tools (OFF set): restore to 9a7ff61
+- 2026-11-24 phone app feel: one + for adding (page add buttons into the + sheet), 16px margins, no results counts/sort: restore to 16b9b80
