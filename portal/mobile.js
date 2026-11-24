@@ -560,18 +560,42 @@
     clearTimeout(va._bpE); va._bpE = setTimeout(function () { va.classList.remove('bp-enter'); }, 400);
   }
 
+  /* 2026-11-24: real iPhones. In the app (not the website): full-screen phones so the notch and home-bar
+     spacing in the styles applies; the browser bar takes the top bar's color; and while the keyboard is up
+     the tab bar steps aside and the box being typed in scrolls into view. */
+  function deviceFit() {
+    var mv = document.querySelector('meta[name="viewport"]');
+    if (mv && M.on() && !/viewport-fit/.test(mv.content)) mv.content = mv.content + ', viewport-fit=cover';
+    var dark = !!($('bpx') && $('bpx').classList.contains('bpx-dark'));
+    var tc = document.querySelector('meta[name="theme-color"]');
+    if (tc && M.on()) tc.content = dark ? '#101216' : '#ffffff';
+  }
+  if (window.visualViewport) {
+    var kbT = 0;
+    var kb = function () {
+      var x = $('bpx'); if (!x) return;
+      var open = M.on() && (window.innerHeight - window.visualViewport.height) > 150;
+      x.classList.toggle('bp-kb', open);
+    };
+    window.visualViewport.addEventListener('resize', function () { clearTimeout(kbT); kbT = setTimeout(kb, 60); });
+  }
+  document.addEventListener('focusin', function (e) {
+    var t = e.target; if (!M.on() || !t || !t.matches || !t.matches('input:not([type=checkbox]):not([type=radio]), textarea, select')) return;
+    setTimeout(function () { try { t.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (x) {} }, 320);
+  });
+
   /* ----------------------------------------------------------- hooks --- */
   function apply() {
     var x = $('bpx'); if (!x) return;
     x.classList.toggle('bp-m', M.on());
     if (!M.on()) { M.appsClose(); x.classList.remove('bp-m-home'); }
-    paintTabs(); paintTop(); watch(); tidy();
+    paintTabs(); paintTop(); watch(); tidy(); deviceFit();
   }
   function hook() {
     var sh = window.bpShell; if (!sh || sh._mob) return !!(sh && sh._mob);
     sh._mob = true;
     var sync = sh.sync;
-    sh.sync = function (v, quiet) { var r = sync.apply(this, arguments); if (!quiet) M.appsClose(); paintTabs(v); paintTop(v); watch(); tidy(); if (!quiet) enter(v); return r; };
+    sh.sync = function (v, quiet) { var r = sync.apply(this, arguments); if (!quiet) M.appsClose(); paintTabs(v); paintTop(v); watch(); tidy(); deviceFit(); if (!quiet) enter(v); return r; };
     var build = sh.buildNav;
     sh.buildNav = function () { var r = build.apply(this, arguments); apply(); return r; };
     var dash = window.bpDashboard;

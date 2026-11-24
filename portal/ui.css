@@ -654,3 +654,7 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx:not(.bp-m):not(:has(#bpxViewArea>.db4)) #bpxRib{opacity:.18 !important;transition:opacity .4s ease}
 #bpx#bpx#bpx.bpx-dark:not(.bp-m):not(:has(#bpxViewArea>.db4)) #bpxRib{opacity:.22 !important}
 #bpx#bpx#bpx:not(.bp-m):has(#bpxViewArea>.db4) #bpxRib{transition:opacity .4s ease}
+/* real iPhones (2026-11-24): keyboard up, the tab bar and sticky Save steps aside; landscape keeps clear of the notch */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bp-kb .bpx-app.on .bp-tabbar,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bp-kb #bpPtr{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bp-kb #bpxViewArea{padding-bottom:16px !important}
+@media (orientation:landscape){#bpx#bpx#bpx.bp-m{left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important;width:auto !important}}
