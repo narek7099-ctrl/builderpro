@@ -244,6 +244,7 @@
     contacts: 'Everyone you’ve worked with or quoted: leads and customers',
     checks: 'Homeowners who priced a job with the calculators on your website',
     automations: 'Texts and emails that go out on their own after a lead, a quote or a finished job',
+    leadsources: 'Leads from Angi, Thumbtack, HomeAdvisor and the rest, pulled from your email',
     calculator: 'The price calculators on your website and what they quote',
     activejobs: 'Jobs you’ve won: schedule, crew, money and photos',
     assets: 'Equipment you installed for customers, with warranty and service dates',
@@ -794,7 +795,7 @@
   var Z = /^(\$?0(\.0+)?%?|—|-|–)$/;
   function pass(area) {
     [].forEach.call(area.querySelectorAll('.bpx-stats,.pjk-stats'), function (g) {
-      var vs = g.querySelectorAll('.bpx-stat .val,.pjk-stat>b'); if (!vs.length) return;
+      var vs = g.querySelectorAll('.bpx-stat .val,.bpx-stat>b,.pjk-stat>b'); if (!vs.length) return;
       var all = true; for (var i = 0; i < vs.length; i++) if (!Z.test((vs[i].textContent || '').replace(/\s+/g, ''))) { all = false; break; }
       g.classList.toggle('bp-zstats', all);
     });
