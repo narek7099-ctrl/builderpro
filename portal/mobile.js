@@ -539,6 +539,22 @@
 
   /* Calendar's "+ Add" is a round + on the phone (the word goes, the menu stays) */
   function iconAdds() {
+    /* Inspections and Jobs tabs: their Book and Closed days / Schedule a crew buttons go into a round + menu */
+    document.querySelectorAll('#bpxViewArea .cal-acts').forEach(function (a) {
+      if (a._bpk) return;
+      var prim = a.querySelector(':scope>button.bpx-btn:not(.ghost)'); if (!prim) return;
+      a._bpk = 1;
+      var extra = Array.prototype.filter.call(a.querySelectorAll(':scope>button.cal-today'), function (b) { return !/bpCalToday\(/.test(b.getAttribute('onclick') || ''); });
+      var item = function (b, ic) {
+        var i0 = b.querySelector('.ms'), label = (b.textContent || '').replace(i0 ? i0.textContent : '', '').trim();
+        return '<button type="button" onclick="bpCalAddClose();' + String(b.getAttribute('onclick') || '').replace(/"/g, '&quot;') + '"><span class="ms">' + (ic || (i0 && i0.textContent) || 'add') + '</span><span><b>' + esc(label) + '</b></span></button>';
+      };
+      var html = item(prim, 'event') + extra.map(function (b) { return item(b); }).join('');
+      [prim].concat(extra).forEach(function (b) { b.classList.add('bp-mhide'); });
+      var d = document.createElement('details'); d.className = 'cal-add bp-kindadd'; d.setAttribute('ontoggle', 'bpCalAddPos(this)');
+      d.innerHTML = '<summary class="bpx-btn"><span class="ms">add</span></summary><div class="cal-addm">' + html + '</div>';
+      a.appendChild(d);
+    });
     document.querySelectorAll('#bpxViewArea .cal-add>summary').forEach(function (sm) {
       if (sm._bpi) return; sm._bpi = 1;
       Array.prototype.slice.call(sm.childNodes).forEach(function (n) { if (n.nodeType === 3 && n.textContent.trim()) n.textContent = ''; });

@@ -658,13 +658,7 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bp-kb .bpx-app.on .bp-tabbar,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bp-kb #bpPtr{display:none !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bp-kb #bpxViewArea{padding-bottom:16px !important}
 @media (orientation:landscape){#bpx#bpx#bpx.bp-m{left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important;width:auto !important}}
-/* Calendar on the phone, Inspections and Jobs tabs: Today, Closed days / Schedule a crew and Book sat on top
-   of the Day / Week / Month switch. The switch gets its own row; the three buttons share the next one. (2026-11-24) */
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .cal-top:has(.cal-acts>button.bpx-btn:not(.ghost)){grid-template-columns:minmax(0,1fr) !important;row-gap:10px !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .cal-top:has(.cal-acts>button.bpx-btn:not(.ghost)) .cal-view{width:100% !important;justify-self:stretch !important;grid-column:1/-1 !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .cal-top:has(.cal-acts>button.bpx-btn:not(.ghost)) .cal-view>.bpx-jt{flex:1 1 0 !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .cal-acts:has(>button.bpx-btn:not(.ghost)){grid-column:1/-1 !important;width:100% !important;display:flex !important;gap:8px !important;margin:0 !important;justify-content:stretch !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .cal-acts:has(>button.bpx-btn:not(.ghost))>button{flex:1 1 0 !important;min-width:0 !important;padding:0 10px !important;font-size:14.5px !important;white-space:nowrap !important;overflow:hidden;text-overflow:ellipsis}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .cal-acts:has(>button.bpx-btn:not(.ghost))>button.cal-today:first-child{flex:0 0 auto !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .cal-acts:has(>button.bpx-btn:not(.ghost))>button .ms{display:none !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .cal-acts:has(>button.bpx-btn:not(.ghost))>button.bpx-btn:not(.ghost){flex:1.4 1 0 !important}
+/* Calendar on the phone, Inspections and Jobs tabs (2026-11-24): the same one row as Everything,
+   Day / Week / Month, Today and a round +; the + holds Book inspection and Closed days (or Book job and
+   Schedule a crew). The original buttons stay in the page for the computer. */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .cal-acts>.bp-mhide{display:none !important}
