@@ -487,3 +487,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-24 receipts slim tiles + empty, calm automations note, chart date labels, phone income/expense single add: restore to ff2544d
 - 2026-11-24 equipment empty single set of buttons, reputation no empty chart cards: restore to 34884cf
 - 2026-11-24 AI CEO daily briefing paused (cron bp-ai-ceo-daily active=false), its notification toggle hidden, Lisa status wording, hours row width: restore to b6762ec
+- 2026-11-24 bell important stripe blue, phone pop-up buttons pinned, sub insurance banner amber: restore to 5231686

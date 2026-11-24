@@ -21,7 +21,7 @@
 #bpx#bpx#bpx#bpx .nt-it:focus-visible{box-shadow:inset 0 0 0 2px var(--blue) !important}
 #bpx#bpx#bpx#bpx .nt-it.unread{background:var(--blue-l) !important}
 #bpx#bpx#bpx#bpx .nt-it.unread:hover{filter:brightness(.98)}
-#bpx#bpx#bpx#bpx .nt-it.hi::before{content:"";position:absolute;left:3px;top:10px;bottom:10px;width:3px;border-radius:2px;background:var(--err)}
+#bpx#bpx#bpx#bpx .nt-it.hi::before{content:"";position:absolute;left:3px;top:10px;bottom:10px;width:3px;border-radius:2px;background:#006fff}   /* important: blue, never red */
 #bpx#bpx#bpx#bpx .nt-it.lo{opacity:.85}
 #bpx#bpx#bpx#bpx .nt-ic{flex:0 0 32px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--soft);color:var(--grey)}
 #bpx#bpx#bpx#bpx .nt-ic .nt-svg{width:17px;height:17px}
