@@ -36,7 +36,10 @@
       h: ['Plan tomorrow: who goes where, in what order?', 'Which jobs have nobody on them?', 'Will the weather stop any roof jobs this week?'] },
     estimator: { n: 'Estimator', ic: 'request_quote', d: 'Prices jobs from your price list and catches estimates priced too low.',
       h: ['Build a good/better/best for a 28-square roof replacement', 'Which of my open estimates are priced too low?', 'Which estimates are worth following up today?'] }
-  };
+  };  /* Marketing is off for now (BP_MARKETING_ON in app.html): its assistant stays defined, so
+     anything it did before still shows its name, but it is out of the map, the picker and new tasks */
+  var SHOWN = function () { return Object.keys(AG).filter(function (k) { return !(k === 'marketing' && window.BP_MARKETING_ON === false); }); };
+
   /* the app pages each assistant can read (supabase/functions/ai-team ACCESS), on top of the CRM and projects */
   var PG = { leads: 'Leads', lead_sources: 'Lead sources', calculator_leads: 'Calculator leads', estimates: 'Estimates', contracts: 'Contracts', payments: 'Payments', money: 'Income & expenses',
     customer_messages: 'Customer messages', change_orders: 'Change orders', reviews: 'Reviews', calendar_notes: 'Calendar', team: 'Employees', hours: 'Timesheets',
@@ -174,7 +177,7 @@
   /* the team as a live board, like the owner's Command Center: the AI CEO in the
      middle managing ten assistants, each wired to it with a link a packet travels
      along, showing what it's connected to and the tasks it has on the board */
-  var RING = ['sales', 'marketing', 'research', 'clients', 'estimator', 'projects', 'dispatch', 'permits', 'workflows', 'office'];
+  var RING = ['sales', 'marketing', 'research', 'clients', 'estimator', 'projects', 'dispatch', 'permits', 'workflows', 'office'].filter(function (k) { return SHOWN().indexOf(k) >= 0; });
   function chipsOf(k) { var c = conns(k), sh = c.slice(0, 4); return '<span class="aib-ch">' + sh.map(function (x) { return '<i>' + esc(x) + '</i>'; }).join('') + (c.length > 4 ? '<i>+' + (c.length - 4) + '</i>' : '') + '</span>'; }
   function taskPill(k) { var t = A.st && A.st.tasks && A.st.tasks[k]; if (!t) return ''; var n = t.open + t.doing; return (n ? '<span class="aib-tk' + (t.doing ? ' on' : '') + '">' + n + ' task' + (n > 1 ? 's' : '') + '</span>' : '') + (t.blocked ? '<span class="aib-tk bl">' + t.blocked + ' blocked</span>' : ''); }
   function nodeHtml(k, cls, style) {
@@ -565,12 +568,12 @@
     var st = A.st; boardCss(); host = host || area();
     if (!st || !st.ok) { host.innerHTML = '<div class="bpx-panel"><div class="bpx-mut">' + esc((st && st.error) || 'Could not load.') + '</div></div>'; return; }
     host.innerHTML = '<div class="bpx-panel"><div class="ai-hero"><div class="pitch">'
-      + '<h2>Your AI Team</h2><div class="bpx-mut" style="max-width:52ch">An AI CEO who manages ten assistants that know your business: leads, customers, marketing, estimates, crews and routes, projects and permits. The CEO hands out tasks and the assistants ask each other. You approve anything before it goes to a customer.</div>'
+      + '<h2>Your AI Team</h2><div class="bpx-mut" style="max-width:52ch">An AI CEO who manages a team of assistants that know your business: leads, customers, estimates, crews and routes, projects and permits. The CEO hands out tasks and the assistants ask each other. You approve anything before it goes to a customer.</div>'
       + '<div class="price">$' + (st.price || 49) + '<small> / month</small></div><div class="bpx-mut" style="font-size:13px">Up to ' + st.cap + ' messages a month. Cancel any time.</div>'
       + '<div style="margin-top:18px;display:flex;gap:10px;align-items:center"><button class="bpx-btn" id="aiAdd">' + (st.addon === 'checkout' ? 'Finish checkout' : st.addon === 'past_due' ? 'Update payment' : 'Add AI Team') + '</button><span class="bpx-mmsg" id="aiMsg"></span></div>'
       + (st.crm ? '' : '<div class="bpx-mut" style="font-size:12.5px;margin-top:10px">Your assistants link to your CRM on their own once your account finishes connecting.</div>')
       + '</div><div style="flex:1;min-width:300px">' + boardHtml(false) + '</div><div class="ai-cards" style="display:none">'
-      + Object.keys(AG).map(function (k) { return '<div class="ai-card"><span class="ms">' + AG[k].ic + '</span><div><b>' + AG[k].n + '</b><span class="bpx-mut" style="font-size:13.5px">' + AG[k].d + '</span></div></div>'; }).join('')
+      + SHOWN().map(function (k) { return '<div class="ai-card"><span class="ms">' + AG[k].ic + '</span><div><b>' + AG[k].n + '</b><span class="bpx-mut" style="font-size:13.5px">' + AG[k].d + '</span></div></div>'; }).join('')
       + '</div></div></div>';
     $('aiAdd').onclick = async function () {
       var b = this; b.disabled = true; b.textContent = 'Opening checkout...';
@@ -594,7 +597,7 @@
       /* the assistants share one picker, so the row fits on any screen */
       + '<label class="ai-tab ai-pick' + (A.tab === 'chat' ? ' on' : '') + '"><span class="ms">' + (A.tab === 'chat' && AG[A.agent] ? AG[A.agent].ic : 'forum') + '</span>'
       + '<select data-agsel aria-label="Talk to an assistant">' + (A.tab === 'chat' ? '' : '<option value="" selected disabled>Talk to…</option>')
-      + Object.keys(AG).map(function (k) { return '<option value="' + k + '"' + (A.tab === 'chat' && A.agent === k ? ' selected' : '') + '>' + AG[k].n + '</option>'; }).join('')
+      + SHOWN().map(function (k) { return '<option value="' + k + '"' + (A.tab === 'chat' && A.agent === k ? ' selected' : '') + '>' + AG[k].n + '</option>'; }).join('')
       + '</select><span class="ms ai-pick-dn">expand_more</span></label>'
       + '<button class="ai-tab' + (A.tab === 'wait' ? ' on' : '') + '" data-wait="1"><span class="ms">task_alt</span>Waiting for you' + (st.pending ? '<span class="n">' + st.pending + '</span>' : '') + '</button>'
       + '<span class="ai-use" title="Messages you sent this month">' + st.used + ' of ' + st.cap + ' messages<i><b style="width:' + pct + '%"></b></i></span>';
@@ -646,7 +649,7 @@
   /* the task board: what the AI CEO (or you) assigned, who has it, and what came back */
   var TS = { open: ['Waiting', '#475467'], doing: ['Working', '#2457d6'], done: ['Done', '#087F61'], blocked: ['Blocked', '#0853B5'], cancelled: ['Cancelled', '#98a2b3'] };
   async function tasks() {
-    var who = Object.keys(AG).filter(function (k) { return k !== 'ceo'; });
+    var who = SHOWN().filter(function (k) { return k !== 'ceo'; });
     $('aiBody').innerHTML = '<div class="bpx-panel" style="margin-bottom:12px"><b style="display:block;margin-bottom:4px">Give an assistant a task</b><div class="bpx-mut" style="font-size:13px;margin-bottom:10px">Or ask your AI CEO to plan the work and hand out tasks. Each task run counts as one message.</div>'
       + '<div class="ai-tkf"><select id="tkWho">' + who.map(function (k) { return '<option value="' + k + '">' + esc(AG[k].n) + '</option>'; }).join('') + '</select><input id="tkT" placeholder="What should they do? e.g. Follow up on every quote older than 5 days"><select id="tkP"><option value="normal">Normal</option><option value="high">High</option><option value="low">Low</option></select></div>'
       + '<textarea id="tkD" class="bpx-input" placeholder="Details (optional)" style="width:100%;margin-top:8px;min-height:50px"></textarea><div style="display:flex;gap:10px;align-items:center;margin-top:8px"><button class="bpx-btn" id="tkAdd">Add to the board</button><span class="bpx-mmsg" id="tkMsg"></span></div></div><div id="tkList"><div class="bpx-mut">Loading…</div></div>';
