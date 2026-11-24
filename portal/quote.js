@@ -1219,7 +1219,7 @@
     if (window.bpEstDraw) try { bpEstDraw(); } catch (e) {}
     el.innerHTML = '<div class="bpx-panel qb-sheets"><div class="bpx-chead" style="margin-bottom:10px"><div class="bpx-ptitle" style="margin:0">Drafts<span class="lg2">estimates you’re still working on — not sent yet</span></div>'
       + '</div>'
-      + (list.length ? '<div class="pjl">' + list.map(row).join('') + '</div>' : '<div class="pjk-empty">No drafts. <a onclick="bpQuoteNew()">Start an estimate</a>: materials, labor and other costs with your markup, and you see the profit before you send it.</div>')
+      + (list.length ? '<div class="pjl">' + list.map(row).join('') + '</div>' : '<div class="pjk-empty"><b>No drafts yet</b>Price materials, labor and your markup, and see the profit before you send it. <a onclick="bpQuoteNew()">Start an estimate</a></div>')
       + '</div>';
     function row(j) {
         var c = calc(j), q = j.quote;

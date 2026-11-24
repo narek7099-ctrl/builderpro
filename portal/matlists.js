@@ -700,7 +700,7 @@
       if (j.status === 'done') return '<span class="ml-s done">Finished</span>';
       var s = (j.materials || {}).status; return s === 'received' ? '<span class="ml-s ok">Received</span>' : s === 'sent' ? '<span class="ml-s sent">Sent to supplier</span>' : '<span class="ml-s">Not ordered</span>';
     };
-    if (!lists.length) h += '<div class="pjk-empty">No lists yet. <a onclick="bpQuoteNew()">Build an estimate</a> and the materials you price on it show up here.</div>';
+    if (!lists.length) h += '<div class="pjk-empty"><b>No order lists yet</b>The materials you price on an estimate show up here, ready to order. <a onclick="bpQuoteNew()">Build an estimate</a></div>';
     else {
       h += '<div class="bpx-chead" style="margin:4px 0 10px"><div class="bpx-jobtabs">' + [['all', 'All'], ['proj', 'Projects'], ['est', 'Estimates'], ['done', 'Finished']].map(function (t) {
           return '<button class="bpx-jt' + (F === t[0] ? ' on' : '') + '" onclick="ML.f=\'' + t[0] + '\';ML.pg=1;bpMatLists()">' + t[1] + ' · ' + cnt[t[0]] + '</button>'; }).join('') + '</div></div>';

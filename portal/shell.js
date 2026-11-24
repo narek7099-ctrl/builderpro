@@ -808,3 +808,39 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watch); else watch();
 })();
+/* empty pages: a soft icon on top and the one next step as a real button,
+   instead of a dashed box of text with a link buried in the sentence */
+(function () {
+  var IC = { estimates: 'request_quote', quote: 'request_quote', invoices: 'receipt_long', income: 'payments', expense: 'receipt',
+    matlists: 'inventory_2', supply: 'inventory_2', supplyorders: 'local_shipping', leadsources: 'mail', messaging: 'sms', email: 'mail',
+    contacts: 'group', checks: 'calculate', activejobs: 'work', employees: 'engineering', calendar: 'event', marketing: 'campaign',
+    aiteam: 'smart_toy', reputation: 'star', automations: 'bolt' };
+  function icon(area) {
+    var f = area.getAttribute('data-fin'), v = window._bpCurView || '';
+    return IC[f] || IC[v] || 'inbox';
+  }
+  function deco(area) {
+    [].forEach.call(area.querySelectorAll('.bpx-empty2,.pjk-empty,.bpx-tempty'), function (el) {
+      if (el._bpe || el.querySelector('.big,.ms') || el.closest('.bpx-modal,.pjs-app,.ctp,.mh5,.db4,.d4,.bpx-sheet')) return;
+      if (el.offsetWidth < 260 || /^\s*(Loading|Checking)/i.test(el.textContent)) return;
+      el._bpe = 1; el.classList.add('bp-emptyx');
+      if (!el.parentNode.closest('.bpx-panel,.bpx-cwrap,.bpx-convlist,.bpx-thread,.bpx-card,.pjk')) el.classList.add('bp-emptyx-card');
+      var i = document.createElement('span'); i.className = 'bp-emptyx-ic'; i.innerHTML = '<span class="ms">' + icon(area) + '</span>';
+      el.insertBefore(i, el.firstChild);
+      var a = el.querySelector('a[onclick],a[href]:not([href="#"]),button[onclick]');
+      if (a && !a.classList.contains('bp-emptyx-go')) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'bp-emptyx-go';
+        b.textContent = a.textContent.replace(/\s+/g, ' ').trim();
+        b.onclick = function (e) { e.preventDefault(); a.click(); };
+        a.classList.add('bp-emptyx-ln'); el.appendChild(b);
+      }
+    });
+  }
+  var q = 0;
+  function watch() {
+    var area = document.getElementById('bpxViewArea'); if (!area || !window.MutationObserver) return;
+    deco(area);
+    new MutationObserver(function () { if (!q) q = requestAnimationFrame(function () { q = 0; deco(area); }); }).observe(area, { childList: true, subtree: true });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watch); else watch();
+})();

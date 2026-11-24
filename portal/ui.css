@@ -726,3 +726,19 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bpx-when-note{background:transparent !important;border:0 !important;padding:2px 0 0 22px !important;position:relative;font-size:12.5px !important;color:#64748b !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bpx-when-note::before{content:"info";font-family:'Material Symbols Rounded';font-weight:300;font-size:16px;position:absolute;left:0;top:1px;color:#94a3b8;line-height:1}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .bpx-when-note{color:#8b9ab0 !important}
+/* empty pages: soft icon, short line, one button (portal/shell.js adds .bp-emptyx) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx{border:0 !important;background:transparent !important;padding:30px 20px 26px !important;text-align:center !important;color:#64748b !important;font-size:13.5px !important;line-height:1.55 !important;max-width:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx-ic{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;margin:0 auto 12px;background:#eef5ff;color:#006fff}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx-ic .ms{font-size:24px;color:#006fff;margin:0}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx b{display:block;color:#0b1526;font-size:15px;font-weight:600;margin-bottom:2px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx .bp-emptyx-ln{color:inherit !important;font-weight:inherit !important;text-decoration:none !important;cursor:default}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx .bp-emptyx-go{display:flex;margin:14px auto 0;align-items:center;gap:6px;background:#eef5ff;color:#006fff;border:0;border-radius:999px;padding:9px 18px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;min-height:0}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx .bp-emptyx-go:hover{background:#dfeafe}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .bp-emptyx{color:#8b9ab0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .bp-emptyx b{color:#e9eef6}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea :is(.bp-emptyx-ic,.bp-emptyx .bp-emptyx-go){background:rgba(75,153,254,.14);color:#9cc7ff}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .bp-emptyx-ic .ms{color:#9cc7ff}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx.bp-emptyx-card{background:#fff !important;border:1px solid #e6e9f0 !important;border-radius:16px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .bp-emptyx.bp-emptyx-card{background:#141b2b !important;border-color:#262f45 !important}
+/* the link is repeated as the button, so it's hidden in the sentence when it sits at the end */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx .bp-emptyx-ln:last-of-type:is(:nth-last-child(2)){display:none}
