@@ -94,9 +94,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261124-20261124z">
-<link rel="stylesheet" href="site/present.css?v=20261124-20261124z">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261124-20261124z"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261124-20261124fb">
+<link rel="stylesheet" href="site/present.css?v=20261124-20261124fb">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261124-20261124fb"}}</script>
 
 
 <style id="bpi-icons">
@@ -10485,7 +10485,7 @@ function bpFinIncome(){_bpFinView='income';bpFinances();}
 function bpFinExpenses(){_bpFinView='expense';bpFinances();}
 var GHL_INV_URL=BP_URL+'/functions/v1/ghl-invoice';
 var GHL_EST_URL=BP_URL+'/functions/v1/ghl-estimate';
-var BPEST_NOTE='<div class="bpx-when-note">Your account setup is still finishing, usually within 3 to 4 days of signing up. Once it\'s done, the estimates you send show here. You can build drafts now.</div>';
+var BPEST_NOTE='<div class="bpx-when-note">Sent estimates show up here once your account finishes connecting, usually a few days after sign-up. Drafts work now.</div>';
 /* ===== Charts on the invoice and estimate lists ==========================
    Both lists answer "what did I send"; neither answers "what am I owed, and
    how late is it" — which is the question that actually costs a contractor
@@ -10674,7 +10674,7 @@ window.bpEstSend=async function(){
     else { msg.style.color='#dc2626'; msg.textContent='Could not create: '+bpEsc(String((d&&d.error)||'unknown error')); btn.disabled=false; }
   }catch(e){ msg.style.color='#dc2626'; msg.textContent='Network error — try again.'; btn.disabled=false; }
 };
-var BPINV_NOTE='<div class="bpx-when-note">Card invoicing isn\'t switched on for your account yet — open <b>Finances → Card payments</b> to connect your Stripe, or ask us to finish setting it up.</div>';
+var BPINV_NOTE='<div class="bpx-when-note">Connect card payments in <b>Finances → Card payments</b> and every invoice gets a Pay button.</div>';
 function bpInvLoad(){
   var el=q('bpxInvList'); if(!el) return;
   if(!window.BP_LIVE){ el.innerHTML='<span class="bpx-mut">Invoices are available on live accounts.</span>'; return; }
@@ -14993,13 +14993,13 @@ window.bpRepCopy=function(text,btn){
 <!--/app-only-->
 </body>
 <!--app-only-->
-<link rel="stylesheet" href="portal/app.css?v=30489fbc89" data-bundle>
+<link rel="stylesheet" href="portal/app.css?v=c8d44e4202" data-bundle>
 <script src="portal/team.js?v=20261115a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261124v"></script>
 <script src="portal/charts.js?v=20261106a"></script>
 <script src="portal/progress.js?v=20261110a"></script>
-<script src="portal/supply.js?v=20261121a"></script>
+<script src="portal/supply.js?v=20261124fb"></script>
 <script src="portal/supply-catalog.js?v=20261024q36"></script>
 <script src="portal/supply-scan.js?v=20260930c"></script>
 <script src="portal/receipts.js?v=20261114a"></script>
@@ -15027,7 +15027,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/teamchat.js?v=20261118f"></script>
 <script src="portal/subapp.js?v=20261121a"></script>
 <script src="portal/subs.js?v=20261118f"></script>
-<script src="portal/aiteam.js?v=20261124x"></script>
+<script src="portal/aiteam.js?v=20261124fb"></script>
 <script src="portal/aiboard.js?v=20261114a"></script>
 <script src="portal/aiceo.js?v=20261118f"></script>
 <script src="portal/storm.js?v=20261114a"></script>
@@ -15042,13 +15042,13 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/qr.js?v=20261001a"></script>
 <script src="portal/tools-share.js?v=20261114a"></script>
 <script src="portal/checks.js?v=20261120r"></script>
-<script src="portal/website.js?v=20261118f"></script>
+<script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261124-20261124z"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261124-20261124z"></script>
-<script src="site/vendor/SplitText.min.js?v=20261124-20261124z"></script>
-<script src="site/site.js?v=20261124-20261124z"></script>
-<script src="site/present.js?v=20261124-20261124z"></script>
+<script src="site/vendor/gsap.min.js?v=20261124-20261124fb"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261124-20261124fb"></script>
+<script src="site/vendor/SplitText.min.js?v=20261124-20261124fb"></script>
+<script src="site/site.js?v=20261124-20261124fb"></script>
+<script src="site/present.js?v=20261124-20261124fb"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>

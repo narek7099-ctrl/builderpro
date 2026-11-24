@@ -1715,7 +1715,7 @@
       .then(function (r) {
         if (r && r.ok) { stamp(r.to || s.email, r.at); SP.poOpen(id); return; }
         var why = r && r.reason;
-        if (why === 'no_mailer') { SP.poFallback(id, 'Email sending is not switched on for this account yet, so we opened the order in your mail app instead. Send it from there.'); return; }
+        if (why === 'no_mailer') { SP.poFallback(id, 'We opened the order in your mail app. Send it from there.'); return; }
         if (why === 'no_email') { SP.poEmailAsk(id); return; }
         SP.poMsg('Could not send it: ' + ((r && (r.detail || r.error)) || 'the mail service did not answer') + '. Try again, or copy it and send it yourself.');
         if (btn) { btn.disabled = false; btn.textContent = 'Send to ' + (s.name || 'the supplier'); }

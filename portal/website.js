@@ -731,7 +731,7 @@
   };
   window.bpWebGoogle = function () {
     if (G.busy) return;
-    if (G.st && !G.st.configured) { alert('Google sign-in is being set up. Use the BuilderPro snippet below for now.'); return; }
+    if (G.st && !G.st.configured) { alert('Google sign-in isn\'t available yet. Use the BuilderPro snippet below.'); return; }
     G.busy = true; B.render();
     var ret = location.origin + location.pathname + '?portal=1';
     api({ op: 'auth_url', return: ret }).then(function (d) {
