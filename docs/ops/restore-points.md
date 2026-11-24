@@ -483,3 +483,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-24 contact page phone header, dark unpicked tabs readable, shorter Lead Sources empty note: restore to e776dfa
 - 2026-11-24 flat mint main buttons, calm setup/status notes: restore to 953064b
 - 2026-11-24 plain app background (moving lines off), designed empty pages: restore to c199c73
+- 2026-11-24 job Overview: Customer & site boxes fold on computer: restore to 6922aed
