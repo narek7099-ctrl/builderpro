@@ -430,7 +430,7 @@
   /* [text, tone, hint] for one workflow on this account */
   function chip(w) {
     if (w.id === '51') return ['Runs in BuilderPro', 'ok', 'This one runs inside BuilderPro itself.'];
-    if (S.linked === false) return ['Needs setup to finish', 'warn', ''];   // the banner above the list explains it
+    if (S.linked === false) return ['Starts soon', 'warn', ''];   // the banner above the list explains it
     if (PHONE[w.id] && !phoneLive()) return ['Needs your business number', 'warn', 'Texts and calls go out once your business number is connected (Settings > Business number).'];
     var fired = w.kind && S.fired ? S.fired[w.kind] : null;
     if (w.kind && S.fired) return fired ? ['Ran ' + fired.n + (fired.n === 1 ? ' time' : ' times') + ' · last ' + ago(fired.last), 'ok', ''] : ['On · waiting for its first event', 'ok', ''];
@@ -465,7 +465,7 @@
     var list = WF.filter(avail);
     var nNew = list.filter(function (w) { return status(w) === 'new'; }).length, nChg = list.filter(function (w) { return status(w) === 'chg'; }).length;
     var h = '<div class="wa"><div class="wa-top"><div class="wa-sum"><span class="wa-pill"><b>' + list.length + '</b>&nbsp;automations ' + (S.linked === false ? 'on' : 'running on') + ' your ' + PLANS[S.plan].name + ' plan</span></div></div>'
-      + (S.linked === false ? '<div class="wa-note warn"><b>Not running yet.</b> Your workspace isn’t fully set up yet, so these are switched off. Ask support to finish your setup and they all turn on.</div>' : '');
+      + (S.linked === false ? '<div class="wa-note warn"><b>These start once your account finishes connecting.</b> We’re finishing that on our side; every automation below turns on by itself.</div>' : '');
     h += '<div class="wa-lay"><aside class="wa-list">';
     var shut = [];
     GROUPS.forEach(function (gr) {
