@@ -84,10 +84,24 @@
     if (P.d >= 64 && window._bpCurView && window.bpNav) {
       P.busy = true; bpHaptic('light');
       var i = ind(); i.classList.add('spin'); i.style.transform = 'translate(-50%,24px)';
-      try { bpNav(window._bpCurView); } catch (e) {}
-      setTimeout(function () { P.busy = false; reset(); }, 900);
+      /* 2026-11-24: load the data again first (jobs, money, contacts), then redraw; changes not sent yet are
+         sent, never overwritten. A page you opened from a list (a contact, a project) stays open. */
+      var v = window._bpCurView, detail = !!document.querySelector('#bpx.bp-m-detail'), t0 = Date.now();
+      fresh().then(function () {
+        if (!detail) { try { bpNav(v); } catch (e) {} }
+        setTimeout(function () { P.busy = false; reset(); }, Math.max(0, 700 - (Date.now() - t0)));
+      });
     } else reset();
   }, { passive: true });
+  function fresh() {
+    var team = window.BP_TEAM || {}, owner = !team.role || team.role === 'owner' || team.role === 'office', jobs = Promise.resolve(), ppl = Promise.resolve();
+    try {
+      if (owner && typeof bpUnsent === 'function' && bpUnsent()) { if (window.bpFinCloudPushNow) bpFinCloudPushNow(); }
+      else if (owner && typeof bpFinCloudLoad === 'function') { try { _bpFinLoaded = false; } catch (e) {} jobs = bpFinCloudLoad(); }
+      if (owner && typeof bpFetchContacts === 'function') ppl = bpFetchContacts().then(function (c) { if (Array.isArray(c) && c.length) { try { _bpContacts = c; } catch (e) {} } });
+    } catch (e) {}
+    return Promise.all([jobs, ppl]).catch(function () {});
+  }
   function reset() { var i = $('bpPtr'); if (i) { i.classList.remove('show', 'ready', 'spin'); i.style.transform = ''; } P.d = 0; }
 
   /* ------------------------------------- swipe a bottom sheet down to close --- */
