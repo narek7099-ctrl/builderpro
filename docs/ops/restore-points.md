@@ -469,3 +469,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-23 before grouped number cards on Subcontractors and Calculator leads: main was c8bf855
 - 2026-11-23 before back arrow in the phone top bar on detail pages (contact, equipment, estimate, invoice): main was 5709d47
 - 2026-11-24 before Who's going on calendar bookings, logo-only phone top bar, sweep fixes (Lisa publish bar, faint icons, tap sizes): main was 2ff5d55
+- 2026-11-24 before tighter 4-choice switches on the phone: main was 494468d
