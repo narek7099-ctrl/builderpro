@@ -639,3 +639,6 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .sp-two .bpx-mut>a{display:inline-block;padding:10px 6px;margin:-10px -6px}
 /* Calculator leads: a good score's white number on mint was hard to read: dark number instead */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .cl-score[style*="#16C79A" i]{color:#00382a !important}
+/* a switch with four or more choices: a little tighter so the last one isn't cut at the edge */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-jobtabs:has(>:nth-child(4)):not(.cal-view)>:is(button,a){padding-left:6px !important;padding-right:6px !important;font-size:13.5px !important;letter-spacing:-.1px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-jobtabs:has(>:nth-child(4)):not(.cal-view){overflow-x:auto;scrollbar-width:none}
