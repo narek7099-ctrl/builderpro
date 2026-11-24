@@ -475,3 +475,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-24 before calmer computer background on work pages (swirl stays on Dashboard): main was ba1c115
 - 2026-11-24 before one bundled portal stylesheet (portal/app.css from portal/css-bundle.txt, built by site/assemble.py; to undo, restore the 31 link tags in app.html): main was 3aa8cf8
 - 2026-11-24 before iPhone readiness (theme color matches the top bar, keyboard hides the tab bar and scrolls the field into view, landscape clear of the notch): main was 6976e21
+- 2026-11-24 before Calendar phone fix (Inspections/Jobs buttons no longer cover the Day/Week/Month switch): main was 8150300
