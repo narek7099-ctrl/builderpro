@@ -94,9 +94,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261124-20261124ff">
-<link rel="stylesheet" href="site/present.css?v=20261124-20261124ff">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261124-20261124ff"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261124-20261124fg">
+<link rel="stylesheet" href="site/present.css?v=20261124-20261124fg">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261124-20261124fg"}}</script>
 
 
 <style id="bpi-icons">
@@ -14284,6 +14284,8 @@ function bpRepCharts(all){
     centreNote:mean?'average of these':'reviews',
     fmt:bpNum, valueHead:'Reviews', axis:'Rating'
   }):bpChart.empty({title:'How the stars fall',empty:'No reviews to break down yet.'});
+  /* no reviews at all: two empty chart cards say nothing the review list below doesn't */
+  if(!all.length)return '';
   return '<div class="bpc-two" style="margin-top:16px"><div class="bpx-panel">'+trend+'</div><div class="bpx-panel">'+spread+'</div></div>';
 }
 function bpRepRender(){
@@ -14319,7 +14321,7 @@ function bpRepRender(){
         +'<div class="rp-rev-b"><div class="rp-rev-t">'+bpRepStars(r.rating)+'<b>'+bpEsc(r.user)+'</b><span class="bpx-mut">'+bpRepWhen(r.at)+' · '+r.platName+'</span>'+(r.replied?'<span class="bpx-badge ok">Replied</span>':(r.rating<=3?'<span class="bpx-badge warn">Needs a reply</span>':''))+'</div>'
         +(r.text?'<div class="rp-rev-x">'+bpEsc(r.text)+'</div>':'<div class="rp-rev-x bpx-mut">Rating only, no text.</div>')+'</div>'
         +(r.manage?'<a class="bpx-rowbtn" style="text-decoration:none;flex:0 0 auto" href="'+bpEsc(r.manage)+'" target="_blank" rel="noopener">Reply</a>':'')+'</div>';
-    }).join('')+pg.nav:'<div class="bpx-empty2">No reviews to show yet.</div>'+pg.nav)
+    }).join('')+pg.nav:'<div class="bpx-empty2"><b>No reviews yet</b>Connect Google, Yelp or Facebook above. Your rating trend and star breakdown show here once reviews come in.</div>'+pg.nav)
     +'</div>';
   area.innerHTML=demo+tiles+cards+bpRepCharts(all)+feed;
 }
@@ -14993,7 +14995,7 @@ window.bpRepCopy=function(text,btn){
 <!--/app-only-->
 </body>
 <!--app-only-->
-<link rel="stylesheet" href="portal/app.css?v=15768304d2" data-bundle>
+<link rel="stylesheet" href="portal/app.css?v=951ab70698" data-bundle>
 <script src="portal/team.js?v=20261115a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261124v"></script>
@@ -15033,7 +15035,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/storm.js?v=20261114a"></script>
 <script src="portal/aiceo-map.js?v=20261121a"></script>
 <script src="portal/installs.js?v=20261118f"></script>
-<script src="portal/assets.js?v=20261118f"></script>
+<script src="portal/assets.js?v=20261124fg"></script>
 <script src="portal/custlink.js?v=20261118f"></script>
 <script src="portal/estpick.js?v=20261118f"></script>
 <script src="portal/reviews.js?v=20261004a"></script>
@@ -15044,11 +15046,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261120r"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261124-20261124ff"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261124-20261124ff"></script>
-<script src="site/vendor/SplitText.min.js?v=20261124-20261124ff"></script>
-<script src="site/site.js?v=20261124-20261124ff"></script>
-<script src="site/present.js?v=20261124-20261124ff"></script>
+<script src="site/vendor/gsap.min.js?v=20261124-20261124fg"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261124-20261124fg"></script>
+<script src="site/vendor/SplitText.min.js?v=20261124-20261124fg"></script>
+<script src="site/site.js?v=20261124-20261124fg"></script>
+<script src="site/present.js?v=20261124-20261124fg"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>

@@ -233,15 +233,17 @@
     var chip = function (k, t) { return '<button class="eq-chip' + (A.filter === k ? ' on' : '') + '" onclick="BPA.setFilter(\'' + k + '\')">' + t + '</button>'; };
     area.innerHTML = '<div class="eq">'
       + '<div class="bpx-chead eq-head"><div><h2>Equipment</h2><p class="eq-sub">Every unit you install or service, with its age, warranty and when it will need replacing.</p></div>'
-        + '<div class="eq-acts"><button class="bpx-btn ghost" onclick="BPA.add()"><span class="ms">edit_note</span>Add by hand</button>'
-        + '<button class="bpx-addbtn" onclick="BPA.add({scan:1})"><span class="ms">photo_camera</span>Scan a nameplate</button></div></div>'
+        /* the buttons sit in the header once there is a list; an empty page has them in its own card only */
+        + (L.length ? '<div class="eq-acts"><button class="bpx-btn ghost" onclick="BPA.add()"><span class="ms">edit_note</span>Add by hand</button>'
+        + '<button class="bpx-addbtn" onclick="BPA.add({scan:1})"><span class="ms">photo_camera</span>Scan a nameplate</button></div>' : '') + '</div>'
       + (L.length ? '<div class="eq-tiles">' + tile('all', L.length, 'All equipment', 'var(--blue)', 'inventory_2') + tile('due', n('due'), 'Service due', '#0953b4', 'build_circle')
           + tile('eol', n('eol'), 'Near end of life', '#0853B5', 'hourglass_bottom') + tile('warr', n('warr'), 'Under warranty', '#087F61', 'verified_user') + '</div>'
         + '<div class="eq-bar"><label class="eq-search"><span class="ms">search</span><input placeholder="Search customer, make, model or serial" value="' + esc(A.q) + '" oninput="BPA.search(this.value)"></label>'
           + '<div class="eq-chips">' + chip('all', 'All') + TAGS.map(function (t) { return chip(t[0], t[1]); }).join('') + '</div></div>'
         + '<div class="eq-list" id="eq-rows"></div>'
-      : '<div class="bpx-panel eq-empty"><span class="ms">qr_code_scanner</span><b>No equipment yet</b><p>Point your phone at the nameplate of the next unit you install or service. BuilderPro reads the make, model and serial, works out how old it is, and tells you when it’s due for service and when it’ll need replacing. Jobs you sign off as done land here too.</p>'
-        + '<button class="bpx-addbtn" onclick="BPA.add({scan:1})"><span class="ms">photo_camera</span>Scan a nameplate</button></div>')
+      : '<div class="bpx-panel eq-empty"><span class="ms">qr_code_scanner</span><b>No equipment yet</b><p>Scan the nameplate of a unit you install or service. BuilderPro reads the make, model and serial and tells you when it’s due for service.</p>'
+        + '<div class="eq-empty-acts"><button class="bpx-addbtn" onclick="BPA.add({scan:1})"><span class="ms">photo_camera</span>Scan a nameplate</button>'
+        + '<button class="bpx-btn ghost" onclick="BPA.add()"><span class="ms">edit_note</span>Add by hand</button></div></div>')
       + '</div>';
     drawRows();
     if (window.bpSpin) bpSpin(false);
