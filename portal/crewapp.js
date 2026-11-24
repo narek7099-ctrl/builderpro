@@ -277,11 +277,16 @@
       if (unlinked()) return;
       var me = C.me, e = me.employee, o = me.open, st = state(), jobs = me.projects || [], day = iso(new Date());
       var today = jobs.filter(onToday);
+      /* 2026-11-24: inspections and visits the office sent you to (Calendar, Who's going) */
+      var visits = me.visits || [], vToday = visits.filter(function (v) { return v.day === day; });
+      var vNext = visits.filter(function (v) { return v.day > day; })[0];
       var next = jobs.map(function (j) { var d = ((j.sched && j.sched.dates) || []).filter(function (x) { return x > day; }).sort()[0]; return d ? { j: j, d: d } : null; })
         .filter(Boolean).sort(function (a, b) { return a.d < b.d ? -1 : 1; })[0];
       var oj = o ? jobOf(o.job_id) : null;
       var line = st === 'off'
-        ? (today.length ? 'You’re booked on ' + jobWords(today[0]) + ' today.' : 'Clock in when you get to work.')
+        ? (today.length ? 'You’re booked on ' + jobWords(today[0]) + ' today.'
+          : vToday.length ? esc(vToday[0].title || 'A visit') + (vToday[0].customer ? ' at ' + esc(vToday[0].customer) : '') + (vToday[0].time ? ', ' + t12(vToday[0].time) : '') + ' today.'
+          : 'Clock in when you get to work.')
         : (st === 'on' ? 'Since ' + clock(o.at) : BRK[st].t + ' since ' + clock(C.brk.open.at) + ' · ' + BRK[st].pay.toLowerCase())
           + (o.job_name ? ' · ' + (oj ? jobWords(oj) : esc(o.job_name)) : '');
       var status = '<div class="bpx-panel chm-status chm-' + st + '">'
@@ -295,15 +300,27 @@
           + '<div><b>' + esc(j.name || 'Project') + (j.title ? ' · ' + esc(j.title) : '') + '</b><span>' + (slot ? slot + (j.addr ? ' · ' : '') : '') + esc(j.addr || '') + '</span></div></button>'
           + (j.addr ? '<a class="chm-dir" href="' + esc(mapsUrl(j.addr)) + '" target="_blank" rel="noopener" aria-label="Directions to ' + esc(j.name || 'the job') + '"><span class="ms">directions</span></a>' : '') + '</div>';
       };
+      var visitRow = function (v) {
+        var when = v.time ? t12(v.time) : '';
+        return '<div class="chm-job"><div class="chm-job-main chm-visit"><span class="chm-job-ic"><span class="ms">' + (v.kind === 'job' ? 'construction' : 'roofing') + '</span></span>'
+          + '<div><b>' + esc(v.title || 'Visit') + (v.customer ? ' · ' + esc(v.customer) : '') + '</b><span>' + (when ? when + (v.addr ? ' · ' : '') : '') + esc(v.addr || '') + '</span></div></div>'
+          + (v.phone ? '<a class="chm-dir" href="tel:' + esc(v.phone) + '" aria-label="Call ' + esc(v.customer || 'the customer') + '"><span class="ms">call</span></a>' : '')
+          + (v.addr ? '<a class="chm-dir" href="' + esc(mapsUrl(v.addr)) + '" target="_blank" rel="noopener" aria-label="Directions to ' + esc(v.customer || 'the visit') + '"><span class="ms">directions</span></a>' : '') + '</div>';
+      };
       var tile = function (v, ic, t, s) { return '<button type="button" class="chm-tile" onclick="bpNav(\'' + v + '\')"><span class="ms">' + ic + '</span><b>' + t + '</b><small>' + s + '</small></button>'; };
       area().innerHTML = '<div class="ca-wrap chm">'
         + '<div class="chm-hero">' + AV.html(e.photo, e.name, 'chm-av') + '<div><small>' + new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' }) + '</small>'
           + '<h2>' + hello() + ', ' + esc((e.name || '').split(' ')[0]) + '</h2><span>' + esc((me.business && me.business.name) || '') + (me.crew ? ' · ' + esc(me.crew.name) : '') + '</span></div></div>'
         + '<div class="chm-grid"><div class="ck-col">' + status
           + '<div class="bpx-panel"><div class="chm-h"><b>Today’s jobs</b><button type="button" onclick="bpNav(\'crewprojects\')">All jobs</button></div>'
-            + (today.length ? today.map(jobRow).join('')
+            + (today.length || vToday.length ? today.map(jobRow).join('') + vToday.map(visitRow).join('')
               : '<div class="chm-none"><span class="ms">event_available</span><div><b>Nothing booked for you today</b>'
-                + (next ? '<span>Next: ' + jobWords(next.j) + ', ' + dayLbl(next.d) + (slotLbl(next.j, next.d) ? ' · ' + slotLbl(next.j, next.d) : '') + '</span>' : '<span>Your boss adds you to jobs on the schedule.</span>') + '</div></div>')
+                + (next && (!vNext || next.d <= vNext.day) ? '<span>Next: ' + jobWords(next.j) + ', ' + dayLbl(next.d) + (slotLbl(next.j, next.d) ? ' · ' + slotLbl(next.j, next.d) : '') + '</span>'
+                  : vNext ? '<span>Next: ' + esc(vNext.title || 'Visit') + (vNext.customer ? ' at ' + esc(vNext.customer) : '') + ', ' + dayLbl(vNext.day) + (vNext.time ? ' · ' + t12(vNext.time) : '') + '</span>'
+                  : '<span>Your boss adds you to jobs on the schedule.</span>') + '</div></div>')
+            + (visits.filter(function (v) { return v.day > day; }).length ? '<div class="chm-h" style="margin-top:14px"><b>Coming up</b></div>' + visits.filter(function (v) { return v.day > day; }).slice(0, 5).map(function (v) {
+                var r = visitRow(v); return r.replace('<span>' + (v.time ? t12(v.time) : ''), '<span>' + dayLbl(v.day) + (v.time ? ' · ' + t12(v.time) : ''));
+              }).join('') : '')
           + '</div></div>'
         + '<div class="ck-side">' + sumHtml()
           + '<div class="chm-tiles">' + tile('crewprojects', 'construction', 'Projects', plural(jobs.length, 'active job', 'active jobs'))
