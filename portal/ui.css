@@ -769,3 +769,18 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bp-m) .st-hrs .bpx-hrs-row{grid-template-columns:92px 26px 1fr !important;column-gap:8px}
 /* phone pop-ups: the Cancel / Save row stays pinned at the bottom of the sheet, even on long forms */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-modalcard>.row:last-child{position:sticky;bottom:calc(-1 * env(safe-area-inset-bottom,0px));z-index:3;background:inherit;margin-top:12px;padding-top:12px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line,#eef0f3)}
+/* ===== phone: feel like an app (2026-11-24) ===== */
+/* one + for adding: a page's own add button is offered by the tab-bar + instead (portal/mobile.js pageAdds) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bp-mpgadd,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bp-mpgrow{display:none !important}
+#bpx .bp-create-here{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;min-height:60px;padding:0 16px;margin:0 0 10px;border-radius:18px;background:var(--bl-l,#eaf2ff);color:#1A3FA3;cursor:pointer}
+#bpx .bp-create-here>.ms:first-child{width:36px;height:36px;border-radius:50%;background:#006fff;color:#fff;display:grid;place-items:center;font-size:22px}
+#bpx .bp-create-here b{flex:1;font-size:16.5px;font-weight:650}
+#bpx .bp-create-here .bp-create-go{opacity:.6}
+#bpx.bpx-dark .bp-create-here{background:rgba(75,153,254,.14);color:#cfe2ff}
+/* iPhone-standard 16px side margins, top tabs included (they were scrolled to the very edge) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea{padding-left:16px !important;padding-right:16px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs{padding-left:16px !important;padding-right:16px !important;scroll-padding-inline:16px}
+/* website toolbar bits that an app doesn't show */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.hl-tcount,.emp-sort){display:none !important}
+/* list headings read as iOS section labels: small, grey, above the group */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead>.bpx-ptitle{margin:4px 0 0 4px !important;font-size:13px !important;font-weight:600 !important;color:#64748b !important;text-transform:uppercase;letter-spacing:.04em}
