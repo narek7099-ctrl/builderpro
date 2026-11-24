@@ -485,3 +485,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-24 plain app background (moving lines off), designed empty pages: restore to c199c73
 - 2026-11-24 job Overview: Customer & site boxes fold on computer: restore to 6922aed
 - 2026-11-24 receipts slim tiles + empty, calm automations note, chart date labels, phone income/expense single add: restore to ff2544d
+- 2026-11-24 equipment empty single set of buttons, reputation no empty chart cards: restore to 34884cf

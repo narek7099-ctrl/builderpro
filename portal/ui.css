@@ -762,3 +762,6 @@ html{overscroll-behavior-y:none}
 /* phone Income/Expenses: the add button lives on the list header only (it was shown twice) */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea:is([data-fin="income"],[data-fin="expense"]) .bpx-finrow-btns:has(.fin-new-incm,.fin-new-exp){display:none !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea:is([data-fin="income"],[data-fin="expense"]) .bpx-finrow-btns :is(.fin-new-incm,.fin-new-exp){display:none !important}
+/* Equipment empty: both ways to add, side by side */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .eq-empty-acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .eq-empty-acts>*{margin:0 !important}
