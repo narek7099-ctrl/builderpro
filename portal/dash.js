@@ -523,7 +523,7 @@
     var avg = sized.length ? sized.reduce(function (t, j) { return t + (+j.estimate || 0); }, 0) / sized.length : 0;
     var t = function (l, v, note, go) { return '<div class="bpx-stat dash-tile' + (go ? ' go' : '') + '"' + (go ? ' onclick="bpNav(\'' + go + '\')"' : '') + '><div class="lbl">' + l + '</div><div class="val">' + v + '</div><div class="note">' + note + '</div></div>'; };
     return '<div class="bpx-stats dash-nums db-foot">'
-      + t('New leads this month', D.leads ? D.leads.n : '&mdash;', D.leads ? 'from your website and phone line' : 'connect your phone line to count these', D.leads ? 'contacts' : 'marketing')
+      + t('New leads this month', D.leads ? D.leads.n : '&mdash;', D.leads ? 'from your website and phone line' : 'connect your phone line to count these', 'contacts')
       + t('Appointments this month', D.leads ? D.leads.a : '&mdash;', D.leads ? 'booked through ' + (window.BP_AI_NAME || 'Lisa') : (window.BP_AI_NAME || 'Lisa') + '\'s bookings land here', 'calendar')
       + t('Won this month', String(wonM.length), wonM.length ? money(wonVal) + ' of work' : 'nothing marked won yet', 'activejobs')
       + t('Average job', avg ? money(avg) : '&middot;', sized.length ? 'across ' + sized.length + (sized.length === 1 ? ' priced job' : ' priced jobs') : 'put a price on a job to see this', 'activejobs')
@@ -705,7 +705,7 @@
      before. Until the contacts have loaded (or if they can't be read) it is HighLevel's count
      for the month. (2026-11-20: the top four cards are the number alone, no graph or icon.) */
   function leadsCard(M) {
-    if (!Array.isArray(D.leadRows)) return statCard('New leads', 'person_add', D.leads ? String(D.leads.n) : '&mdash;', D.leads ? 'this month' : 'not connected yet', D.leads ? 'contacts' : 'marketing', 'See leads');
+    if (!Array.isArray(D.leadRows)) return statCard('New leads', 'person_add', D.leads ? String(D.leads.n) : '&mdash;', D.leads ? 'this month' : 'not connected yet', 'contacts', 'See leads');
     var rows = D.leadRows;
     var cur = rows.filter(function (t) { return inP(t, P.start, P.end); }).length, prev = rows.filter(function (t) { return inP(t, P.pStart, P.pEnd); }).length;
     var dlt = bpChart.delta(prev, cur, { vs: P.vs });
@@ -966,7 +966,7 @@
     var st = sparkTiles(M, X.active), gos = ['finances', 'finances', 'activejobs', 'finances', 'activejobs'];
     var top = [
       [3, W(gos[2], st[2], 'hl-spk')],
-      [3, W(Array.isArray(D.leadRows) || D.leads ? 'contacts' : 'marketing', leadsCard(M), 'hl-spk')],
+      [3, W(Array.isArray(D.leadRows) || 'contacts', leadsCard(M), 'hl-spk')],
       [3, W('activejobs', statCard('Active projects', 'construction', String(X.active.n), money(X.active.v) + ' in progress', 'activejobs', 'See jobs'), 'hl-spk')],
       [3, W('estimates', statCard('Quotes out', 'request_quote', String(quotesOut().n), quotesOut().v ? money(quotesOut().v) + ' quoted' : 'estimates out', 'estimates', 'See estimates'), 'hl-spk')]
     ];

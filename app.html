@@ -94,9 +94,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261124-20261124fi">
-<link rel="stylesheet" href="site/present.css?v=20261124-20261124fi">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261124-20261124fi"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261124-20261124fj">
+<link rel="stylesheet" href="site/present.css?v=20261124-20261124fj">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261124-20261124fj"}}</script>
 
 
 <style id="bpi-icons">
@@ -2813,6 +2813,12 @@ var BP_NAV=[
   {id:'aiteam',l:'AI Team',ico:'aiteam'},
   {id:'marketing',l:'Marketing',ico:'marketing',kids:[['marketing','Ads & Listings'],['reputation','Reputation'],['website','Website'],['social','Social Media'],['competitors','Competitors']]}
 ];
+/* 2026-11-24: Marketing is off for now (the owner's call). Its pages stay in the code;
+   set BP_MARKETING_ON=true to bring the section back to the sidebar, the phone menu
+   and search. While it is off, any link into those pages lands on the dashboard. */
+var BP_MARKETING_ON=false;
+var BP_MKT_VIEWS=['marketing','reputation','website','social','competitors','connections'];
+if(!BP_MARKETING_ON)BP_NAV=BP_NAV.filter(function(g){return g.id!=='marketing';});
 var BP_NAV_FOOT=[['settings','Settings','settings']];
 function bpNavGroupOf(v){
   for(var i=0;i<BP_NAV.length;i++){var g=BP_NAV[i];if(g.id===v&&!g.kids)return g.id;
@@ -2846,6 +2852,7 @@ function bpSpin(on){
   s._t=setTimeout(function(){s.classList.remove('on');},450);
 }
 function bpNav(v){
+  if(!BP_MARKETING_ON&&BP_MKT_VIEWS.indexOf(v)>=0)v='dashboard';
   if(window.bpTeamAllows&&!bpTeamAllows(v))v=window.bpTeamHome?bpTeamHome():'dashboard';
   /* the same page drawn again (its data arrived, a live update, a save): update it where it
      is. Only a real switch of page shows the spinner and plays the fade, so opening the app
@@ -13337,6 +13344,7 @@ function bpEnsureLeaflet(cb){
     {key:"ai",label:""+BP_AI_NAME+" AI",desc:"their 24/7 AI receptionist. The Knowledge tab holds services, pricing guidance, common questions and rules — filling those in and tapping Publish pushes it live to web chat, texts and the phone line. Voice & tone sets how it sounds; Test "+BP_AI_NAME+" lets them chat with it like a customer would"},
     {key:"settings",label:"Settings",desc:"business name, trade, phone, email, address, service area, license number, logo, opening hours, the missed-call auto-reply, owner details, their plan and billing, and Team. Team (owner only): add other people to the account by email with a role. Office sees everything the owner sees except billing and the Team page. Crew sees projects, calendar, materials, contacts and messages, and nothing about money or settings. The person gets an email with a link to set a password, then signs in at the normal login; if they already have a BuilderPro login they just sign in. The owner can change a role or remove someone at any time; it applies on their next sign-in. Everyone on the team works on the same account and the same data"}
   ];
+  if(!BP_MARKETING_ON)A_NAV=A_NAV.filter(function(n){return BP_MKT_VIEWS.indexOf(n.key)<0;});
   var css=document.createElement('style');
   css.textContent='.oaw-btn{position:fixed;right:18px;bottom:18px;z-index:99999;width:58px;height:58px;border-radius:50%;border:0;cursor:pointer;background:linear-gradient(135deg,#2f6bff,#1e4fd6);display:none;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(47,107,255,.4)}'
   +'.oaw-btn svg{display:block}'
@@ -15013,7 +15021,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/matlists.js?v=20261124fd"></script>
 <script src="portal/quote.js?v=20261124fd"></script>
 <script src="portal/prices.js?v=20261118f"></script>
-<script src="portal/dash.js?v=20261120c"></script>
+<script src="portal/dash.js?v=20261124fj"></script>
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261116a"></script>
 <script src="portal/permits.js?v=20261024q30"></script>
@@ -15046,11 +15054,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261120r"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261124-20261124fi"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261124-20261124fi"></script>
-<script src="site/vendor/SplitText.min.js?v=20261124-20261124fi"></script>
-<script src="site/site.js?v=20261124-20261124fi"></script>
-<script src="site/present.js?v=20261124-20261124fi"></script>
+<script src="site/vendor/gsap.min.js?v=20261124-20261124fj"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261124-20261124fj"></script>
+<script src="site/vendor/SplitText.min.js?v=20261124-20261124fj"></script>
+<script src="site/site.js?v=20261124-20261124fj"></script>
+<script src="site/present.js?v=20261124-20261124fj"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>
