@@ -39,6 +39,9 @@
       + '<span><b>' + pct + '%</b><small>' + label + '</small></span></div>';
   }
 
+  /* 2026-11-25 redesign: one header for phone and computer. Name, job and address on the left,
+     the progress ring on the right; the money in one strip; Call, Text, Directions and Done
+     as one even row of buttons. */
   function hero(j) {
     var iso = new Date().toISOString().slice(0, 10);
     var today = j.sched && (j.sched.dates || []).indexOf(iso) >= 0;
@@ -47,36 +50,36 @@
     var pct = pr ? pr.pct : (est > 0 ? Math.min(100, Math.round(paid / est * 100)) : 0);
     var addr = (j.addr || '').trim(), ph = (j.phone || '').replace(/[^\d+]/g, '');
     var status = j.status === 'done' ? '<span class="pjs-pill done"><span class="ms">task_alt</span>Done</span>' : '<span class="pjs-pill live"><i></i>In progress</span>';
-    var stats = isCrew() ? ''
+    var next = pr && pr.next ? (pr.next.name || pr.next.label || '') : '';
+    var stats = isCrew() ? (next ? '<div class="pjs-stat"><small>Next phase</small><b>' + esc(next) + '</b></div>' : '')
       : '<div class="pjs-stat"><small>Estimate</small><b>' + money(est) + '</b></div>'
       + '<div class="pjs-stat"><small>Collected</small><b>' + money(paid) + '</b></div>'
-      + '<div class="pjs-stat"><small>Balance</small><b>' + money(Math.max(est - paid, 0)) + '</b></div>';
+      + '<div class="pjs-stat"><small>Balance</small><b>' + money(Math.max(est - paid, 0)) + '</b></div>'
+      + (next ? '<div class="pjs-stat wide"><small>Next phase</small><b>' + esc(next) + '</b></div>' : '');
     var act = function (href, ico, t, dis, extra) {
-      return dis ? '<span class="pjs-act dis" aria-disabled="true" title="No phone number on this job"><span class="ms">' + ico + '</span>' + t + '</span>'
-        : '<a class="pjs-act" href="' + href + '"' + (extra || '') + '><span class="ms">' + ico + '</span>' + t + '</a>';
+      return dis ? '<span class="pjs-act dis" aria-disabled="true" title="Nothing to use yet"><span class="ms">' + ico + '</span><span class="pjs-al">' + t + '</span></span>'
+        : '<a class="pjs-act" href="' + href + '"' + (extra || '') + '><span class="ms">' + ico + '</span><span class="pjs-al">' + t + '</span></a>';
     };
     return '<header class="pjs-hero">'
       + '<div class="pjs-hero-top">'
-      + '<div class="pjs-av" aria-hidden="true">' + esc(initials(j.name)) + '</div>'
       + '<div class="pjs-hero-t">'
       + '<div class="pjs-tags">' + status + (today ? '<span class="pjs-pill today"><span class="ms">engineering</span>Crew on site today</span>' : '') + '<span id="pjs-permit-chip">' + (window.bpPermitChip ? bpPermitChip(j) : '') + '</span></div>'
       + '<h2 id="pjs-title">' + esc(j.name || 'Project') + '</h2>'
       + '<div class="pjs-job">' + esc(j.title || 'Project') + '</div>'
-      + (addr ? '<a class="pjs-addr" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr) + '"><span class="ms">location_on</span><span>' + esc(addr) + '</span><span class="ms ext">open_in_new</span></a>'
+      + (addr ? '<a class="pjs-addr" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr) + '"><span class="ms">location_on</span><span>' + esc(addr) + '</span></a>'
         : '<span class="pjs-addr none"><span class="ms">location_off</span>No address yet</span>')
       + '</div>'
+      + ring(pct, pr ? 'built' : 'paid')
       + '<button class="pjs-x" type="button" aria-label="Close project" onclick="bpCloseModal()"><span class="ms">close</span></button>'
       + '</div>'
-      + '<div class="pjs-hero-row">'
-      + ring(pct, pr ? 'built' : 'paid')
-      + '<div class="pjs-stats">' + stats + (pr && pr.next ? '<div class="pjs-stat wide"><small>Next phase</small><b>' + esc(pr.next.name || pr.next.label || '') + '</b></div>' : '') + '</div>'
+      + (stats ? '<div class="pjs-stats">' + stats + '</div>' : '')
       + '<div class="pjs-acts">'
       + act('tel:' + ph, 'call', 'Call', !ph)
-      + act('sms:' + ph, 'sms', 'Text', !ph)
-      + (j.status === 'done' || isCrew() ? '' : '<button type="button" class="pjs-act primary" onclick="bpJobDoneOpen(\'' + j.id + '\')"><span class="ms">check</span>Mark done</button>')
-      + '</div></div></header>';
+      + act('sms:' + ph, 'chat_bubble', 'Text', !ph)
+      + act('https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr), 'near_me', 'Directions', !addr, ' target="_blank" rel="noopener"')
+      + (j.status === 'done' || isCrew() ? '' : '<button type="button" class="pjs-act primary" onclick="bpJobDoneOpen(\'' + j.id + '\')"><span class="ms">check</span><span class="pjs-al">' + ((window.innerWidth || 1000) <= 760 ? 'Done' : 'Mark done') + '</span></button>')
+      + '</div></header>';
   }
-
 
   /* ---------- on a phone, the project is a screen in an app (2026-11-21) ----------
      A top bar with "‹ Jobs" and Save, the title fading into it as the header scrolls away;
@@ -100,29 +103,6 @@
     /* the title shows in the bar once the name has scrolled up under it */
     var h2 = card.querySelector('#pjs-title');
     card.addEventListener('scroll', function () { nav.classList.toggle('t', !!h2 && h2.getBoundingClientRect().bottom < nav.getBoundingClientRect().bottom); }, { passive: true });
-    /* a Directions button beside Call and Text */
-    var acts = card.querySelector('.pjs-acts');
-    if (acts && j.addr && !acts.querySelector('.pjs-dir')) {
-      var a = document.createElement('a'); a.className = 'pjs-act pjs-dir'; a.target = '_blank'; a.rel = 'noopener';
-      a.href = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(j.addr);
-      a.innerHTML = '<span class="ms">near_me</span>Directions';
-      var done = acts.querySelector('.primary'); acts.insertBefore(a, done || null);
-    }
-    if (acts) Array.prototype.forEach.call(acts.querySelectorAll('.pjs-act'), function (b) { if (/Mark done/.test(b.textContent)) b.lastChild.textContent = 'Done'; });
-    if (form) Array.prototype.forEach.call(form.querySelectorAll('label'), function (l) { if (/^\s*Customer name\s*$/.test(l.textContent)) l.textContent = 'Name'; });
-    /* less to scroll (2026-11-21): the customer card goes; its Profile link and the automatic-texts
-       switch become rows in the groups, like Settings */
-    if (form && !form.querySelector('.pjs-prow')) {
-      var g1 = form.querySelector('.pjs-sec:not(.pjs-view)');
-      if (g1) {
-        var pr = document.createElement('button'); pr.type = 'button'; pr.className = 'pjs-prow';
-        pr.innerHTML = '<span>Customer profile</span><span class="ms">chevron_right</span>';
-        pr.onclick = function () { if (window.bpOpenPerson) bpOpenPerson(window._bpProjId || ''); };
-        g1.appendChild(pr);
-        var ap = form.querySelector('#ap-row');
-        if (ap) { var apg = document.createElement('section'); apg.className = 'pjs-sec pjs-apg'; apg.appendChild(ap); g1.after(apg); }
-      }
-    }
     /* Money and Schedule as app screens too (2026-11-21): name each group so the phone styles can
        lay it out as rows; Budget folds shut until it is opened */
     var tagSec = function (sel, cls) { var e = card.querySelector(sel), sec = e && e.closest('.pjs-sec'); if (sec) sec.classList.add(cls); return sec; };
@@ -165,77 +145,73 @@
       if (n.nodeType === 1 && n.tagName === 'LABEL' && startsSec(n, i)) { n.classList.add('pjs-h'); n.removeAttribute('style'); }
       cur.appendChild(n);
     });
-    if (key === 'details' && secs[0]) {
-      var h = document.createElement('div'); h.className = 'pjs-h'; h.textContent = 'Customer & site'; secs[0].insertBefore(h, secs[0].firstChild);
-      if (secs[1]) { var l = secs[1].querySelector('label.pjs-h'); if (l) l.textContent = 'Job & notes'; }
-    }
     secs.forEach(function (s) { pane.appendChild(s); });
   }
 
-  /* Overview opens as a calm read-only summary; the form is one tap away
-     behind "Edit details", so nobody changes a phone number by accident. */
-  function viewMode(body) {
-    var pane = body.querySelector('[data-pj-pane="details"]'); if (!pane || pane.querySelector('.pjs-view')) return;
-    var rows = [];
-    Array.prototype.forEach.call(pane.querySelectorAll('label'), function (l) {
-      var f = l.htmlFor ? document.getElementById(l.htmlFor) : null;
-      if (!f) { var n = l.nextElementSibling; f = n && /^(INPUT|TEXTAREA|SELECT)$/.test(n.tagName) ? n : l.querySelector('input,textarea,select'); }
-      if (!f || f.type === 'hidden' || f.type === 'file' || f.type === 'checkbox') return;
-      var v = f.tagName === 'SELECT' ? (f.options[f.selectedIndex] || {}).text : f.value;
-      var k = (l.textContent || '').replace(/\s+/g, ' ').trim(); if (!k || k.length > 40) return;
-      rows.push([k, String(v || '').trim(), f.type]);
-    });
-    if (!rows.length) return;
-    var link = function (r) {
-      var v = esc(r[1]); if (!r[1]) return '<span class="pjs-vnone">Not added</span>';
-      if (/phone/i.test(r[0]) || r[2] === 'tel') return '<a href="tel:' + esc(r[1].replace(/[^\d+]/g, '')) + '">' + v + '</a>';
-      if (/address/i.test(r[0])) return '<a href="https://maps.google.com/?q=' + encodeURIComponent(r[1]) + '" target="_blank" rel="noopener">' + v + '</a>';
-      return v;
+  /* 2026-11-25 redesign: the Overview is the form itself, open straight away (the owner wants
+     the boxes there, task #30), laid out as two groups: Customer and Job. Every box keeps its
+     id, so Save, offline saving and the other modules work as before. Phone and address boxes
+     carry their own Call, Text and Directions buttons, which follow what is typed. */
+  function overview(body) {
+    var pane = body.querySelector('[data-pj-pane="details"]'); if (!pane || pane.querySelector('.pjs-form')) return;
+    var $ = function (id) { return document.getElementById(id); };
+    var old = Array.prototype.slice.call(pane.childNodes);
+    var field = function (id, label, side) {
+      var el = $(id); if (!el) return '';
+      return '<div class="pjs-f" data-f="' + id + '"><label for="' + id + '">' + label + '</label><div class="pjs-fi"></div>' + (side || '') + '</div>';
     };
-    var view = document.createElement('section'); view.className = 'pjs-sec pjs-view';
-    /* Overview: who the customer is (with ways to reach them) next to the job's facts.
-       Anything missing shows a small "Add" that opens the form. */
-    var find = function (re) { for (var q = 0; q < rows.length; q++) if (re.test(rows[q][0])) return rows.splice(q, 1)[0]; return null; };
-    var nm = find(/name/i), ph = find(/phone|mobile|cell/i), em = find(/e-?mail/i);
-    var who = (nm && nm[1]) || '';
-    var ini = who.split(/\s+/).filter(Boolean).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase() || '?';
-    var add = function (what) { return '<button type="button" class="pjs-add" data-pjs-edit><span class="ms">add</span>Add ' + what + '</button>'; };
-    var num = ph && ph[1] ? esc(ph[1].replace(/[^\d+]/g, '')) : '';
-    var line = function (ico, html) { return '<div class="pjs-cl"><span class="ms">' + ico + '</span>' + html + '</div>'; };
-    /* the whole card goes to this person's profile in Leads; its own buttons and links still do their own thing */
-    var cust = '<div class="pjs-cust" role="button" tabindex="0" title="Open ' + esc(who || 'the customer') + '\u2019s profile in Leads" onclick="if(!event.target.closest(\'a,button,.pjs-cust-ap\')&&window.bpOpenPerson)bpOpenPerson(window._bpProjId||\'\')" onkeydown="if(event.key===\'Enter\'&&event.target===this&&window.bpOpenPerson)bpOpenPerson(window._bpProjId||\'\')">'
-      + '<div class="pjs-cu"><span class="pjs-cu-av">' + esc(ini) + '</span><div class="pjs-cu-t"><small>Customer</small><b>' + (who ? esc(who) : 'No name yet') + '</b></div><span class="pjs-cu-go">Profile<span class="ms">chevron_right</span></span></div>'
-      + '<div class="pjs-cls">'
-      + line('call', num ? '<a href="tel:' + num + '">' + esc(ph[1]) + '</a><a class="pjs-mini" href="sms:' + num + '">Text</a>' : add('phone'))
-      + line('mail', em && em[1] ? '<a href="mailto:' + esc(em[1]) + '">' + esc(em[1]) + '</a>' : add('email'))
-      + '</div><div class="pjs-cust-ap"></div></div>';
-    var ICO = [[/address|site|location/i, 'location_on'], [/crew|team/i, 'groups'], [/^job|type|scope|work/i, 'construction'], [/note/i, 'sticky_note_2'], [/date|start|end/i, 'event'], [/price|amount|value|budget/i, 'payments']];
-    var ico = function (k) { for (var q = 0; q < ICO.length; q++) if (ICO[q][0].test(k)) return ICO[q][1]; return 'info'; };
-    var lab = function (k) { return /^job\s*&\s*notes$/i.test(k) ? 'Job' : k; };
-    var info = '<div class="pjs-info"><div class="pjs-info-h"><b>Job info</b><button type="button" class="pjs-edit" data-pjs-edit><span class="ms">edit</span>Edit</button></div>'
-      + rows.map(function (r) {
-        var v = r[1], extra = '';
-        if (v && /address/i.test(r[0])) extra = '<a class="pjs-mini" href="https://maps.google.com/?q=' + encodeURIComponent(v) + '" target="_blank" rel="noopener"><span class="ms">near_me</span>Directions</a>';
-        return '<div class="pjs-ir"><span class="pjs-ir-i ms">' + ico(r[0]) + '</span><div class="pjs-ir-t"><small>' + esc(lab(r[0])) + '</small>'
-          + (v ? '<div>' + esc(v) + '</div>' : '<div>' + add(lab(r[0]).toLowerCase()) + '</div>') + '</div>' + extra + '</div>';
-      }).join('') + '</div>';
-    view.innerHTML = '<div class="pjs-ov">' + cust + info + '</div>';
-    var ap = document.getElementById('ap-row'); if (ap) view.querySelector('.pjs-cust-ap').appendChild(ap);
-    pane.insertBefore(view, pane.firstChild);
-    /* 2026-11-20: the owner wants the fill-out boxes open straight away, as they used to be;
-       the customer card stays on top, the read-only Job info list only shows if pjs-ro is set */
-    /* 2026-11-24: on a computer the customer card above already shows name, phone and
-       email, so the Customer & site boxes fold under one "Edit" row (the job's other
-       boxes stay open). On a phone the boxes are the customer info, so they stay. */
-    var cs = pane.querySelector('.pjs-sec:not(.pjs-view)'), csh = cs && cs.querySelector(':scope > .pjs-h');
-    if (csh && /customer/i.test(csh.textContent)) {
-      cs.classList.add('pjs-cs', 'pjs-cs-shut');
-      csh.setAttribute('role', 'button'); csh.tabIndex = 0;
-      csh.innerHTML = '<span>Customer &amp; site</span><span class="pjs-cs-tg"><span class="pjs-cs-tl">Edit</span><span class="ms">expand_more</span></span>';
-      csh.onclick = function () { cs.classList.toggle('pjs-cs-shut'); };
-      csh.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); csh.onclick(); } };
-    }
-    Array.prototype.forEach.call(view.querySelectorAll('[data-pjs-edit]'), function (b) { b.onclick = function () { pane.classList.remove('pjs-ro'); if (cs) cs.classList.remove('pjs-cs-shut'); var want = /email/i.test(b.textContent) ? 'input[type=email],input[id*=mail]' : /phone/i.test(b.textContent) ? 'input[type=tel],input[id*=phone]' : 'input'; var f = pane.querySelector('.pjs-sec:not(.pjs-view) ' + want) || pane.querySelector('.pjs-sec:not(.pjs-view) input'); if (f) f.focus(); }; });
+    var a = function (cls, ico, t) { return '<a class="pjs-fb ' + cls + '" aria-label="' + t + '" title="' + t + '"><span class="ms">' + ico + '</span></a>'; };
+    var cust = document.createElement('section'); cust.className = 'pjs-sec pjs-form';
+    cust.innerHTML = '<div class="pjs-fh"><b>Customer</b>' + (isCrew() ? '' : '<button type="button" class="pjs-fl" onclick="if(window.bpOpenPerson)bpOpenPerson(window._bpProjId||\'\')">Profile<span class="ms">chevron_right</span></button>') + '</div>'
+      + field('bpx-pj-name', 'Name')
+      + '<div class="pjs-f2">' + field('bpx-pj-phone', 'Phone') + field('bpx-pj-email', 'Email') + '</div>'
+      + field('bpx-pj-addr', 'Job site address')
+      + '<div class="pjs-cust-ap"></div>';
+    var jobs = document.createElement('section'); jobs.className = 'pjs-sec pjs-form';
+    jobs.innerHTML = '<div class="pjs-fh"><b>Job</b></div>'
+      + '<div class="pjs-f2">' + field('bpx-pj-title', 'Job') + field('bpx-pj-crew', 'Crew') + '</div>'
+      + field('bpx-pj-notes', 'Notes');
+    /* move each real box into its slot */
+    Array.prototype.forEach.call(cust.querySelectorAll('[data-f]'), put); Array.prototype.forEach.call(jobs.querySelectorAll('[data-f]'), put);
+    function put(f) { var el = $(f.getAttribute('data-f')); if (el) { el.removeAttribute('style'); f.querySelector('.pjs-fi').appendChild(el); } }
+    /* buttons inside the phone and address boxes */
+    var phf = cust.querySelector('[data-f="bpx-pj-phone"] .pjs-fi'), adf = cust.querySelector('[data-f="bpx-pj-addr"] .pjs-fi');
+    if (phf) phf.insertAdjacentHTML('beforeend', a('pjs-fb-call', 'call', 'Call') + a('pjs-fb-sms', 'chat_bubble', 'Text'));
+    if (adf) adf.insertAdjacentHTML('beforeend', a('pjs-fb-dir', 'near_me', 'Directions'));
+    var sync = function () {
+      var ph = cust.querySelector('#bpx-pj-phone'), ad = cust.querySelector('#bpx-pj-addr'), n = ph ? ph.value.replace(/[^\d+]/g, '') : '', v = ad ? ad.value.trim() : '';
+      Array.prototype.forEach.call(cust.querySelectorAll('.pjs-fb-call,.pjs-fb-sms'), function (x) { x.classList.toggle('off', !n); if (n) x.href = (x.classList.contains('pjs-fb-call') ? 'tel:' : 'sms:') + n; else x.removeAttribute('href'); });
+      var d = cust.querySelector('.pjs-fb-dir'); if (d) { d.classList.toggle('off', !v); if (v) { d.href = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(v); d.target = '_blank'; d.rel = 'noopener'; } else d.removeAttribute('href'); }
+    };
+    sync(); cust.addEventListener('input', sync);
+    var t = $('bpx-pj-notes'); if (t) { t.rows = 3; t.placeholder = 'Gate code, parking, materials, anything the crew should know'; }
+    /* whatever else other modules put in the pane goes under the Job group; the old labels and wrappers go */
+    old.forEach(function (n) {
+      if (n.parentNode !== pane) return;
+      if (n.nodeType !== 1) { pane.removeChild(n); return; }
+      if (n.id === 'ap-row') return;
+      if (n.tagName === 'LABEL' || (!n.textContent.trim() && !n.querySelector('input,select,textarea,img,svg,canvas'))) { n.remove(); return; }
+      if (n.querySelector && n.querySelector('label') && !n.querySelector('input,select,textarea')) { n.remove(); return; }
+      jobs.appendChild(n);
+    });
+    pane.insertBefore(jobs, pane.firstChild); pane.insertBefore(cust, jobs);
+    var ap = $('ap-row'); if (ap) cust.querySelector('.pjs-cust-ap').appendChild(ap);
+    pane.setAttribute('data-pjs', '1');
+  }
+
+  /* the old panes carry inline sizes, borders and white backgrounds (wrong in dark mode);
+     clear them so the sheet's own styles apply, and name the layout grids */
+  function tidyPanes(body) {
+    Array.prototype.forEach.call(body.querySelectorAll('[data-pj-pane]>:is(label,.bpx-mut), [data-pj-pane] .pjs-sec>:is(label,.bpx-mut), [data-pj-pane] div>div>label, [data-pj-pane] :is(input:not([type=checkbox]):not([type=radio]),select,textarea,#bpx-pj-bal,#bpx-pj-cal)'), function (e) {
+      if (e.type === 'file' || e.type === 'hidden' || /display\s*:\s*none/.test(e.getAttribute('style') || '')) return;
+      e.removeAttribute('style');
+    });
+    Array.prototype.forEach.call(body.querySelectorAll('[data-pj-pane] div[style*="grid-template-columns"]'), function (g) {
+      if (g.classList.contains('bpx-iv-grid') || /repeat\(/.test(g.getAttribute('style')) || g.closest('#bpx-pj-cal')) return;
+      var n = (g.getAttribute('style').match(/grid-template-columns:\s*([^;]+)/) || [])[1] || '';
+      g.removeAttribute('style'); g.classList.add('pjs-grid', 'pjs-g' + n.trim().split(/\s+/).length);
+    });
+    var iv = body.querySelector('.bpx-iv-grid'); if (iv) iv.removeAttribute('style');
   }
 
   function emptyState(ico, title, text, btn, onclick) {
@@ -278,10 +254,11 @@
       return '<button type="button" class="bpx-jt pjs-tab' + (i === 0 ? ' on' : '') + '" role="tab" aria-selected="' + (i === 0) + '" data-pj-tab="' + k + '" onclick="bpProjTab(\'' + k + '\')">'
         + '<span class="ms">' + t[1] + '</span><span class="pjs-tl">' + t[0] + '</span><span class="pjs-n"></span></button>';
     };
-    var main = keys.filter(function (k) { return MAIN.indexOf(k) >= 0; }), rest = keys.filter(function (k) { return MAIN.indexOf(k) < 0; });
+    var M = (window.innerWidth || 1000) <= 760 ? MAIN.filter(function (k) { return k !== 'materials'; }) : MAIN;
+    var main = keys.filter(function (k) { return M.indexOf(k) >= 0; }), rest = keys.filter(function (k) { return M.indexOf(k) < 0; });
     if (rest.length < 2) { main = keys; rest = []; }
     bar.innerHTML = main.map(btn).join('')
-      + (rest.length ? '<div class="pjs-more"><button type="button" class="bpx-jt pjs-tab pjs-more-b" aria-haspopup="true" aria-expanded="false" onclick="bpPjsMore(event)"><span class="pjs-tl">More</span><span class="ms pjs-chev">expand_more</span></button>'
+      + (rest.length ? '<div class="pjs-more"><button type="button" class="bpx-jt pjs-tab pjs-more-b" aria-haspopup="true" aria-expanded="false" onclick="bpPjsMore(event)"><span class="ms pjs-mi">more_horiz</span><span class="pjs-tl">More</span><span class="ms pjs-chev">expand_more</span></button>'
         + '<div class="pjs-menu" hidden><small class="pjs-menu-h">More sections</small>' + rest.map(function (k) { return btn(k, -1); }).join('') + '</div></div>' : '');
   }
 
@@ -332,7 +309,8 @@
     }
     Array.prototype.forEach.call(body.querySelectorAll('[data-pj-pane]'), function (p) {
       var k = p.getAttribute('data-pj-pane');
-      if (k !== 'permits' && k !== 'contract' && k !== 'materials' && k !== 'subs' && k !== 'cust' && k !== 'inspect') cardify(p, k);
+      if (k === 'details') overview(body);
+      else if (k !== 'permits' && k !== 'contract' && k !== 'materials' && k !== 'subs' && k !== 'cust' && k !== 'inspect') cardify(p, k);
       else if (k !== 'permits' && k !== 'subs' && k !== 'cust' && k !== 'inspect') { var s = document.createElement('section'); s.className = 'pjs-sec'; while (p.firstChild) s.appendChild(p.firstChild); p.appendChild(s); }
       p.setAttribute('role', 'tabpanel');
     });
@@ -344,7 +322,7 @@
       crewPane.insertBefore(rc, crewPane.firstChild);
       if (!crewPane.hidden) bpCeoReco(j);
     }
-    viewMode(body);
+    tidyPanes(body);
     if ((window.innerWidth || 1000) <= 760) appify(card, j);
     if (window.bpPermitsReset) bpPermitsReset();
     if (window.bpPermitsRender) bpPermitsRender(j);
@@ -373,6 +351,7 @@
       if (mb && mm) {
         var inMore = on && mm.contains(on); mb.classList.toggle('on', !!inMore);
         mb.querySelector('.pjs-tl').textContent = inMore ? on.querySelector('.pjs-tl').textContent : 'More';
+        var mi = mb.querySelector('.pjs-mi'), oi = inMore && on.querySelector('.ms'); if (mi) mi.textContent = oi ? oi.textContent : 'more_horiz';
         mm.hidden = true; mb.setAttribute('aria-expanded', 'false');
         if (inMore) on = mb;
       }
