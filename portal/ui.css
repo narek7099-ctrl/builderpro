@@ -834,3 +834,11 @@ html{overscroll-behavior-y:none}
 /* phone Finances Overview: shorter — an empty Recurring card goes, the chart is less tall */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .fin-recur.is-empty{display:none !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-panel>figure.bpc,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-panel:has(>figure.bpc){min-height:0 !important;height:auto !important}
+
+/* 2026-11-25: phone tab rows no longer scroll sideways, so their fade edges go; the left one
+   had a negative margin that pulled every tab row 12px toward the screen edge */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs::before,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs::after{content:none !important;display:none !important}
+/* a pinned switch row sits 8px above what follows, not 36px */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead.bp-mpinwrap{margin-bottom:8px !important;padding-bottom:8px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead.bp-mpinwrap .bpx-jobtabs{margin-bottom:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .pjk-bar{margin-top:0 !important}
