@@ -494,3 +494,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-24 phone app feel: one + for adding (page add buttons into the + sheet), 16px margins, no results counts/sort: restore to 16b9b80
 - 2026-11-24 phone app feel round 2: iOS search fields, no Quick add/receipt hero, flat lists in cards, calendar without gridlines, empty-state bold fix: restore to 1bbef90
 - 2026-11-24 phone: nothing scrolls sideways (tabs + More sheet, chips to dropdown, dashboard jobs list, AI tabs wrap, automations flow vertical), page switch pinned: restore to 1519e14
+- 2026-11-25 iPhone launch screens, white theme colour, shorter phone Finances overview: restore to 6ded0e6

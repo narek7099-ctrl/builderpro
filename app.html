@@ -30,8 +30,19 @@ try{ var h0=location.hash||''; window.__bpAuthHash=/access_token=|type=(recovery
 <link rel="icon" type="image/png" sizes="64x64" href="assets/brand/logo-mark-64.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/logo-mark-32.png">
 <link rel="apple-touch-icon" href="assets/app/apple-touch-icon.png">
+<!-- iPhone launch screens (logo on white), one per screen size -->
+<link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="assets/app/splash-1320x2868.png">
+<link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="assets/app/splash-1290x2796.png">
+<link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="assets/app/splash-1206x2622.png">
+<link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="assets/app/splash-1179x2556.png">
+<link rel="apple-touch-startup-image" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="assets/app/splash-1284x2778.png">
+<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="assets/app/splash-1170x2532.png">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="assets/app/splash-1125x2436.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="assets/app/splash-1242x2688.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="assets/app/splash-828x1792.png">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="assets/app/splash-750x1334.png">
 <link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#1f3a5f">
+<meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="BuilderPro">
@@ -94,9 +105,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261124-20261124ft">
-<link rel="stylesheet" href="site/present.css?v=20261124-20261124ft">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261124-20261124ft"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261125-20261125a">
+<link rel="stylesheet" href="site/present.css?v=20261125-20261125a">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261125-20261125a"}}</script>
 
 
 <style id="bpi-icons">
@@ -8451,7 +8462,7 @@ function bpFinances(){
       +'<div class="bpx-panel fin-quick"><div class="bpx-ptitle">Quick add</div><div class="bpx-mut" style="font-size:13px;margin-bottom:12px">Log money that didn\'t come through a job — ad spend, fuel, a side payment. Set it to repeat and it books itself every week, month or year.</div>'
         +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="bpx-addbtn" onclick="bpFinAddOpen(\'income\')">+ Add income</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpFinAddOpen(\'expense\')">+ Add expense</button></div>'
         +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:14px">Management view — not accounting of record. Income is what you actually collected. Synced to your account.</div></div></div>'
-      +'<div class="bpx-panel"><div class="bpx-chead" style="margin-bottom:10px"><div class="bpx-ptitle" style="margin:0">Recurring<span class="lg2" style="margin-left:8px">books itself on schedule</span></div><span class="bpx-mut" style="font-size:12.5px">'+(recRules.length?bpMoneyFmt(recMonthly)+' / month in fixed costs':'')+'</span></div>'
+      +'<div class="bpx-panel fin-recur'+(recRules.length?'':' is-empty')+'"><div class="bpx-chead" style="margin-bottom:10px"><div class="bpx-ptitle" style="margin:0">Recurring<span class="lg2" style="margin-left:8px">books itself on schedule</span></div><span class="bpx-mut" style="font-size:12.5px">'+(recRules.length?bpMoneyFmt(recMonthly)+' / month in fixed costs':'')+'</span></div>'
         +(recRules.length?'<div class="bpx-cwrap" style="border:0;border-radius:0"><table class="bpx-ctable"><thead><tr><th>Item</th><th>Repeats</th><th>Next</th><th class="bpx-r">Amount</th><th></th></tr></thead><tbody>'
           +recRules.map(function(r){ var f=r.f; return '<tr><td>'+bpEsc(f.note||f.category||(f.kind==='income'?'Income':'Expense'))+'</td><td><span class="bpx-badge'+(f.kind==='expense'?' warn':'')+'">'+BP_RECUR[f.recur]+'</span></td><td class="bpx-mut">'+bpRecurNext(f).toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</td><td class="bpx-r bpx-num '+(f.kind==='income'?'bpx-pos':'bpx-neg')+'">'+(f.kind==='income'?'+ ':'\u2212 ')+bpMoneyFmt(+f.amount||0)+'</td><td class="bpx-r">'+bpDelBtn('bpFinDel('+r.fi+')','Stop this recurring entry')+'</td></tr>'; }).join('')
           +'</tbody></table></div>':'<div class="bpx-empty2">Nothing repeats yet. Add an expense or income and set <b>Repeats</b> to weekly, monthly or yearly — rent, software, insurance, a retainer.</div>')
@@ -15003,7 +15014,7 @@ window.bpRepCopy=function(text,btn){
 <!--/app-only-->
 </body>
 <!--app-only-->
-<link rel="stylesheet" href="portal/app.css?v=74a8a43ad1" data-bundle>
+<link rel="stylesheet" href="portal/app.css?v=998b26ec13" data-bundle>
 <script src="portal/team.js?v=20261115a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261124v"></script>
@@ -15054,11 +15065,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261120r"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261124-20261124ft"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261124-20261124ft"></script>
-<script src="site/vendor/SplitText.min.js?v=20261124-20261124ft"></script>
-<script src="site/site.js?v=20261124-20261124ft"></script>
-<script src="site/present.js?v=20261124-20261124ft"></script>
+<script src="site/vendor/gsap.min.js?v=20261125-20261125a"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261125-20261125a"></script>
+<script src="site/vendor/SplitText.min.js?v=20261125-20261125a"></script>
+<script src="site/site.js?v=20261125-20261125a"></script>
+<script src="site/present.js?v=20261125-20261125a"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>
