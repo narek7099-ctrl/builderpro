@@ -846,3 +846,6 @@ html{overscroll-behavior-y:none}
 /* phone: a page's own switch (People/Crews/Hours, Active/Completed, Day/Week/Month) stays pinned under the tabs */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bp-mpin{position:sticky !important;z-index:6 !important;box-shadow:0 0 0 8px var(--bp-pagebg,#eef1f5) !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bp-mpin.bp-mpinwrap{background:var(--bp-pagebg,#eef1f5) !important;box-shadow:0 0 0 8px var(--bp-pagebg,#eef1f5) !important;padding-bottom:4px}
+/* phone Finances Overview: shorter — an empty Recurring card goes, the chart is less tall */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .fin-recur.is-empty{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-panel>figure.bpc,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-panel:has(>figure.bpc){min-height:0 !important;height:auto !important}

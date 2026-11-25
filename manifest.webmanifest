@@ -9,7 +9,7 @@
   "display_override": ["window-controls-overlay", "standalone"],
   "orientation": "any",
   "background_color": "#ffffff",
-  "theme_color": "#1f3a5f",
+  "theme_color": "#ffffff",
   "lang": "en-US",
   "dir": "ltr",
   "categories": ["business", "productivity", "lifestyle"],
