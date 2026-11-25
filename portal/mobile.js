@@ -277,7 +277,20 @@
       + (needs.length > 3 ? '<button type="button" class="mh5-more" onclick="bpShell.notes&&bpShell.notes(document.getElementById(\'hlBell\'))">See all ' + needs.length + '</button>' : ''), '<span class="mh5-n">' + needs.length + '</span>') : '';
     var todayCard = card('Today', allows('calendar') ? 'calendar' : '', 'Calendar', todayRows.length
       ? todayRows.map(function (r) { return '<button type="button" class="mh5-row" onclick="bpNav(\'' + r.go + '\')"><span class="mh5-time">' + (r.t || '') + '</span><span class="mh5-t"><b>' + r.w + '</b><small>' + r.s + '</small></span><span class="ms mh5-go">chevron_right</span></button>'; }).join('')
-      : '<div class="mh5-empty">' + (d.appts === undefined ? 'Loading today…' : 'Nothing booked today.') + (allows('calendar') ? ' <button type="button" class="mh5-link" onclick="bpMobile.book()">Book a visit</button>' : '') + '</div>');
+      : '<div class="mh5-empty">' + (d.appts === undefined ? 'Loading today…' : 'Nothing booked today.') + (allows('calendar') ? ' <button type="button" class="mh5-link" onclick="bpMobile.book()">Book a visit</button>' : '') + '</div>' + soon());
+    /* 2026-11-25: a free day shows what's coming up next, so the card is never just empty */
+    function soon() {
+      var up = [];
+      act.forEach(function (j) { ((j.sched && j.sched.dates) || []).forEach(function (dt) { if (dt > day) up.push({ d: dt, j: j }); }); });
+      up.sort(function (a, b) { return a.d < b.d ? -1 : a.d > b.d ? 1 : 0; });
+      var seen = {}; up = up.filter(function (u) { var k = u.j.id; if (seen[k]) return false; seen[k] = 1; return true; }).slice(0, 3);
+      if (!up.length) return '';
+      return '<div class="mh5-soon">Coming up</div>' + up.map(function (u) {
+        var dt = new Date(u.d + 'T12:00:00');
+        return '<button type="button" class="mh5-row" onclick="bpProjOpen&&bpProjOpen(\'' + esc(u.j.id) + '\')"><span class="mh5-time">' + dt.toLocaleDateString('en-US', { weekday: 'short' }) + '<small>' + dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + '</small></span>'
+          + '<span class="mh5-t"><b>' + esc(u.j.name || 'Project') + '</b><small>' + esc(u.j.title || 'Job') + (u.j.sched.time ? ' · ' + esc(u.j.sched.time) : '') + '</small></span><span class="ms mh5-go">chevron_right</span></button>';
+      }).join('');
+    }
     var jobRows = act.slice().sort(function (a, b) { return (Math.max((+b.estimate || 0) - (+b.collected || 0), 0)) - (Math.max((+a.estimate || 0) - (+a.collected || 0), 0)); }).slice(0, 3).map(function (j) {
       var est = +j.estimate || 0, got1 = +j.collected || 0, pc = est ? Math.min(100, Math.round(got1 / est * 100)) : 0, left = Math.max(est - got1, 0);
       /* how far the work is: phases ticked off when the job has a plan, else how much is paid */
@@ -292,7 +305,7 @@
     }).join('');
     var addJob = '<button type="button" class="mh5-jc mh5-jadd" onclick="bpMobile.quick(\'activejobs\',\'bpAddJobOpen\')"><span class="ms">add_circle</span>New job</button>';
     var jobsCard = !allows('activejobs') ? '' : jobRows
-      ? '<section class="mh5-sec"><div class="mh5-h"><b>Jobs in progress</b><span class="mh5-n">' + act.length + '</span><button type="button" class="mh5-all" onclick="bpNav(\'activejobs\')">All jobs</button></div><div class="mh5-jlist">' + jobRows + '</div></section>'
+      ? '<section class="mh5-card mh5-jcard"><div class="mh5-h"><b>Jobs in progress</b><span class="mh5-n">' + act.length + '</span><button type="button" class="mh5-all" onclick="bpNav(\'activejobs\')">All jobs</button></div><div class="mh5-jlist">' + jobRows + '</div></section>'
       : card('Jobs in progress', 'activejobs', 'All jobs', '<div class="mh5-empty">No active jobs. <button type="button" class="mh5-link" onclick="bpMobile.quick(\'activejobs\',\'bpAddJobOpen\')">Add a job</button></div>');
     var leadHost = allows('contacts') ? '<div id="mh5Leads">' + leadCards() + '</div>' : '';
     el.innerHTML = '<div class="mh2 mh3 mh5">'

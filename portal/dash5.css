@@ -48,3 +48,14 @@
 @top .dbh.dbh-m .dbh-acts{display:grid !important;grid-template-columns:repeat(3,minmax(0,1fr)) !important;gap:8px !important;padding-top:18px !important}
 @top .dbh.dbh-m .dbh-b{flex-direction:column !important;justify-content:center !important;gap:4px !important;height:64px !important;padding:0 4px !important;border-radius:16px !important;font-size:13px !important}
 @top .dbh.dbh-m .dbh-b .ms{font-size:22px !important}
+
+/* phone home sections (portal/mobile.js): every section is one card with its title inside */
+@top.bp-m #bpxViewArea .mh5 .mh5-jcard .mh5-jlist{margin:0 !important;border-radius:0 !important;background:none !important;box-shadow:none !important}
+@top.bp-m #bpxViewArea .mh5 .mh5-soon{margin:4px 0 0 !important;padding:10px 16px 2px !important;border-top:.5px solid var(--line) !important;font-size:13px !important;font-weight:600 !important;color:var(--grey) !important}
+@top.bp-m #bpxViewArea .mh5 .mh5-time small{display:block !important;margin-top:1px !important;font-size:12px !important;font-weight:500 !important;color:var(--grey) !important}
+@top.bp-m #bpxViewArea .mh5 .mh5-empty{padding:4px 16px 14px !important}
+/* one 12px gap between the home's cards (the leads cards sit in their own wrapper) */
+@top.bp-m #bpxViewArea .mh5{display:flex !important;flex-direction:column !important;gap:12px !important}
+@top.bp-m #bpxViewArea .mh5>*,@top.bp-m #bpxViewArea .mh5 #mh5Leads>*{margin-top:0 !important;margin-bottom:0 !important}
+@top.bp-m #bpxViewArea .mh5 #mh5Leads{display:contents !important}
+@top.bp-m #bpxViewArea .mh5>.dbh-m{margin:4px 0 4px !important}
