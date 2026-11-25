@@ -234,6 +234,7 @@
   function circ(ic, label, fn, msIcon) {
     return '<button type="button" class="mh-c" onclick="' + fn + '"><span class="mh-c-r">' + (msIcon ? '<span class="ms">' + ic + '</span>' : ico(ic)) + '</span><span>' + esc(label) + '</span></button>';
   }
+  M.day = function (i) { M._day = i; home(); };
   M.book = function () { bpNav('calendar'); setTimeout(function () { var d = document.querySelector('#bpxViewArea .cal-add'); if (d) d.open = true; }, 500); };
   M.quick = function (v, fn, arg) {
     bpNav(v);
@@ -307,16 +308,48 @@
     var jobsCard = !allows('activejobs') ? '' : jobRows
       ? '<section class="mh5-card mh5-jcard"><div class="mh5-h"><b>Jobs in progress</b><span class="mh5-n">' + act.length + '</span><button type="button" class="mh5-all" onclick="bpNav(\'activejobs\')">All jobs</button></div><div class="mh5-jlist">' + jobRows + '</div></section>'
       : card('Jobs in progress', 'activejobs', 'All jobs', '<div class="mh5-empty">No active jobs. <button type="button" class="mh5-link" onclick="bpMobile.quick(\'activejobs\',\'bpAddJobOpen\')">Add a job</button></div>');
-    var leadHost = allows('contacts') ? '<div id="mh5Leads">' + leadCards() + '</div>' : '';
-    el.innerHTML = '<div class="mh2 mh3 mh5">'
-      /* 2026-11-25 redesign: the navy header from the computer's dashboard, without money figures
-         (the phone home stays lists you act on): the day in one line and the three quick actions */
-      + '<section class="dbh dbh-m"><div class="dbh-l"><div class="dbh-date">' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '</div>'
-        + '<h1 class="dbh-hi">' + (hiH < 12 ? 'Good morning' : hiH < 17 ? 'Good afternoon' : 'Good evening') + (name ? ', ' + esc(name) : '') + '</h1>'
-        + '<p class="dbh-sum">' + [todayRows.length ? todayRows.length + (todayRows.length === 1 ? ' visit' : ' visits') + ' today' : 'Nothing booked today', act.length + (act.length === 1 ? ' job' : ' jobs') + ' in progress'].concat(needs.length ? ['<b>' + needs.length + ' need' + (needs.length === 1 ? 's' : '') + ' you</b>'] : []).join('<span class="dbh-dot"></span>') + '</p>'
-        + '<div class="dbh-acts">' + hb('estimates', 'bpEstOpen', 'request_quote', 'Estimate', 1) + hb('activejobs', 'bpAddJobOpen', 'add_business', 'Job') + hb('invoices', 'bpInvOpen', 'receipt_long', 'Invoice') + '</div></div></section>'
-      + setupCard()
-      + needCard + todayCard + jobsCard + leadHost
+    /* 2026-11-25: a brand-new phone home. The week at the top (tap a day to see it), four round
+       actions, widget tiles for what needs you and the leads, and the jobs as photo cards. */
+    var leadHost = allows('contacts') ? '<div id="mh5Leads" class="h6-host">' + leadCards() + '</div>' : '';
+    var days = [], sel = Math.max(0, Math.min(6, M._day || 0));
+    for (var di = 0; di < 7; di++) { var dd0 = new Date(); dd0.setDate(dd0.getDate() + di); days.push(dd0); }
+    var onDay = function (d0) {
+      var k = iso(d0), list = act.filter(function (j) { return j.sched && (j.sched.dates || []).indexOf(k) >= 0; }).map(function (j) { return { t: j.sched.time || 'All day', w: j.name || 'Project', s: j.title || 'Job', go: "bpProjOpen&&bpProjOpen('" + esc(j.id) + "')", ic: 'construction' }; });
+      if (k === day) list = list.concat(appts.map(function (a) { return { t: a.time || '', w: a.name || 'Appointment', s: a.what || 'Visit', go: "bpNav('calendar')", ic: 'event' }; }));
+      return list;
+    };
+    var week = '<div class="h6-days">' + days.map(function (d0, i) {
+      var n = onDay(d0).length;
+      return '<button type="button" class="h6-day' + (i === sel ? ' on' : '') + (i === 0 ? ' today' : '') + '" onclick="bpMobile.day(' + i + ')" aria-pressed="' + (i === sel) + '">'
+        + '<small>' + d0.toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 3) + '</small><b>' + d0.getDate() + '</b><i class="' + (n ? 'has' : '') + '"></i></button>';
+    }).join('') + '</div>';
+    var agenda = onDay(days[sel]), selName = sel === 0 ? 'Today' : sel === 1 ? 'Tomorrow' : days[sel].toLocaleDateString('en-US', { weekday: 'long' });
+    var agendaHtml = agenda.length ? agenda.map(function (r) { return '<button type="button" class="h6-ev" onclick="' + r.go + '"><span class="h6-evt">' + esc(r.t) + '</span><span class="h6-evb"><b>' + esc(r.w) + '</b><small>' + esc(r.s) + '</small></span><span class="ms">chevron_right</span></button>'; }).join('')
+      : '<div class="h6-free"><span>' + (sel === 0 && d.appts === undefined ? 'Loading…' : 'Nothing booked ' + (sel === 0 ? 'today' : sel === 1 ? 'tomorrow' : 'on ' + selName)) + '</span>' + (allows('calendar') ? '<button type="button" onclick="bpMobile.book()"><span class="ms">add</span>Book</button>' : '') + '</div>';
+    var weekCard = '<section class="h6-week"><div class="h6-wh"><b>' + selName + '</b><span>' + days[sel].toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) + '</span>' + (allows('calendar') ? '<button type="button" onclick="bpNav(\'calendar\')">Calendar</button>' : '') + '</div>' + week + '<div class="h6-agenda">' + agendaHtml + '</div></section>';
+    var rb = function (go, fn, ic, label, pri, arg) { if (!allows(go)) return ''; return '<button type="button" class="h6-act' + (pri ? ' pri' : '') + '" onclick="bpMobile.quick(\'' + go + '\',\'' + fn + '\'' + (arg ? ',\'' + arg + '\'' : '') + ')"><span class="h6-ai"><span class="ms">' + ic + '</span>' + (locked(go) ? '<span class="ms bp-lk" aria-label="Not on your plan">lock</span>' : '') + '</span><span>' + label + '</span></button>'; };
+    var acts = '<section class="h6-acts">' + rb('estimates', 'bpEstOpen', 'request_quote', 'Estimate', 1) + rb('activejobs', 'bpAddJobOpen', 'add_business', 'Job') + rb('invoices', 'bpInvOpen', 'receipt_long', 'Invoice') + rb('ledger', 'bpFinAddOpen', 'payments', 'Expense', 0, 'expense') + '</section>';
+    var n0 = needs[0];
+    var needTile = '<div class="h6-tile' + (needs.length ? ' alert' : ' calm') + '" role="button" tabindex="0" onclick="' + (n0 ? 'bpNav(\'' + esc(n0.go) + '\')' : 'void 0') + '">'
+      + '<div class="h6-tt"><span class="h6-ti"><span class="ms">' + (needs.length ? 'priority_high' : 'check') + '</span></span><span>Needs you</span></div>'
+      + '<b class="h6-big">' + (needs.length || '<span class="ms">done_all</span>') + '</b><span class="h6-tsub">' + (n0 ? esc(String(n0.t).replace(/<[^>]+>/g, '')) : 'All caught up') + '</span></div>';
+    var tiles = '<section class="h6-grid">' + needTile + leadHost + '</section>';
+    var pc = function (j) {
+      var est = +j.estimate || 0, got1 = +j.collected || 0, left = Math.max(est - got1, 0);
+      var ph = j.plan && j.plan.phases && j.plan.phases.length ? j.plan.phases : null, dn = ph ? ph.filter(function (x) { return x.doneAt; }).length : 0;
+      var wk = ph ? Math.round(dn / ph.length * 100) : (est ? Math.min(100, Math.round(got1 / est * 100)) : 0), nxt = ph ? ph.filter(function (x) { return !x.doneAt; })[0] : null;
+      var img = (j.photos && j.photos[0]) || '', pic = img ? (window.bpPF && bpPF.img ? bpPF.img(img, 'alt="" loading="lazy"') : '<img src="' + esc(img) + '" alt="" loading="lazy">') : (window.bpCover ? '<img src="' + bpCover(j, 0) + '" alt="" loading="lazy">' : '');
+      return '<button type="button" class="h6-job" onclick="bpProjOpen&&bpProjOpen(\'' + esc(j.id) + '\')"><span class="h6-pic">' + pic + '<span class="h6-pct">' + wk + '%</span></span>'
+        + '<span class="h6-jb"><b>' + esc(j.name || 'Project') + '</b><small>' + esc(j.title || 'Job') + '</small>'
+        + '<span class="h6-bar"><i style="width:' + wk + '%"></i></span>'
+        + '<span class="h6-jf"><span>' + (nxt ? 'Next: ' + esc(nxt.name) : ph ? 'All phases done' : (est ? Math.round(got1 / est * 100) + '% paid' : '')) + '</span><b>' + (left ? money(left) + ' left' : 'Paid') + '</b></span></span></button>';
+    };
+    var jobList = act.slice().sort(function (a, b) { return (Math.max((+b.estimate || 0) - (+b.collected || 0), 0)) - (Math.max((+a.estimate || 0) - (+a.collected || 0), 0)); }).slice(0, 4);
+    var jobs6 = !allows('activejobs') ? '' : '<section class="h6-jobs"><div class="h6-sh"><b>Jobs in progress</b>' + (act.length ? '<span>' + act.length + '</span>' : '') + '<button type="button" onclick="bpNav(\'activejobs\')">See all</button></div>'
+      + (jobList.length ? jobList.map(pc).join('') : '<div class="h6-free"><span>No jobs in progress</span><button type="button" onclick="bpMobile.quick(\'activejobs\',\'bpAddJobOpen\')"><span class="ms">add</span>Add a job</button></div>') + '</section>';
+    el.innerHTML = '<div class="mh2 mh3 mh5 h6">'
+      + '<header class="h6-hi"><small>' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '</small><h1>' + (hiH < 12 ? 'Good morning' : hiH < 17 ? 'Good afternoon' : 'Good evening') + (name ? ', ' + esc(name) : '') + '</h1></header>'
+      + weekCard + acts + setupCard() + tiles + jobs6
       + (look() === 'sidebar' ? '' : sectionsCard())
       + '</div>';
     if (allows('contacts') && !(window._bpContacts && _bpContacts.length) && window.bpEnsureContacts) {
@@ -336,11 +369,20 @@
       return '<div class="mh5-row mh5-lead' + (grp(c) === 'new' ? ' is-new' : '') + '"><span class="mh5-av" aria-hidden="true">' + esc(ini) + '</span><button type="button" class="mh5-t" onclick="bpContactPage&&bpContactPage(\'' + esc(c.id) + '\')"><b>' + esc(c.name) + '</b><small>' + sub(c) + '</small></button>'
         + (tel ? '<a class="mh5-cb" href="tel:' + esc(tel) + '" aria-label="Call ' + esc(c.name) + '"><span class="ms">call</span></a><a class="mh5-cb" href="sms:' + esc(tel) + '" aria-label="Text ' + esc(c.name) + '"><span class="ms">sms</span></a>' : '') + '</div>';
     };
-    var c1 = fresh.length ? '<section class="mh5-card"><div class="mh5-h"><b>New leads to call</b><span class="mh5-n">' + fresh.length + '</span><button type="button" class="mh5-all" onclick="window._bpCtStage=\'new\';bpNav(\'contacts\')">See all</button></div>'
-      + fresh.slice(0, 3).map(function (c) { return row(c, function (x) { var w = when(x); return 'New lead' + (w ? ' · came in ' + w : ''); }); }).join('') + '</section>' : '';
-    var c2 = out.length ? '<section class="mh5-card"><div class="mh5-h"><b>Waiting on a yes</b><span class="mh5-n">' + out.length + '</span><button type="button" class="mh5-all" onclick="window._bpCtStage=\'quoted\';bpNav(\'contacts\')">See all</button></div>'
-      + out.slice(0, 3).map(function (c) { return row(c, function (x) { var st = ''; try { st = window.bpStageOf ? bpStageOf(x)[0] : ''; } catch (e) {} return esc(st || 'Estimate sent') + ' · follow up'; }); }).join('') + '</section>' : '';
-    return c1 + c2;
+    /* 2026-11-25 new home: leads are tiles with faces, not lists */
+    var ini = function (c) { return String(c.name || '?').replace(/\([^)]*\)/g, ' ').trim().split(/\s+/).filter(Boolean).slice(0, 2).map(function (w) { return w.charAt(0); }).join('').toUpperCase() || '?'; };
+    var faces = function (list) { return '<span class="h6-faces">' + list.slice(0, 4).map(function (c) { return '<i>' + esc(ini(c)) + '</i>'; }).join('') + (list.length > 4 ? '<i class="more">+' + (list.length - 4) + '</i>' : '') + '</span>'; };
+    var first = fresh[0], tel = first ? String(first.phone || '').replace(/[^\d+]/g, '') : '';
+    var t1 = '<div class="h6-tile wide' + (fresh.length ? '' : ' calm') + '" role="button" tabindex="0" onclick="if(!event.target.closest(\'a\')){window._bpCtStage=\'new\';bpNav(\'contacts\')}">'
+      + '<div class="h6-tt"><span class="h6-ti"><span class="ms">person_add</span></span><span>New leads</span></div>'
+      + '<div class="h6-tb"><b class="h6-big">' + fresh.length + '</b>' + (fresh.length ? faces(fresh) : '<span class="h6-tsub">No one new to call</span>') + '</div>'
+      + (first ? '<div class="h6-next"><span>Next: <b>' + esc(String(first.name).replace(/\s*\([^)]*\)\s*$/, '')) + '</b>' + (when(first) ? ' · came in ' + when(first) : '') + '</span>'
+        + (tel ? '<a class="h6-call" href="tel:' + esc(tel) + '" aria-label="Call ' + esc(first.name) + '"><span class="ms">call</span>Call</a>' : '') + '</div>' : '')
+      + '</div>';
+    var t2 = '<div class="h6-tile" role="button" tabindex="0" onclick="window._bpCtStage=\'quoted\';bpNav(\'contacts\')">'
+      + '<div class="h6-tt"><span class="h6-ti"><span class="ms">hourglass_top</span></span><span>Estimates out</span></div>'
+      + '<b class="h6-big">' + out.length + '</b>' + (out.length ? faces(out) : '<span class="h6-tsub">No estimates out</span>') + '</div>';
+    return t2 + t1;
   }
   /* Look A: every section of the software as one list, the same order as the sidebar */
   function sectionsCard() {
