@@ -496,3 +496,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-24 phone: nothing scrolls sideways (tabs + More sheet, chips to dropdown, dashboard jobs list, AI tabs wrap, automations flow vertical), page switch pinned: restore to 1519e14
 - 2026-11-25 iPhone launch screens, white theme colour, shorter phone Finances overview: restore to 6ded0e6
 - 2026-11-25 before new store screenshots (dash, jobs, money, calendar, crew, homeowner): restore to 8e6bc7a
+- 2026-11-25 before project screen redesign (new portal/pjs.css, old project-sheet rules removed): restore to 9a85339

@@ -56,15 +56,6 @@
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.insp-ctabs):not(.cal-view)>:is(button,a):is(.on,[aria-selected="true"]){background:#2a303b !important;color:#fff !important}
 /* calendar's Day/Week/Month: even inner padding */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .cal-view{padding:2px !important;gap:2px !important}
-
-/* ---------------------------------------------------------------------
-   4. Buttons. Three kinds, one shape:
-        main action  (the one "add / new / done" per screen)  mint, flat
-        button       (everything else that acts)               blue, flat
-        secondary    (Refresh, Preview, Scheduled...)          white
-      44px tall, 12px corners, centred label, no glow or gradient.
-   --------------------------------------------------------------------- */
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-btn,.bpx-addbtn,.bp-cta,.bpx-donebtn):not(.bpx-linkbtn):not(.pjs-act){min-height:44px !important;border-radius:12px !important;align-items:center !important;justify-content:center !important;gap:6px;text-align:center;font-size:15px !important;font-weight:600 !important;line-height:1.2 !important;white-space:nowrap;background-image:none !important;transform:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bp-cta,.bpx-addbtn,.bpx-donebtn,[data-fin="estimates"] .fin-new-est){background:#16c79a !important;color:#001530 !important;border:0 !important;box-shadow:0 1px 2px rgba(0,60,40,.18) !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bp-cta,.bpx-addbtn,.bpx-donebtn,[data-fin="estimates"] .fin-new-est):active{background:#12b38a !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-btn:not(.ghost):not(.bpx-delbtn):not(.danger):not(.bp-cta):not(.bpx-addbtn):not(.fin-new-est){background:#006fff !important;color:#fff !important;border:0 !important;box-shadow:0 1px 2px rgba(0,40,120,.2) !important}
@@ -165,7 +156,6 @@
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea:has(.eq-empty:not(.sm)) .eq-acts{display:none !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .eq-head :is(p,.bpx-mut){display:none !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea:has(.ca-empty) .sb-top>.bpx-btn{display:none !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.eq-empty,.ca-empty,.pjs-empty) p{display:-webkit-box !important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:300px;margin-left:auto !important;margin-right:auto !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.eq-empty,.ca-empty)>:is(button,.bpx-btn,.bpx-addbtn){margin-top:14px !important}
 
 /* Automations had no dark mode at all (dark text on the dark page) */
@@ -501,34 +491,9 @@
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-ring.full{background:#16c79a;border-radius:50%}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-ring.full>b,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .mh5-ring.full>b .ms{color:#fff !important;font-size:22px !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .mh5-ring>b{color:#5ee0bb}
-
-/* =====================================================================
-   Project screens, 2026-11-22
-   ===================================================================== */
-/* fields inside a job's grouped rows: clean rows, no box (the general field style put boxes back) */
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app :is([data-pj-pane="details"],.pjs-mrows,.pjs-exp,.pjs-fold,.pjs-days) :is(input:not([type=checkbox]):not([type=radio]),select,textarea){border:0 !important;border-radius:0 !important;background-color:transparent !important;box-shadow:none !important;padding-left:0 !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app :is([data-pj-pane="details"],.pjs-mrows,.pjs-exp,.pjs-fold,.pjs-days) :is(input,select,textarea):focus{box-shadow:none !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app [data-pj-pane="details"] textarea{min-height:64px !important;padding-top:10px !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app :is(.pjs-mrows) input{text-align:right !important;padding-right:12px !important}
-/* the job header: how far the work is, as a ring in the corner (mint, the brand's "done" colour) */
-#bpx#bpx#bpx#bpx .pjs-ring .fg{stroke:#16c79a !important}
-#bpx#bpx#bpx#bpx .pjs-ring .tr{stroke:rgba(22,199,154,.16) !important}
-#bpx#bpx#bpx#bpx .pjs-ring b{color:#08775d !important}
-#bpx#bpx#bpx#bpx.bpx-dark .pjs-ring b{color:#5ee0bb !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .pjs-hero{position:relative !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .pjs-hero .pjs-ring{display:block !important;position:absolute;top:10px;right:16px;width:62px !important;height:62px !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .pjs-hero .pjs-ring b{font-size:15px !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .pjs-hero .pjs-ring small{font-size:8.5px !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .pjs-hero-t{padding-right:72px !important}
 /* crew: round ticks, like picking people on an iPhone */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .cw-row>input[type=checkbox]{-webkit-appearance:none;appearance:none;flex:0 0 24px !important;width:24px !important;height:24px !important;min-height:0 !important;max-height:24px !important;align-self:center !important;padding:0 !important;margin:0 12px 0 0 !important;border-radius:50% !important;border:2px solid #c3cbd6 !important;background:transparent !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .cw-row>input[type=checkbox]:checked{border-color:#006fff !important;background:#006fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center/16px no-repeat !important}
-/* the AI's "Recommended" card hides when it has nothing to recommend */
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app #pjs-reco:not(:has(.rc-list,.ceo-wait)){display:none !important}
-/* materials list steps on one line */
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .ml-steps{flex-wrap:nowrap !important;gap:4px !important;font-size:13px}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .ml-steps>button{white-space:nowrap;padding:0 !important;font-size:13px !important;min-height:32px !important;height:32px !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-app .ml-steps .ml-stl{flex:1 1 8px;min-width:8px}
 
 /* ===== App feel (2026-11-23): glass top bar, a bolder title, fewer buttons, taps that press in, screens that slide in ===== */
 html{overscroll-behavior-y:none}
@@ -720,8 +685,6 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .ctp3-head .ctp3-edit{width:42px !important;height:42px !important;min-height:42px !important;padding:0 !important;border-radius:50% !important;display:grid !important;place-items:center !important;flex:none !important;align-self:flex-start}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .ctp3-head .ctp3-edit .ms{margin:0 !important;font-size:20px !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .ctp3-head .ctp3-who h2{font-size:21px !important;line-height:1.2 !important}
-/* dark: tabs that aren't picked stay readable (contact and job pages) */
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-tabs .pjs-tab:not(.on):not([aria-selected="true"]),#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-tabs .pjs-tab:not(.on):not([aria-selected="true"]) *{color:#9aa6b8 !important}
 /* status notes read as a quiet line, not a dashed warning box */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bpx-when-note{background:transparent !important;border:0 !important;padding:2px 0 0 22px !important;position:relative;font-size:12.5px !important;color:#64748b !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bpx-when-note::before{content:"info";font-family:'Material Symbols Rounded';font-weight:300;font-size:16px;position:absolute;left:0;top:1px;color:#94a3b8;line-height:1}
@@ -742,18 +705,6 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .bp-emptyx.bp-emptyx-card{background:#141b2b !important;border-color:#262f45 !important}
 /* the link is repeated as the button, so it's hidden in the sentence when it sits at the end */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-emptyx .bp-emptyx-ln:last-of-type:is(:nth-last-child(2)){display:none}
-/* job Overview on a computer: Customer & site folds under one Edit row */
-@media (min-width:761px){
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-cs.pjs-cs-shut>:not(.pjs-h){display:none !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-cs>.pjs-h{display:flex !important;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-cs.pjs-cs-shut>.pjs-h{margin:0 !important}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-cs-tg{display:inline-flex;align-items:center;gap:2px;color:#006fff;font-size:13px;font-weight:600;text-transform:none;letter-spacing:0}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-cs-tg .ms{font-size:20px;color:#006fff;transition:transform .2s}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-cs:not(.pjs-cs-shut) .pjs-cs-tg .ms{transform:rotate(180deg)}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-cs:not(.pjs-cs-shut) .pjs-cs-tl{display:none}
-#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-cs-tg,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-cs-tg .ms{color:#6aa8ff}
-}
-@media (max-width:760px){#bpx .pjs-cs-tg{display:none !important}}
 /* receipts tiles all zero: same slim strip */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats>.rcp-stat{padding:10px 14px !important;min-height:0 !important;display:flex !important;flex-direction:row !important;align-items:center !important;justify-content:space-between !important;gap:8px !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bp-zstats>.rcp-stat>:is(.rcp-si,em){display:none !important}

@@ -97,6 +97,8 @@ def squeeze(css):
 parts = []
 for f in files:
     src = (ROOT / f).read_text(encoding='utf-8')
+    # '@top' (portal/pjs.css) is a long #bpx chain, so a fresh stylesheet can win over the old stacked ones
+    src = re.sub(r'@top(?=[\s.:#\[])', '#bpx' * 18, src)
     parts.append('/* ' + f + ' */\n' + squeeze(src))
 bundle = '\n'.join(parts) + '\n'
 (ROOT / 'portal' / 'app.css').write_text(bundle, encoding='utf-8')
