@@ -13,3 +13,4 @@ __pycache__/
 *.local.txt
 site-check.json
 .claude/settings.local.json
+tools/store-shots/raw/

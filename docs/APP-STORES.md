@@ -107,8 +107,10 @@ For homeowners:
 
 **Screenshots:** ready in `docs/store-screenshots/`, six of each, upload in number order:
 `iphone-*.png` (6.9", 1320 x 2868), `ipad-*.png` (13", 2064 x 2752), `android-*.png` (1080 x 1920) and
-`android-feature-graphic.png` (1024 x 500, Google's banner). Made from the demo account with the business
-shown as "Summit Roofing Co"; to remake them after a redesign, ask for "new store screenshots".
+`android-feature-graphic.png` (1024 x 500, Google's banner). The order is 1 dashboard, 2 jobs, 3 money
+(profit), 4 calendar, 5 crew clock-in, 6 homeowner page. Made from the demo account with the business
+shown as "Summit Roofing Co" (renamed in the picture only). To remake them after a redesign, see
+`tools/store-shots/README.md` or ask for "new store screenshots".
 
 **App Review notes (Apple) / App access (Google)** — give the reviewer a demo login, for example
 a test contractor account and the homeowner test account, and say:
