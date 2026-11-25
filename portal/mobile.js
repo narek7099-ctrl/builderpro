@@ -332,7 +332,8 @@
     var when = function (c) { var t = Date.parse(c.dateAdded || ''); if (!isFinite(t)) return ''; var dd = Math.round((Date.now() - t) / 864e5); return dd <= 0 ? 'today' : dd === 1 ? 'yesterday' : dd < 7 ? dd + ' days ago' : new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
     var row = function (c, sub) {
       var tel = String(c.phone || '').replace(/[^\d+]/g, '');
-      return '<div class="mh5-row mh5-lead"><button type="button" class="mh5-t" onclick="bpContactPage&&bpContactPage(\'' + esc(c.id) + '\')"><b>' + esc(c.name) + '</b><small>' + sub(c) + '</small></button>'
+      var ini = String(c.name || '?').replace(/\([^)]*\)/g, ' ').trim().split(/\s+/).filter(Boolean).slice(0, 2).map(function (w) { return w.charAt(0); }).join('').toUpperCase() || '?';
+      return '<div class="mh5-row mh5-lead' + (grp(c) === 'new' ? ' is-new' : '') + '"><span class="mh5-av" aria-hidden="true">' + esc(ini) + '</span><button type="button" class="mh5-t" onclick="bpContactPage&&bpContactPage(\'' + esc(c.id) + '\')"><b>' + esc(c.name) + '</b><small>' + sub(c) + '</small></button>'
         + (tel ? '<a class="mh5-cb" href="tel:' + esc(tel) + '" aria-label="Call ' + esc(c.name) + '"><span class="ms">call</span></a><a class="mh5-cb" href="sms:' + esc(tel) + '" aria-label="Text ' + esc(c.name) + '"><span class="ms">sms</span></a>' : '') + '</div>';
     };
     var c1 = fresh.length ? '<section class="mh5-card"><div class="mh5-h"><b>New leads to call</b><span class="mh5-n">' + fresh.length + '</span><button type="button" class="mh5-all" onclick="window._bpCtStage=\'new\';bpNav(\'contacts\')">See all</button></div>'
