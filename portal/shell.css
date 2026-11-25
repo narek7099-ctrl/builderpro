@@ -180,6 +180,9 @@ html.bp-appmode body{overflow:hidden}
 
 #bpx#bpx#bpx#bpx .bpx-btn,#bpx#bpx#bpx#bpx .bpx-addbtn,#bpx#bpx#bpx#bpx .bpx-donebtn,#bpx#bpx#bpx#bpx .bpx-savebtn,#bpx#bpx#bpx#bpx .bpx-ghostbtn,#bpx#bpx#bpx#bpx .hero-cta,#bpx#bpx#bpx#bpx .bpx-mtab,#bpx#bpx#bpx#bpx .bpx-rowbtn,#bpx#bpx#bpx#bpx .bpx-delbtn,#bpx#bpx#bpx#bpx .pm-btn{
   min-height:32px !important;height:auto;padding:0 12px !important;border-radius:6px !important;font-size:13px !important;font-weight:500 !important;line-height:18px !important;width:auto}
+
+@media (min-width:761px){#bpx#bpx#bpx#bpx .pjs-act{
+  min-height:32px !important;height:auto;padding:0 12px !important;border-radius:6px !important;font-size:13px !important;font-weight:500 !important;line-height:18px !important;width:auto}}
 #bpx#bpx#bpx#bpx .bpx-btn:not(.ghost),#bpx#bpx#bpx#bpx .bpx-addbtn,#bpx#bpx#bpx#bpx .bpx-donebtn,#bpx#bpx#bpx#bpx .bpx-savebtn{font-weight:600 !important}
 #bpx#bpx#bpx#bpx .bpx-rowbtn,#bpx#bpx#bpx#bpx .bpx-delbtn{min-height:28px !important;padding:0 10px !important;font-size:12.5px !important}
 #bpx#bpx#bpx#bpx .bpx-iconbtn{min-width:30px !important;min-height:30px !important;border-radius:6px !important}
@@ -417,6 +420,9 @@ html.bp-appmode body{overflow:hidden}
 #bpx#bpx#bpx#bpx label{min-width:0}
 #bpx#bpx#bpx#bpx label>input[type=date],#bpx#bpx#bpx#bpx label>input[type=time],#bpx#bpx#bpx#bpx label>input[type=datetime-local]{display:block;width:100%}
 #bpx#bpx#bpx#bpx [style*="grid-template-columns"]>*,#bpx#bpx#bpx#bpx [style*="display:flex"]>div{min-width:0}
+
+@media (min-width:761px){#bpx#bpx#bpx#bpx :is(.bpx-btn,.bpx-addbtn,.bpx-donebtn,.bpx-savebtn,.bpx-ghostbtn,.hero-cta,.bpx-mtab,.bpx-rowbtn,.bpx-delbtn,.pm-btn,.pjs-act,.bpx-logo-up,.bpx-logo-rm,.sg-decline)[style*="display:inline-block"],#bpx#bpx#bpx#bpx :is(.bpx-btn,.bpx-addbtn,.bpx-donebtn,.bpx-savebtn,.bpx-ghostbtn,.hero-cta,.bpx-mtab,.bpx-rowbtn,.bpx-delbtn,.pm-btn,.pjs-act,.bpx-logo-up,.bpx-logo-rm,.sg-decline)[style*="display: inline-block"]{display:inline-flex !important;align-items:center !important;justify-content:center !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx :is(.bpx-btn,.bpx-addbtn,.bpx-donebtn,.bpx-savebtn,.bpx-ghostbtn,.hero-cta,.bpx-mtab,.bpx-rowbtn,.bpx-delbtn,.pm-btn,.pjs-act,.bpx-logo-up,.bpx-logo-rm,.sg-decline)[style*="display:block"],#bpx#bpx#bpx#bpx :is(.bpx-btn,.bpx-addbtn,.bpx-donebtn,.bpx-savebtn,.bpx-ghostbtn,.hero-cta,.bpx-mtab,.bpx-rowbtn,.bpx-delbtn,.pm-btn,.pjs-act,.bpx-logo-up,.bpx-logo-rm,.sg-decline)[style*="display: block"]{display:flex !important;align-items:center !important;justify-content:center !important}}
 #bpx#bpx#bpx#bpx a:is(.bpx-btn,.bpx-addbtn,.bpx-rowbtn,.bpx-ghostbtn,.hero-cta){text-decoration:none}
 
 /* ---------- sidebar top: the business name, its plan quietly underneath ---------- */

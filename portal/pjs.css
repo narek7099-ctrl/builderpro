@@ -10,10 +10,14 @@
    tokens (--bg, --card, --soft, --ink, --grey, --line, --blue), so dark
    mode follows on its own.
 
-   Computer: a sheet from the right; header, tabs and footer stay put,
-   the body scrolls. Phone (760px and less): a full screen that scrolls
-   as one, with a top bar (back, title, Save) and icon tabs that stick.
+   PHONE ONLY (760px and less): the owner keeps the computer's project
+   sheet as it was, so everything here sits in one max-width query; the
+   computer's look is the older rules in the other stylesheets, which
+   apply from 761px up. A full screen that scrolls as one, with a top bar
+   (back, title, Save) and icon tabs that stick.
    ================================================================== */
+@media (max-width:760px){
+
 
 /* ---------------------------------------------------------- frame --- */
 @top .bpx-modal.pjs{padding:0 !important;justify-content:flex-end !important;align-items:stretch !important;background:rgba(0,21,48,.42) !important;animation:pjsVeil .24s ease both !important}
@@ -297,4 +301,6 @@
   @top .pjs-hero-row .pjs-stats{flex:none !important;grid-template-columns:1fr !important}
   @top .pjs-hero-row .pjs-stat.wide{border-top:0 !important}
   @top .pjs-hero-row .pjs-stat.wide+.pjs-stat.wide{border-top:1px solid var(--line) !important}
+}
+
 }

@@ -266,6 +266,7 @@
     setTimeout(function () { if (window.bpCountUp) bpCountUp(el); }, 0);
     /* 2026-11-20: simpler. A small greeting, one money card, three quick buttons in a row, one
        "Today" card (what needs you, then what's booked), a one-line setup bar, the apps. */
+    var hb = function (go, fn, ic, label, pri) { if (!allows(go)) return ''; return '<button type="button" class="dbh-b' + (pri ? ' pri' : '') + '" onclick="bpMobile.quick(\'' + go + '\',\'' + fn + '\')"><span class="ms">' + ic + '</span>' + label + (locked(go) ? '<span class="ms bp-lk" aria-label="Not on your plan">lock</span>' : '') + '</button>'; };
     var qb = function (go, fn, ic, label) { if (!allows(go)) return ''; return '<button type="button" class="mh3-q" onclick="bpMobile.quick(\'' + go + '\',\'' + fn + '\')"><span class="ms">' + ic + '</span><span>' + label + '</span>' + (locked(go) ? '<span class="ms bp-lk" aria-label="Not on your plan">lock</span>' : '') + '</button>'; };
     var todayList = needs.slice(0, 3).map(function (r) { return row(r.go, r.tone || '', r.t, ''); }).join('')
       + todayRows.map(function (r) { return '<button type="button" class="mh2-today" onclick="bpNav(\'' + r.go + '\')"><span class="mh2-tt">' + (r.t || '') + '</span><span class="mh2-rt"><b>' + r.w + '</b><small>' + r.s + '</small></span></button>'; }).join('');
@@ -295,9 +296,12 @@
       : card('Jobs in progress', 'activejobs', 'All jobs', '<div class="mh5-empty">No active jobs. <button type="button" class="mh5-link" onclick="bpMobile.quick(\'activejobs\',\'bpAddJobOpen\')">Add a job</button></div>');
     var leadHost = allows('contacts') ? '<div id="mh5Leads">' + leadCards() + '</div>' : '';
     el.innerHTML = '<div class="mh2 mh3 mh5">'
-      + '<section class="mh3-hi"><h2>' + (hiH < 12 ? 'Good morning' : hiH < 17 ? 'Good afternoon' : 'Good evening') + (name ? ', ' + esc(name) : '') + '</h2>'
-        + '<small>' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + '</small></section>'
-      + '<section class="mh3-qs">' + qb('estimates', 'bpEstOpen', 'request_quote', 'Estimate') + qb('activejobs', 'bpAddJobOpen', 'add_business', 'Job') + qb('invoices', 'bpInvOpen', 'receipt_long', 'Invoice') + '</section>'
+      /* 2026-11-25 redesign: the navy header from the computer's dashboard, without money figures
+         (the phone home stays lists you act on): the day in one line and the three quick actions */
+      + '<section class="dbh dbh-m"><div class="dbh-l"><div class="dbh-date">' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '</div>'
+        + '<h1 class="dbh-hi">' + (hiH < 12 ? 'Good morning' : hiH < 17 ? 'Good afternoon' : 'Good evening') + (name ? ', ' + esc(name) : '') + '</h1>'
+        + '<p class="dbh-sum">' + [todayRows.length ? todayRows.length + (todayRows.length === 1 ? ' visit' : ' visits') + ' today' : 'Nothing booked today', act.length + (act.length === 1 ? ' job' : ' jobs') + ' in progress'].concat(needs.length ? ['<b>' + needs.length + ' need' + (needs.length === 1 ? 's' : '') + ' you</b>'] : []).join('<span class="dbh-dot"></span>') + '</p>'
+        + '<div class="dbh-acts">' + hb('estimates', 'bpEstOpen', 'request_quote', 'Estimate', 1) + hb('activejobs', 'bpAddJobOpen', 'add_business', 'Job') + hb('invoices', 'bpInvOpen', 'receipt_long', 'Invoice') + '</div></div></section>'
       + setupCard()
       + needCard + todayCard + jobsCard + leadHost
       + (look() === 'sidebar' ? '' : sectionsCard())
