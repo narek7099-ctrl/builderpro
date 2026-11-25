@@ -1,45 +1,106 @@
 /* ==================================================================
-   Phone home, 2026-11-25 (portal/mobile.js). White, like the rest of the
-   app: the greeting sits on the page, the three everyday actions are white
-   tiles, every section is one white card. The computer's dashboard is not
-   touched by this file.
+   Phone home, redesigned 2026-11-25 (portal/mobile.js, .h6). The computer's
+   dashboard is not touched by this file.
+
+   Top to bottom: the greeting; the week (tap a day, its bookings show
+   under it); four round actions; widget tiles (Needs you, Waiting on a
+   yes, New leads with faces and a Call button); the jobs as photo cards.
+
    "@top" becomes a long #bpx chain in site/assemble.py; declarations are
-   !important for the same reason as portal/pjs.css (the app-wide theme
-   marks buttons !important).
+   !important because the app-wide theme marks buttons !important.
    ================================================================== */
-@top .dbh.dbh-m{position:relative !important;display:block !important;margin:0 !important;padding:6px 4px 0 !important;border:0 !important;border-radius:0 !important;background:none !important;box-shadow:none !important;color:var(--ink) !important;overflow:visible !important}
-@top .dbh-m .dbh-date{font-size:12.5px !important;font-weight:700 !important;letter-spacing:.06em !important;text-transform:uppercase !important;color:var(--grey) !important}
-@top .dbh-m .dbh-hi{margin:4px 0 0 !important;font-size:30px !important;line-height:1.12 !important;font-weight:800 !important;letter-spacing:-.03em !important;color:var(--ink) !important}
-@top .dbh-m .dbh-sum{display:flex !important;flex-wrap:wrap !important;align-items:center !important;gap:2px 8px !important;margin:8px 0 0 !important;font-size:15px !important;line-height:1.45 !important;color:var(--grey) !important}
-@top .dbh-m .dbh-sum b{color:var(--blue) !important;font-weight:650 !important}
-@top .dbh-m .dbh-dot{width:3.5px !important;height:3.5px !important;border-radius:50% !important;background:var(--grey-l) !important}
-@top .dbh-m .dbh-acts{display:grid !important;grid-template-columns:repeat(3,minmax(0,1fr)) !important;gap:10px !important;margin:18px -4px 0 !important;padding:0 !important}
-@top .dbh-m .dbh-b{position:relative !important;display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:center !important;gap:8px !important;height:92px !important;min-height:0 !important;margin:0 !important;padding:0 4px !important;
-  border:1px solid var(--line) !important;border-radius:20px !important;background:var(--card) !important;color:var(--ink) !important;font-size:14px !important;font-weight:650 !important;font-family:inherit !important;box-shadow:0 1px 2px rgba(0,21,48,.04) !important;cursor:pointer !important;transform:none !important}
-@top .dbh-m .dbh-b:active{transform:scale(.97) !important}
-@top .dbh-m .dbh-b>.ms:first-child{display:grid !important;place-items:center !important;width:42px !important;height:42px !important;border-radius:14px !important;background:var(--blue-l) !important;color:var(--blue) !important;font-size:23px !important}
-@top .dbh-m .dbh-b.pri>.ms:first-child{background:#16c79a !important;color:#001530 !important}
-@top .dbh-m .dbh-b .bp-lk{position:absolute !important;top:8px !important;right:8px !important;font-size:15px !important;color:var(--grey-l) !important}
+@top.bp-m #bpxViewArea .h6{display:flex !important;flex-direction:column !important;gap:14px !important;padding-bottom:12px !important}
+@top.bp-m #bpxViewArea .h6>*{margin:0 !important}
 
-/* cards */
-@top.bp-m #bpxViewArea .mh5 section.mh5-card{padding:2px 0 4px !important;border:1px solid var(--line) !important;border-radius:20px !important;background:var(--card) !important;box-shadow:0 1px 2px rgba(0,21,48,.04) !important;overflow:hidden !important}
-@top.bp-m #bpxViewArea .mh5 .mh5-h{display:flex !important;align-items:center !important;gap:8px !important;padding:14px 16px 6px !important}
-@top.bp-m #bpxViewArea .mh5 .mh5-h>b{font-size:18px !important;font-weight:750 !important;letter-spacing:-.01em !important;color:var(--ink) !important}
-@top.bp-m #bpxViewArea .mh5 .mh5-n{display:inline-grid !important;place-items:center !important;min-width:22px !important;height:22px !important;padding:0 7px !important;border-radius:999px !important;background:var(--blue-l) !important;color:var(--blue) !important;font-size:12.5px !important;font-weight:700 !important}
-@top.bp-m #bpxViewArea .mh5 .mh5-all{margin-left:auto !important;padding:0 !important;border:0 !important;background:none !important;color:var(--blue) !important;font-size:15px !important;font-weight:600 !important;box-shadow:none !important;min-height:0 !important}
-/* leads get a face: their initials */
-@top.bp-m #bpxViewArea .mh5 .mh5-av{flex:none !important;display:grid !important;place-items:center !important;width:40px !important;height:40px !important;margin-right:12px !important;border-radius:50% !important;background:var(--soft) !important;color:var(--ink) !important;font-size:14px !important;font-weight:700 !important;letter-spacing:.01em !important}
-@top.bp-m #bpxViewArea .mh5 .mh5-lead.is-new .mh5-av{background:var(--blue-l) !important;color:var(--blue) !important}
-@top.bp-m #bpxViewArea .mh5 .mh5-lead{align-items:center !important}
-@top.bp-m #bpxViewArea .mh5 .mh5-lead .mh5-t{flex:1 !important;min-width:0 !important}
+/* greeting */
+@top.bp-m #bpxViewArea .h6-hi{padding:6px 4px 0 !important}
+@top.bp-m #bpxViewArea .h6-hi small{display:block !important;font-size:14px !important;font-weight:600 !important;color:var(--grey) !important}
+@top.bp-m #bpxViewArea .h6-hi h1{margin:2px 0 0 !important;font-size:30px !important;line-height:1.12 !important;font-weight:800 !important;letter-spacing:-.03em !important;color:var(--ink) !important}
 
-/* phone home sections (portal/mobile.js): every section is one card with its title inside */
-@top.bp-m #bpxViewArea .mh5 .mh5-jcard .mh5-jlist{margin:0 !important;border-radius:0 !important;background:none !important;box-shadow:none !important}
-@top.bp-m #bpxViewArea .mh5 .mh5-soon{margin:4px 0 0 !important;padding:10px 16px 2px !important;border-top:.5px solid var(--line) !important;font-size:13px !important;font-weight:600 !important;color:var(--grey) !important}
-@top.bp-m #bpxViewArea .mh5 .mh5-time small{display:block !important;margin-top:1px !important;font-size:12px !important;font-weight:500 !important;color:var(--grey) !important}
-@top.bp-m #bpxViewArea .mh5 .mh5-empty{padding:4px 16px 14px !important}
-/* one 12px gap between the home's cards (the leads cards sit in their own wrapper) */
-@top.bp-m #bpxViewArea .mh5{display:flex !important;flex-direction:column !important;gap:12px !important}
-@top.bp-m #bpxViewArea .mh5>*,@top.bp-m #bpxViewArea .mh5 #mh5Leads>*{margin-top:0 !important;margin-bottom:0 !important}
-@top.bp-m #bpxViewArea .mh5 #mh5Leads{display:contents !important}
-@top.bp-m #bpxViewArea .mh5>.dbh-m{margin:0 0 6px !important}
+/* the week */
+@top.bp-m #bpxViewArea .h6-week{padding:16px 14px 6px !important;border:1px solid var(--line) !important;border-radius:24px !important;background:var(--card) !important;box-shadow:0 1px 2px rgba(0,21,48,.04) !important}
+@top.bp-m #bpxViewArea .h6-wh{display:flex !important;align-items:baseline !important;gap:8px !important;padding:0 4px 12px !important}
+@top.bp-m #bpxViewArea .h6-wh b{font-size:20px !important;font-weight:800 !important;letter-spacing:-.02em !important;color:var(--ink) !important}
+@top.bp-m #bpxViewArea .h6-wh span{font-size:14px !important;font-weight:500 !important;color:var(--grey) !important}
+@top.bp-m #bpxViewArea .h6-wh button{margin-left:auto !important;padding:0 !important;min-height:0 !important;border:0 !important;background:none !important;box-shadow:none !important;color:var(--blue) !important;font-size:15px !important;font-weight:600 !important}
+@top.bp-m #bpxViewArea .h6-days{display:grid !important;grid-template-columns:repeat(7,minmax(0,1fr)) !important;gap:4px !important}
+@top.bp-m #bpxViewArea .h6-day{display:flex !important;flex-direction:column !important;align-items:center !important;gap:4px !important;height:72px !important;min-height:0 !important;margin:0 !important;padding:8px 0 6px !important;border:0 !important;border-radius:16px !important;background:var(--soft) !important;box-shadow:none !important;color:var(--ink) !important;transform:none !important}
+@top.bp-m #bpxViewArea .h6-day small{font-size:11.5px !important;font-weight:600 !important;color:var(--grey) !important;text-transform:uppercase !important;letter-spacing:.03em !important}
+@top.bp-m #bpxViewArea .h6-day b{font-size:19px !important;font-weight:700 !important;line-height:1 !important}
+@top.bp-m #bpxViewArea .h6-day i{width:5px !important;height:5px !important;border-radius:50% !important;background:transparent !important}
+@top.bp-m #bpxViewArea .h6-day i.has{background:var(--blue) !important}
+@top.bp-m #bpxViewArea .h6-day.today b{color:var(--blue) !important}
+@top.bp-m #bpxViewArea .h6-day.on{background:var(--blue) !important;color:#fff !important}
+@top.bp-m #bpxViewArea .h6-day.on small,@top.bp-m #bpxViewArea .h6-day.on b{color:#fff !important}
+@top.bp-m #bpxViewArea .h6-day.on i.has{background:#fff !important}
+@top.bp-m #bpxViewArea .h6-agenda{margin-top:8px !important}
+@top.bp-m #bpxViewArea .h6-ev{display:flex !important;align-items:center !important;gap:12px !important;width:100% !important;min-height:58px !important;margin:0 !important;padding:8px 4px !important;border:0 !important;border-top:1px solid var(--line-2) !important;border-radius:0 !important;background:none !important;box-shadow:none !important;text-align:left !important;color:var(--ink) !important}
+@top.bp-m #bpxViewArea .h6-ev:first-child{border-top:0 !important}
+@top.bp-m #bpxViewArea .h6-evt{flex:none !important;min-width:64px !important;padding:6px 8px !important;border-radius:10px !important;background:var(--blue-l) !important;color:var(--blue) !important;font-size:13px !important;font-weight:700 !important;text-align:center !important}
+@top.bp-m #bpxViewArea .h6-evb{flex:1 !important;min-width:0 !important;display:flex !important;flex-direction:column !important}
+@top.bp-m #bpxViewArea .h6-evb b{font-size:16px !important;font-weight:650 !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important}
+@top.bp-m #bpxViewArea .h6-evb small{font-size:13.5px !important;color:var(--grey) !important}
+@top.bp-m #bpxViewArea .h6-ev>.ms{color:var(--grey-l) !important;font-size:20px !important}
+@top.bp-m #bpxViewArea .h6-free{display:flex !important;align-items:center !important;justify-content:space-between !important;gap:12px !important;padding:10px 4px 12px !important;font-size:15px !important;color:var(--grey) !important}
+@top.bp-m #bpxViewArea .h6-free button{display:inline-flex !important;align-items:center !important;gap:4px !important;height:36px !important;min-height:0 !important;margin:0 !important;padding:0 14px !important;border:0 !important;border-radius:999px !important;background:var(--blue-l) !important;color:var(--blue) !important;font-size:14px !important;font-weight:650 !important;box-shadow:none !important}
+@top.bp-m #bpxViewArea .h6-free button .ms{font-size:18px !important}
+
+/* four round actions */
+@top.bp-m #bpxViewArea .h6-acts{display:grid !important;grid-template-columns:repeat(4,minmax(0,1fr)) !important;gap:6px !important;padding:2px 0 !important}
+@top.bp-m #bpxViewArea .h6-act{display:flex !important;flex-direction:column !important;align-items:center !important;gap:7px !important;min-height:0 !important;height:auto !important;margin:0 !important;padding:0 !important;border:0 !important;background:none !important;box-shadow:none !important;color:var(--ink) !important;font-size:13px !important;font-weight:600 !important;transform:none !important}
+@top.bp-m #bpxViewArea .h6-ai{position:relative !important;display:grid !important;place-items:center !important;width:60px !important;height:60px !important;border-radius:50% !important;border:1px solid var(--line) !important;background:var(--card) !important;color:var(--blue) !important;box-shadow:0 1px 2px rgba(0,21,48,.05) !important}
+@top.bp-m #bpxViewArea .h6-ai .ms{font-size:26px !important}
+@top.bp-m #bpxViewArea .h6-act.pri .h6-ai{border-color:#16c79a !important;background:#16c79a !important;color:#001530 !important}
+@top.bp-m #bpxViewArea .h6-act:active .h6-ai{transform:scale(.94) !important}
+@top.bp-m #bpxViewArea .h6-ai .bp-lk{position:absolute !important;right:-2px !important;top:-2px !important;font-size:16px !important;color:var(--grey) !important;background:var(--card) !important;border-radius:50% !important}
+
+/* widget tiles */
+@top.bp-m #bpxViewArea .h6-grid{display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:12px !important}
+@top.bp-m #bpxViewArea .h6-host{display:contents !important}
+@top.bp-m #bpxViewArea .h6-tile{display:flex !important;flex-direction:column !important;min-width:0 !important;min-height:150px !important;padding:14px 16px 16px !important;border:1px solid var(--line) !important;border-radius:24px !important;background:var(--card) !important;box-shadow:0 1px 2px rgba(0,21,48,.04) !important;cursor:pointer !important;color:var(--ink) !important}
+@top.bp-m #bpxViewArea .h6-tile.wide{grid-column:1/-1 !important;min-height:0 !important}
+@top.bp-m #bpxViewArea .h6-tt{display:flex !important;align-items:center !important;gap:8px !important;font-size:14px !important;font-weight:650 !important;color:var(--grey) !important}
+@top.bp-m #bpxViewArea .h6-ti{display:grid !important;place-items:center !important;width:28px !important;height:28px !important;border-radius:9px !important;background:var(--blue-l) !important;color:var(--blue) !important}
+@top.bp-m #bpxViewArea .h6-ti .ms{font-size:18px !important}
+@top.bp-m #bpxViewArea .h6-tile.alert .h6-ti{background:#fff1d6 !important;color:#b45309 !important}
+@top.bp-m.bpx-dark #bpxViewArea .h6-tile.alert .h6-ti{background:#3a2a0c !important;color:#fbbf24 !important}
+@top.bp-m #bpxViewArea .h6-tile.calm .h6-ti{background:rgba(22,199,154,.14) !important;color:#0d8f6e !important}
+@top.bp-m #bpxViewArea .h6-big{display:block !important;margin:auto 0 0 !important;padding-top:14px !important;font-size:40px !important;line-height:1 !important;font-weight:800 !important;letter-spacing:-.03em !important;color:var(--ink) !important}
+@top.bp-m #bpxViewArea .h6-big .ms{font-size:36px !important;color:#16c79a !important}
+@top.bp-m #bpxViewArea .h6-tsub{display:-webkit-box !important;-webkit-line-clamp:2 !important;-webkit-box-orient:vertical !important;overflow:hidden !important;margin-top:6px !important;font-size:13.5px !important;line-height:1.35 !important;color:var(--grey) !important}
+@top.bp-m #bpxViewArea .h6-tb{display:flex !important;align-items:flex-end !important;justify-content:space-between !important;gap:12px !important}
+@top.bp-m #bpxViewArea .h6-tb .h6-tsub{margin:0 0 4px !important}
+@top.bp-m #bpxViewArea .h6-faces{display:flex !important;margin-top:10px !important}
+@top.bp-m #bpxViewArea .h6-tb .h6-faces{margin:0 0 2px !important}
+@top.bp-m #bpxViewArea .h6-faces i{display:grid !important;place-items:center !important;width:34px !important;height:34px !important;margin-left:-8px !important;border:2.5px solid var(--card) !important;border-radius:50% !important;background:var(--blue-l) !important;color:var(--blue) !important;font-style:normal !important;font-size:12px !important;font-weight:700 !important}
+@top.bp-m #bpxViewArea .h6-faces i:first-child{margin-left:0 !important}
+@top.bp-m #bpxViewArea .h6-faces i.more{background:var(--soft) !important;color:var(--grey) !important}
+@top.bp-m #bpxViewArea .h6-next{display:flex !important;align-items:center !important;justify-content:space-between !important;gap:10px !important;margin-top:14px !important;padding-top:12px !important;border-top:1px solid var(--line-2) !important;font-size:14px !important;color:var(--grey) !important}
+@top.bp-m #bpxViewArea .h6-next>span{min-width:0 !important;overflow:hidden !important;text-overflow:ellipsis !important;white-space:nowrap !important}
+@top.bp-m #bpxViewArea .h6-next b{color:var(--ink) !important;font-weight:650 !important}
+@top.bp-m #bpxViewArea .h6-call{flex:none !important;display:inline-flex !important;align-items:center !important;gap:5px !important;height:36px !important;padding:0 14px !important;border-radius:999px !important;background:var(--blue) !important;color:#fff !important;font-size:14px !important;font-weight:650 !important;text-decoration:none !important}
+@top.bp-m #bpxViewArea .h6-call .ms{font-size:18px !important}
+
+/* jobs as photo cards */
+@top.bp-m #bpxViewArea .h6-jobs{display:flex !important;flex-direction:column !important;gap:12px !important}
+@top.bp-m #bpxViewArea .h6-sh{display:flex !important;align-items:center !important;gap:8px !important;padding:6px 4px 0 !important}
+@top.bp-m #bpxViewArea .h6-sh b{font-size:20px !important;font-weight:800 !important;letter-spacing:-.02em !important;color:var(--ink) !important}
+@top.bp-m #bpxViewArea .h6-sh span{display:inline-grid !important;place-items:center !important;min-width:22px !important;height:22px !important;padding:0 7px !important;border-radius:999px !important;background:var(--blue-l) !important;color:var(--blue) !important;font-size:12.5px !important;font-weight:700 !important}
+@top.bp-m #bpxViewArea .h6-sh button{margin-left:auto !important;padding:0 !important;min-height:0 !important;border:0 !important;background:none !important;box-shadow:none !important;color:var(--blue) !important;font-size:15px !important;font-weight:600 !important}
+@top.bp-m #bpxViewArea .h6-job{display:flex !important;align-items:stretch !important;gap:14px !important;width:100% !important;min-height:0 !important;margin:0 !important;padding:10px !important;border:1px solid var(--line) !important;border-radius:22px !important;background:var(--card) !important;box-shadow:0 1px 2px rgba(0,21,48,.04) !important;text-align:left !important;color:var(--ink) !important;transform:none !important}
+@top.bp-m #bpxViewArea .h6-pic{position:relative !important;flex:none !important;width:96px !important;height:96px !important;border-radius:16px !important;overflow:hidden !important;background:var(--soft) !important}
+@top.bp-m #bpxViewArea .h6-pic img{display:block !important;width:100% !important;height:100% !important;object-fit:cover !important}
+@top.bp-m #bpxViewArea .h6-pct{position:absolute !important;left:6px !important;bottom:6px !important;padding:3px 7px !important;border-radius:999px !important;background:rgba(0,21,48,.72) !important;color:#fff !important;font-size:11.5px !important;font-weight:700 !important}
+@top.bp-m #bpxViewArea .h6-jb{flex:1 !important;min-width:0 !important;display:flex !important;flex-direction:column !important;padding:4px 4px 2px 0 !important}
+@top.bp-m #bpxViewArea .h6-jb>b{font-size:17px !important;font-weight:700 !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important}
+@top.bp-m #bpxViewArea .h6-jb>small{margin-top:1px !important;font-size:14px !important;color:var(--grey) !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important}
+@top.bp-m #bpxViewArea .h6-bar{display:block !important;height:6px !important;margin:auto 0 0 !important;border-radius:3px !important;background:var(--line-2) !important;overflow:hidden !important}
+@top.bp-m #bpxViewArea .h6-bar i{display:block !important;height:100% !important;border-radius:3px !important;background:#16c79a !important}
+@top.bp-m #bpxViewArea .h6-jf{display:flex !important;align-items:baseline !important;justify-content:space-between !important;gap:8px !important;margin-top:8px !important;font-size:13px !important;color:var(--grey) !important}
+@top.bp-m #bpxViewArea .h6-jf>span{min-width:0 !important;overflow:hidden !important;text-overflow:ellipsis !important;white-space:nowrap !important}
+@top.bp-m #bpxViewArea .h6-jf b{flex:none !important;font-size:14px !important;font-weight:700 !important;color:var(--ink) !important}
+@top.bp-m #bpxViewArea .h6-jobs .h6-free{padding:16px !important;border:1px solid var(--line) !important;border-radius:22px !important;background:var(--card) !important}
+/* a general phone rule pads sections 64px at the top; these two sit in the column's even gap */
+@top.bp-m #bpxViewArea .h6>section{padding-top:0 !important;padding-bottom:0 !important}
+@top.bp-m #bpxViewArea .h6>section.h6-week{padding:16px 14px 6px !important}
+@top.bp-m #bpxViewArea .h6>section.h6-acts{padding:2px 0 !important}

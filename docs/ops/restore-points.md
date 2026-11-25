@@ -500,3 +500,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-25 before phone-only project screen and phone home header (computer restored): restore to cbdf6e4
 - 2026-11-25 before phone home cards and tab-edge fix: restore to 4db915b
 - 2026-11-25 before white phone home: restore to 57b5197
+- 2026-11-25 before brand-new phone home (week strip, round actions, tiles, photo job cards): restore to 4bbbff4
