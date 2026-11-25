@@ -251,6 +251,8 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 /* the "Finished / Not yet" check-ins on Projects */
 #bpx#bpx#bpx#bpx.bp-m .bpx-main :is(.pjd-due,.due-it) button{min-height:48px !important;font-size:15px !important}
 
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m :is(.pjs-acts,.pj-acts) :is(a,button){min-height:52px !important;font-size:15px !important}}
+
 /* crew: the clock button is the biggest thing on the screen */
 #bpx#bpx#bpx#bpx.bp-m .ck-btn{min-height:64px !important;font-size:19px !important;border-radius:16px !important}
 #bpx#bpx#bpx#bpx.bp-m .hl-tab{min-height:50px !important;padding:0 16px !important;font-size:15px !important}
@@ -420,10 +422,26 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 /* --- Jobs on a phone: just the jobs (totals and the live map stay on a computer) --- */
 #bpx#bpx#bpx#bpx.bp-m #bpxViewArea .pjk-stats,#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .pjk-live{display:none !important}
 #bpx#bpx#bpx#bpx.bp-m #bpxViewArea .pjk-bar{margin-top:6px}
+
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-hero{background:var(--nv) !important;color:#fff !important;border:0 !important;padding-bottom:20px !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-hero :is(h1,h2,h3,b,strong,.pjs-name,.pjs-t){color:#fff !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-hero :is(small,span,p,a,.pjs-sub,.pjs-addr,label){color:var(--nv-mu) !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-hero svg circle{stroke:rgba(255,255,255,.18)}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-hero :is(.pjs-x,[aria-label=Close]){background:var(--nv-2) !important;border:0 !important;color:#fff !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-hero :is(button,a.pjl-b,.pjl-b){background:var(--nv-2) !important;border:0 !important;color:#fff !important;min-height:58px !important;border-radius:16px !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-hero :is(button,.pjl-b) *{color:#fff !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-hero :is(button,.pjl-b).pri{background:var(--bl) !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-hero [class*=pill],#bpx#bpx#bpx#bpx.bp-m .pjs-hero [class*=badge]{background:var(--nv-2) !important;color:#fff !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-hero a{background:var(--nv-2) !important;border:0 !important;color:#fff !important;border-radius:16px !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-hero a *{color:#fff !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-addr a,#bpx#bpx#bpx#bpx.bp-m .pjs-hero a[href*="maps"]:not(.pjs-act){background:none !important;color:var(--nv-mu) !important}}
 /* job cards: tap the card to open it; finishing a job happens inside it */
 #bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-donebtn{display:none !important}
 #bpx#bpx#bpx#bpx.bp-m #bpxViewArea .ml-sec:has(+ .ml-sec){display:none !important}
 #bpx#bpx#bpx#bpx.bp-m #bpxViewArea:has(.pjk-bar) .pjl-a .pjl-b{display:none !important}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-act{background:var(--nv-2) !important;border:0 !important;color:#fff !important;border-radius:16px !important;min-height:58px !important;box-shadow:none !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-act *{color:#fff !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-act.primary{background:var(--bl) !important}}
 
 /* --- Home: All apps --- */
 #bpx .mh2-apps{padding-bottom:16px}
@@ -447,11 +465,18 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #bpx#bpx#bpx#bpx.bp-m #bpxViewArea:has(.pjk-bar) .ml-sec{display:none !important}
 #bpx#bpx#bpx#bpx.bp-m .pjk-chip{min-height:44px}
 
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-job{color:var(--nv-mu) !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-act{white-space:nowrap;padding:0 10px !important;gap:6px}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx .pjs-card:has([data-pj-pane="details"]:not([hidden]).pjs-ro) .pjs-foot button:not(.pjs-del){display:none !important}}
+
 /* Team chat on a phone: end above the taller bottom bar so the message box can be reached */
 #bpx#bpx#bpx#bpx.bp-m .tc{height:calc(100dvh - 205px - env(safe-area-inset-bottom)) !important;min-height:360px !important}
 /* ---- A-Z design fixes ---- */
 /* empty count badges (a grey dash) stay hidden until they have a number */
 #bpx .bpx-badge:empty{display:none !important}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-card:has(.pjs-tab.on:not([data-pj-tab="details"])) :is(.pjs-ring,.pjs-stats){display:none !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-card:has(.pjs-tab.on:not([data-pj-tab="details"])) .ap-row{display:none !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .pjs-card:has(.pjs-tab.on:not([data-pj-tab="details"])) .pjs-hero-row{padding-top:4px !important;gap:0 !important}}
 /* Payouts: the three steps stack instead of running off the edge */
 #bpx#bpx#bpx#bpx.bp-m .bpx-pay-flow{display:grid !important;grid-template-columns:1fr !important;gap:8px}
 #bpx#bpx#bpx#bpx.bp-m .bpx-pay-flow>i{display:none !important}
@@ -573,6 +598,14 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 /* phones: small pop-ups (forms, confirms) become bottom sheets with a grab handle;
    the full-screen job sheets (.pjs) keep their own layout */
 @keyframes bpSheetUp{from{transform:translateY(100%)}to{transform:none}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .bpx-modal:not(.pjs){align-items:flex-end !important;justify-content:stretch !important;padding:0 !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .bpx-modal:not(.pjs)>.bpx-modalcard{width:100% !important;max-width:none !important;max-height:92vh !important;max-height:92dvh !important;overflow-y:auto !important;margin:0 !important;border-radius:22px 22px 0 0 !important;padding-top:26px !important;padding-bottom:calc(18px + env(safe-area-inset-bottom)) !important;position:relative;animation:bpSheetUp .26s cubic-bezier(.2,0,0,1);overscroll-behavior:contain}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .bpx-modal:not(.pjs)>.bpx-modalcard::before{content:'';position:absolute;top:9px;left:50%;width:40px;height:5px;margin-left:-20px;border-radius:3px;background:#d0d5dd}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .bpx-modal:not(.pjs)>.bpx-modalcard :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),select,textarea){min-height:48px !important;font-size:16px !important;border-radius:12px !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .bpx-modal:not(.pjs)>.bpx-modalcard textarea{min-height:96px !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .bpx-modal:not(.pjs)>.bpx-modalcard input[type=checkbox]{width:22px !important;height:22px !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .bpx-modal:not(.pjs)>.bpx-modalcard button{min-height:48px}}
+@media(prefers-reduced-motion:reduce){@media (min-width:761px){#bpx#bpx#bpx#bpx.bp-m .bpx-modal:not(.pjs)>.bpx-modalcard{animation:none}}}
 /* press feedback on touch: things dim a little while a finger is on them */
 @media(hover:none){
   #bpx#bpx.bp-m :is(button,a[href],[role="button"],[onclick]):not(:disabled):active,

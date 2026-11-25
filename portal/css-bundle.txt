@@ -30,4 +30,5 @@ portal/flat.css
 portal/shell4.css
 portal/ui.css
 portal/homeowner.css
+portal/dash5.css
 portal/pjs.css

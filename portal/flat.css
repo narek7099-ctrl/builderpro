@@ -58,6 +58,9 @@
 /* ---- the top bar: plain white with a hairline ---- */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #hlTop{background:rgba(255,255,255,.96) !important;border-bottom:1px solid #e9edf3 !important}
 
+@media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) :is(.pjs-sec,.pjs-cust,.pjs-info,.pjs-tile){background:#fff !important;background-image:none !important;border:1px solid #e3e8ef !important;box-shadow:none !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx [data-pj-pane="details"] .pjs-view{border:0 !important;background:none !important;box-shadow:none !important;padding:0 !important}}
+
 /* ---- dark: the same flat cards, in navy-black ---- */
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.rp-plat,.ls-pv,.pjk-stat,.pj-card,.mh2-owed,.mh2-tiles,.mh2-card,.ws-step,.bpx-convlist,.bpx-thread,.st-plan,.bpx-rg-hero,.brn-card,.pj-route,.dash-projs,.bpx-cd-card,.bpp-ask-row,.pjk-live,.pjl,.qb-step,.cl-tile,.cl-card,.wa-list,.wa-dh,.wa-tcard,.wa-node,.rcp-hero,.rcp-stat,.rcp-card,.bpt-get,.cz-sec,.cz-prev,.sp-pk-box,.tc,.sp-aisle,.sp-chain,.bpx-pay-flow>div){
   background:#111824 !important;background-image:none !important;border:1px solid #222d3d !important;box-shadow:none !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
@@ -68,6 +71,7 @@
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs)>:is(button,a):is(.on,.active,[aria-selected=true]){background:#1b2433 !important;color:#fff !important;box-shadow:none !important}
 @media (min-width:821px){ #bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .hl-tabs{background:#0c121c !important;border:1px solid #222d3d !important;box-shadow:none !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important} }
 #bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark :is(.hl-tabs,#bpxViewArea) .bp-slide{background:#1b2433;box-shadow:none}
+@media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark:is(*) :is(.pjs-sec,.pjs-cust,.pjs-info){background:#111824 !important;background-image:none !important;border-color:#222d3d !important;box-shadow:none !important}}
 
 /* =====================================================================
    The calendar (2026-11-20): four numbers on top, then one clean grid:
@@ -292,7 +296,13 @@
 #bpx#bpx#bpx#bpx .ctp-figs small{display:block;font-size:12.5px;font-weight:500;color:#64748b}
 #bpx#bpx#bpx#bpx .ctp-figs b{display:block;margin-top:4px;font-size:20px;font-weight:650;letter-spacing:-.02em;color:#0b1526;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:700px){ #bpx#bpx#bpx#bpx .ctp-figs{grid-template-columns:repeat(2,minmax(0,1fr))} #bpx#bpx#bpx#bpx .ctp-figs>div:nth-child(3){border-left:0} #bpx#bpx#bpx#bpx .ctp-figs>div:nth-child(n+3){border-top:1px solid #eef1f5} }
+@media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-tabs{padding:3px !important;gap:2px !important;border:1px solid #e3e8ef !important;border-radius:10px !important;background:#f1f4f8 !important;box-shadow:none !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-tabs .pjs-tab:not(.pjs-menu .pjs-tab){height:32px !important;border-radius:7px !important;padding:0 13px !important;background:transparent !important;color:#5b6b82 !important;box-shadow:none !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-tabs .pjs-tab:not(.pjs-menu .pjs-tab):is(.on,[aria-selected=true]){background:#fff !important;color:#0b1526 !important;font-weight:600 !important;box-shadow:0 1px 2px rgba(16,24,40,.1),0 0 0 1px rgba(16,24,40,.04) !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-tabs .pjs-tab:not(.pjs-menu .pjs-tab):is(.on,[aria-selected=true]) .ms{color:#006fff !important}}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .insp-ctabs{margin:16px 0 12px !important}
+@media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-tabs{background:#0c121c !important;border-color:#222d3d !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-tabs .pjs-tab:not(.pjs-menu .pjs-tab):is(.on,[aria-selected=true]){background:#1b2433 !important;color:#fff !important;box-shadow:none !important}}
 #bpx#bpx#bpx#bpx .ctp-card{border:1px solid #e3e8ef !important;border-radius:14px !important;padding:18px 20px !important;background:#fff !important;box-shadow:0 1px 2px rgba(16,24,40,.05) !important}
 #bpx#bpx#bpx#bpx .ctp-ch b{font-size:14.5px;font-weight:600}
 #bpx#bpx#bpx#bpx .ctp-pipe ol{margin-top:10px}
@@ -484,6 +494,35 @@
 #bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs .hl-tab{height:38px !important;min-height:38px !important;align-self:center;border-radius:999px !important;padding:0 16px !important;font-size:15px !important}
 #bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs .bp-slide{border-radius:999px !important;box-shadow:0 1px 2px rgba(16,24,40,.1),0 0 0 1px rgba(16,24,40,.05) !important}
 
+/* An open project on a phone (2026-11-20): the header was half the screen and never scrolled away.
+   Now: name and job on two lines with the address under, the money in one row of three small
+   figures, buttons 44px tall. The ring and "Next phase" go (the Schedule tab has both). */
+@media (max-width:820px){
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-hero{padding:12px 16px 12px !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-hero-top{gap:8px}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-hero .pjs-tags{display:none !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-hero h2{font-size:20px !important;line-height:1.2 !important;margin:0 !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-hero .pjs-job{font-size:14px !important;margin-top:1px !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-hero .pjs-addr{margin-top:6px !important;font-size:13px !important;padding:3px 9px !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-hero .pjs-x{width:36px !important;height:36px !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-hero-row{display:flex !important;flex-direction:column !important;gap:10px !important;margin-top:12px !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-hero .pjs-ring{display:none !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-hero .pjs-stats{display:grid !important;grid-template-columns:repeat(3,minmax(0,1fr)) !important;gap:8px !important;width:100%}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-hero .pjs-stat.wide{display:none !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-hero .pjs-stat small{font-size:11.5px !important;letter-spacing:0 !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-hero .pjs-stat b{font-size:17px !important;line-height:1.2 !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-hero .pjs-acts{gap:8px !important;width:100%}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-hero .pjs-act{height:44px !important;min-height:44px !important;font-size:14.5px !important;border-radius:10px !important;padding:0 10px !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-card .pjs-tabs{margin:8px 12px 4px !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-card .pjs-tabs .pjs-tab:not(.pjs-menu .pjs-tab){height:36px !important}}
+}
+
+@media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-menu.pjs-menu-sheet{position:absolute !important;left:10px !important;right:10px !important;bottom:84px !important;top:auto !important;min-width:0 !important;max-height:70% !important;z-index:60 !important;
+  padding:8px !important;border-radius:16px !important;background:#fff !important;border:1px solid #e3e8ef !important;box-shadow:0 18px 40px -12px rgba(0,21,48,.35),0 2px 6px rgba(16,24,40,.08) !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-menu.pjs-menu-sheet[hidden]{display:none !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-menu.pjs-menu-sheet .pjs-tab{height:48px !important}}
+@media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-menu.pjs-menu-sheet{background:#111824 !important;border-color:#222d3d !important}}
+
 /* =====================================================================
    The phone home, simpler (2026-11-20)
    ===================================================================== */
@@ -524,10 +563,41 @@
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .bp-tabbar .bp-tab.on{color:#fff !important}
 
 /* =====================================================================
+   An open project on a phone feels like an app (2026-11-21): the whole
+   sheet scrolls as one page. The header scrolls away, the tabs stick to
+   the top, Save stays at the bottom. The Overview drops the phone and
+   email rows that the form under it already has.
+   ===================================================================== */
+@media (max-width:820px){
+  @media (min-width:761px){#bpx#bpx#bpx .bpx-modal.pjs .bpx-modalcard.pjs-card{overflow-y:auto !important;overflow-x:hidden !important;display:block !important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx .pjs-card>.pjs-body{overflow:visible !important;flex:none !important;height:auto !important;max-height:none !important;padding-bottom:12px !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-card>.pjs-tabs{position:sticky !important;top:0 !important;z-index:5 !important;margin:0 !important;border-radius:0 !important;border-width:0 0 1px !important;padding:6px 10px !important;background:#fff !important;box-shadow:0 1px 0 #e9edf3 !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-card>.pjs-tabs{background:#0f1520 !important;box-shadow:0 1px 0 #222d3d !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx .pjs-card>.pjs-foot{position:sticky !important;bottom:0 !important;z-index:5 !important;padding:10px 14px calc(10px + env(safe-area-inset-bottom)) !important;background:#fff !important;border-top:1px solid #e9edf3 !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx.bpx-dark .pjs-card>.pjs-foot{background:#0f1520 !important;border-color:#222d3d !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx .pjs-card>.pjs-foot button{height:44px !important;min-height:44px !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx .pjs-menu.pjs-menu-sheet{position:fixed !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx [data-pj-pane="details"]:not(.pjs-ro) .pjs-cust .pjs-cls{display:none !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx [data-pj-pane="details"] .pjs-cust{padding:12px 14px !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx [data-pj-pane="details"] .pjs-cust .pjs-cu{padding-bottom:10px !important;margin-bottom:10px !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx [data-pj-pane="details"] .pjs-cust .pjs-cu-av{width:40px !important;height:40px !important;font-size:15px !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx .pjs-card .pjs-body .pjs-sec{padding:14px !important;margin-bottom:10px !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx .pjs-card .pjs-body label{margin-top:8px !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx .pjs-card .pjs-body :is(input,select){min-height:44px !important;height:44px !important}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx .pjs-card .pjs-body textarea{min-height:76px !important}}
+}
+@media (max-width:820px){
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .pjs-card>.pjs-tabs{width:100% !important;max-width:none !important;box-sizing:border-box}}
+  @media (min-width:761px){#bpx#bpx#bpx#bpx#bpx#bpx#bpx .bpx-modal>.pjs-menu.pjs-menu-sheet{position:fixed !important;left:10px !important;right:10px !important;bottom:calc(84px + env(safe-area-inset-bottom)) !important;z-index:10000 !important;max-height:70vh !important}}
+}
+
+/* =====================================================================
    An open project on a phone, as an app screen (2026-11-21)
    ===================================================================== */
 @media (max-width:760px){
   @keyframes pjsPush{from{transform:translateX(100%)}to{transform:none}}
+}
+@media (max-width:760px){
 }
 
 /* =====================================================================
@@ -546,8 +616,31 @@
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-panel,.bpx-stat,.pj-card,.bpx-cwrap,.mh2-card,.mh3-money,.mj,.cl-tile,.cl-card,.ctp-card,.pjk-stat){background:var(--fl-1) !important;border-color:transparent !important;box-shadow:var(--fl-hi),var(--fl-sh1) !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.mh3-q:not(:first-child),.bpx-btn.ghost,.ctp3-b+.ctp3-b,.ctp3-a:not(.pri),.ctp3-edit,.bpx-cm-b){background:var(--fl-2) !important;border-color:transparent !important;box-shadow:var(--fl-sh2),var(--fl-hi) !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #hlTop,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs{background:var(--fl-bar) !important;-webkit-backdrop-filter:saturate(180%) blur(20px) !important;backdrop-filter:saturate(180%) blur(20px) !important}
+
+/* the open project */
+@media (max-width:760px){
+}
+@media (max-width:760px){ }
 #bpx#bpx#bpx#bpx#bpx.bpx-dark .mj2 .mj-bar{background:#2a2f38 !important}
 #bpx#bpx#bpx#bpx#bpx.bpx-dark .mj-pill.red,#bpx#bpx#bpx#bpx#bpx.bpx-dark .mj-pill.blue{background:#0f2340 !important;color:#9cc4ff !important}
 #bpx#bpx#bpx#bpx#bpx.bpx-dark .mj-pill.green{background:#0b2e26 !important;color:#3FE0B6 !important}
 #bpx#bpx#bpx#bpx#bpx.bpx-dark .mj-pill.gray{background:#23272f !important;color:#cbd5e1 !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .hl-tabs{box-shadow:0 1px 0 #2a2f38 !important}
+
+/* =====================================================================
+   Money and Schedule on a phone, as app screens (2026-11-21)
+   ===================================================================== */
+@media (max-width:760px){
+}
+@media (max-width:760px){
+}
+
+/* =====================================================================
+   The rest of an open project's tabs on a phone, as app screens (2026-11-21):
+   Crew, Materials, Photos, Subs, Permits, Contract, Customer, Inspections,
+   Documents, Blueprints. Groups on the lighter layer with a small heading
+   above, no explanation paragraphs, compact "nothing here yet" rows, and
+   actions as blue rows instead of boxed buttons.
+   ===================================================================== */
+@media (max-width:760px){
+}

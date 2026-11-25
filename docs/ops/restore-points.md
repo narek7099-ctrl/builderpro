@@ -497,3 +497,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-25 iPhone launch screens, white theme colour, shorter phone Finances overview: restore to 6ded0e6
 - 2026-11-25 before new store screenshots (dash, jobs, money, calendar, crew, homeowner): restore to 8e6bc7a
 - 2026-11-25 before project screen redesign (new portal/pjs.css, old project-sheet rules removed): restore to 9a85339
+- 2026-11-25 before phone-only project screen and phone home header (computer restored): restore to cbdf6e4
