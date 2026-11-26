@@ -713,8 +713,8 @@
             + ' \u00b7 ' + (r.e.pay_type === 'salary' && !r.h ? 'salary' : r.h + ' hrs' + (r.ot ? ' + ' + r.ot + ' OT' : '')) + '</small></div><div class="pp6-amt"><b>' + money(amt) + '</b><small>' + (r.paid ? 'paid' : 'due') + '</small></div></div>'
             + (Object.keys(r.jobs).length ? '<div class="pp6-jobs">' + esc(Object.keys(r.jobs).join(', ').replace(/\s*\(sample\)/g, '')) + '</div>' : '')
             + (r.disp.length ? '<div class="pp6-flag"><span class="ms">flag</span>' + r.disp.length + ' disputed ' + (r.disp.length === 1 ? 'day' : 'days') + '</div>' : '')
-            + '<div class="pp6-b' + (r.e.kind === '1099' ? ' three' : '') + '"><button class="bpx-btn ghost" onclick="bpPayStub(\'' + r.e.id + '\',\'' + f + '\')"><span class="ms">receipt_long</span>Pay stub</button>'
-            + (r.e.kind === '1099' ? '<button class="bpx-btn ghost" onclick="bpPayCheck(\'' + r.e.id + '\',\'' + f + '\')"><span class="ms">payments</span>Pay by check</button>' : '')
+            + '<div class="pp6-b">' + (r.paid ? '<button class="bpx-btn ghost" onclick="bpPayStub(\'' + r.e.id + '\',\'' + f + '\')"><span class="ms">receipt_long</span>Pay stub</button>'
+              : '<button class="bpx-btn ghost" onclick="bpPayOpen(\'' + r.e.id + '\',\'' + f + '\')"><span class="ms">payments</span>Pay</button>')
             + (r.paid ? '<button class="bpx-btn ghost" onclick="bpPayMark(\'' + r.e.id + '\',\'' + f + '\',0)">\u2713 Paid</button>'
               : '<button class="bpx-btn" onclick="bpPayMark(\'' + r.e.id + '\',\'' + f + '\',1)">Mark paid</button>') + '</div></div>';
         }).join('') + '</div>' : '<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr>'
@@ -730,7 +730,8 @@
             + '<td>' + (r.e.pay_type === 'salary' && !r.h ? '<span class="bpx-mut">salary</span>' : r.h) + '</td><td>' + (r.ot || '—') + '</td>'
             + '<td><b>' + money(amt) + '</b></td>'
             + '<td class="bpx-mut" style="font-size:11.5px">' + esc(Object.keys(r.jobs).join(', ') || '—') + '</td>'
-            + '<td style="text-align:right;white-space:nowrap"><button class="bpx-btn ghost ps-btn hl-keep" onclick="bpPayStub(\'' + r.e.id + '\',\'' + f + '\')"><span class="ms">receipt_long</span>Pay stub</button> ' + (r.e.kind === '1099' ? '<button class="bpx-btn ghost ps-btn hl-keep" onclick="bpPayCheck(\'' + r.e.id + '\',\'' + f + '\')"><span class="ms">payments</span>Pay by check</button> ' : '') + (r.paid
+            + '<td style="text-align:right;white-space:nowrap">' + (r.paid ? '<button class="bpx-btn ghost ps-btn hl-keep" onclick="bpPayStub(\'' + r.e.id + '\',\'' + f + '\')"><span class="ms">receipt_long</span>Pay stub</button> '
+              : '<button class="bpx-btn ghost ps-btn hl-keep" onclick="bpPayOpen(\'' + r.e.id + '\',\'' + f + '\')"><span class="ms">payments</span>Pay</button> ') + (r.paid
                 ? '<button class="bpx-btn ghost bpx-donebtn" style="padding:6px 12px;font-size:12px" title="Undo: takes it back out of Finances" onclick="bpPayMark(\'' + r.e.id + '\',\'' + f + '\',0)">✓ Paid</button>'
                 : '<button class="bpx-btn bpx-donebtn" style="padding:6px 12px;font-size:12px" onclick="bpPayMark(\'' + r.e.id + '\',\'' + f + '\',1)">Mark paid</button>')
             + '</td></tr>';
@@ -741,6 +742,52 @@
       + (owed > 0 && list.filter(function (r) { return !r.paid; }).length > 1
           ? '<div style="margin-top:10px;text-align:right"><button class="bpx-btn" onclick="bpPayAll(\'' + f + '\')">Mark everyone paid · ' + money(owed) + '</button></div>' : '')
       + note;
+  }
+
+  /* ------------------------------------------------------------ Pay --- */
+  /* 2026-11-26 (the owner's ask): one Pay button per person. It asks how: a pay stub, a
+     check, or both (the check with the pay stub printed after it). Checks are for 1099
+     contractors only; a W-2 paycheck needs tax taken out, so that goes through payroll and
+     only the stub is offered. Choosing does nothing yet: each road keeps its own preview
+     and its own two-step confirmation before anything is printed or booked. */
+  window.bpPayOpen = function (empId, from) {
+    from = from || S.payFrom || periodOf(Date.now())[0];
+    var d = stubData(empId, from); if (!d) return;
+    var c99 = d.e.kind === '1099', amt = d.r.gross;
+    var opt = function (k, ico, t, sub, on, off) {
+      return '<label class="pay6-o' + (off ? ' off' : '') + '"><input type="radio" name="pay6" value="' + k + '"' + (on ? ' checked' : '') + (off ? ' disabled' : '') + '>'
+        + '<span class="pay6-i"><span class="ms">' + ico + '</span></span><span class="pay6-t"><b>' + t + '</b><small>' + sub + '</small></span><span class="pay6-r" aria-hidden="true"></span></label>';
+    };
+    bpModal('<div class="pay6"><h3>Pay ' + esc(d.e.name) + '</h3>'
+      + '<div class="pay6-amt"><b>' + m2(amt) + '</b><span>' + esc(nice(d.from)) + ' \u2013 ' + esc(nice(d.to)) + ' \u00b7 ' + (c99 ? '1099 contractor' : 'W-2 employee') + '</span></div>'
+      + '<div class="pay6-l" role="radiogroup" aria-label="How do you want to pay?">'
+      + opt('stub', 'receipt_long', 'Pay stub', 'The record of hours and pay, to print or save as a PDF.', !c99, false)
+      + opt('check', 'payments', 'Check', c99 ? 'Print a check, signed with your saved e-signature.' : 'For 1099 contractors. W-2 pay goes through your payroll.', false, !c99)
+      + opt('both', 'library_books', 'Both', c99 ? 'The check, with the pay stub printed right after it.' : 'For 1099 contractors only.', c99, !c99)
+      + '</div><p class="pay6-n">Nothing is printed or marked paid yet: you see it first, then confirm.</p>'
+      + '<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" onclick="bpPayGo(\'' + d.e.id + '\',\'' + d.from + '\')">Next</button></div></div>');
+    var cards = document.querySelectorAll('.bpx-modalcard'), mc = cards[cards.length - 1]; if (mc) mc.style.maxWidth = '460px';
+    payCss();
+  };
+  window.bpPayGo = function (empId, from) {
+    var r = document.querySelector('input[name="pay6"]:checked'), k = r ? r.value : 'stub';
+    if (k === 'stub') return bpPayStub(empId, from);
+    bpPayCheck(empId, from, { stub: k === 'both' });
+  };
+  function payCss() {
+    if (document.getElementById('pay6-css')) return;
+    var c = document.createElement('style'); c.id = 'pay6-css';
+    c.textContent = '#bpx .pay6 h3{margin:0 0 4px}#bpx .pay6-amt{margin:0 0 14px}#bpx .pay6-amt b{display:block;font-size:30px;font-weight:800;letter-spacing:-.02em;color:var(--ink)}#bpx .pay6-amt span{font-size:13.5px;color:var(--grey)}'
+      + '#bpx .pay6-l{display:flex;flex-direction:column;gap:8px}'
+      + '#bpx .pay6-o{display:flex !important;align-items:center;gap:12px;margin:0 !important;padding:12px 14px !important;border:1.5px solid var(--line);border-radius:14px;background:var(--card,#fff);cursor:pointer;text-transform:none !important;letter-spacing:0 !important;font-weight:400 !important;color:var(--ink) !important}'
+      + '#bpx .pay6-o input{position:absolute;opacity:0;pointer-events:none}'
+      + '#bpx .pay6-o:has(input:checked){border-color:var(--blue);background:var(--blue-l)}#bpx .pay6-o:has(input:focus-visible){outline:2px solid var(--blue);outline-offset:2px}'
+      + '#bpx .pay6-o.off{opacity:.5;cursor:not-allowed}'
+      + '#bpx .pay6-i{display:grid;place-items:center;flex:none;width:40px;height:40px;border-radius:12px;background:var(--soft);color:var(--blue)}#bpx .pay6-i .ms{font-size:22px}'
+      + '#bpx .pay6-t{flex:1;min-width:0}#bpx .pay6-t b{display:block;font-size:15.5px;font-weight:700}#bpx .pay6-t small{display:block;margin-top:1px;font-size:13px;line-height:1.4;color:var(--grey)}'
+      + '#bpx .pay6-r{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid var(--line)}#bpx .pay6-o:has(input:checked) .pay6-r{border:6px solid var(--blue)}'
+      + '#bpx .pay6-n{margin:12px 0 0;font-size:12.5px;color:var(--grey)}';
+    document.head.appendChild(c);
   }
 
   /* ------------------------------------------------------- pay stubs --- */
@@ -767,7 +814,7 @@
       no: 'PS-' + to.replace(/-/g, '') + '-' + String(e.name || 'X').replace(/\([^)]*\)/g, '').trim().split(/\s+/).map(function (w) { return w.charAt(0); }).join('').toUpperCase() };
   }
   function stubHtml(d) {
-    var e = d.e, co = d.co, logo = co.logoUrl || (window.BPLOGO || '');
+    var e = d.e, co = d.co, logo = ckLogo(co);
     var w2 = e.kind !== '1099', when = function (s) { return new Date(at(s)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); };
     var payDate = d.paid && d.paid.when ? new Date(d.paid.when).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null;
     var rateTxt = e.pay_type === 'hourly' ? m2(e.rate) + '/hr' : e.pay_type === 'day' ? m2(e.rate) + '/day' : m2(e.rate) + '/yr';
@@ -807,7 +854,7 @@
     var w = window.open('', '_blank');
     if (!w) { alert('Your browser blocked the new tab. Allow pop-ups for this site and try again.'); return; }
     w.document.open();
-    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Pay stub</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif;color:#001530;--line:#e3e8ef;--grey:#5b6b80;--soft:#f4f7fa;--ink:#001530}' + css.replace(/#bpx\s*/g, '') + '.ps-break{page-break-after:always;height:24px}@media print{body{margin:0}}</style></head><body>' + body + '<script>setTimeout(function(){print()},400)<\/script></body></html>');
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Pay stub</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif;color:#001530;--line:#e3e8ef;--grey:#5b6b80;--soft:#f4f7fa;--ink:#001530}' + css.replace(/#bpx\s*/g, '') + '.ps-break{page-break-after:always;height:24px}@media print{body{margin:0}}</style></head><body>' + body + '<script>(function(){var done=0,go=function(){if(done++)return;setTimeout(function(){print()},150)};var im=[].slice.call(document.images).filter(function(i){return !i.complete});if(!im.length)return go();var n=im.length,t=setTimeout(go,4000);im.forEach(function(i){i.onload=i.onerror=function(){if(--n<=0){clearTimeout(t);go()}}})})()<\/script></body></html>');
     w.document.close();
   };
   function stubCss() {
@@ -889,8 +936,8 @@
   }
   function sheet(d, o) { return '<div class="ck-page">' + checkFace(d, o) + voucher(d, o, false) + voucher(d, o, true) + '</div>'; }
   function today() { return new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
-  window.bpPayCheck = function (empId, from) {
-    ckCss();
+  window.bpPayCheck = function (empId, from, how) {
+    ckCss(); how = how || {};
     var d = stubData(empId, from || S.payFrom || periodOf(Date.now())[0]); if (!d) return;
     var no = String(chkGet('next', 1001)), addrs = chkGet('addr', {}), memo = 'Pay ' + nice(d.from) + ' – ' + nice(d.to);
     bpModal('<h3>Check for ' + esc(d.e.name) + '</h3>'
@@ -899,6 +946,7 @@
       + '<div class="ck-form"><div><label>Check number</label><input id="ckNo" inputmode="numeric" value="' + esc(no) + '"></div>'
       + '<div><label>Date</label><input id="ckDate" value="' + esc(today()) + '"></div>'
       + '<div class="w"><label>Memo</label><input id="ckMemo" value="' + esc(memo) + '"></div>'
+      + '<div class="w ck-chk"><label><input type="checkbox" id="ckStub"' + (how.stub ? ' checked' : '') + '> Print the pay stub after the check <small>A full page with the hours, rate and year-to-date pay, for their records.</small></label></div>'
       + '<div class="w ck-chk"><label><input type="checkbox" id="ckTop"' + (chkGet('top', true) ? ' checked' : '') + '> Print my logo and business name in the top-left corner <small>Turn this off if your checks already have your name printed there.</small></label></div>'
       + '<div class="w"><label>Mailing address <small>for a window envelope, optional</small></label><textarea id="ckAddr" rows="2" placeholder="Street\nCity, State ZIP">' + esc(addrs[empId] || '') + '</textarea></div></div>'
       + '<p class="ck-note">Print onto pre-printed business checks with the check on top (from your bank or an office store). Your bank details and the magnetic number line are already on them, so BuilderPro never asks for them. Two stubs with the pay details print below the check. <b>Pay</b> signs it with your saved signature, prints it and marks it paid; paid another way? Close this and use Mark paid.</p>'
@@ -944,10 +992,10 @@
     signP.then(function (row) {
       var sig = row && row.image;
       return ok2({ kind: 'check', title: 'Pay ' + d.e.name + ' by check?', amount: d.r.gross, who: 'Check ' + (($('ckNo') || {}).value || chkGet('next', 1001)) + ' \u00b7 ' + nice(d.from) + ' \u2013 ' + nice(d.to),
-        lines: [sig ? 'Signed with your saved signature.' : 'You have no saved signature, so it prints for you to sign by hand (Settings \u203a Your signature to add one).', 'It prints now, then shows as paid in Finances.', 'Print on your pre-printed checks.'],
+        lines: [sig ? 'Signed with your saved signature.' : 'You have no saved signature, so it prints for you to sign by hand (Settings \u203a Your signature to add one).', 'It prints now, then shows as paid in Finances.', 'Print on your pre-printed checks.', ($('ckStub') || {}).checked ? 'Their pay stub prints right after the check.' : ''],
         cta: 'Yes, pay ' + m2(d.r.gross) }).then(function (y) {
           if (!y) return;
-          bpCheckPrint(empId, from, 0, { sig: sig, skipAsk: 1 });
+          bpCheckPrint(empId, from, 0, { sig: sig, skipAsk: 1, stub: !!($('ckStub') || {}).checked });
           bpPayMark(empId, from, 1, 1);
           if (window.bpCloseModal) bpCloseModal();
           if (window.bpToast) bpToast(d.e.name + ' paid ' + m2(d.r.gross) + ' by check.', 'success');
@@ -963,23 +1011,26 @@
       return ok2({ kind: 'check', title: ids.length > 1 ? 'Print ' + ids.length + ' checks?' : 'Print this check?', amount: tot0,
         who: ids.length > 1 ? 'Every 1099 contractor this period' : (stubData(ids[0], from) || { e: { name: '' } }).e.name,
         lines: ['They print to sign by hand. This doesn\u2019t mark anyone paid.', 'Print on your pre-printed checks.'], cta: ids.length > 1 ? 'Yes, print ' + ids.length + ' checks' : 'Yes, print check' })
-        .then(function (y) { if (y) bpCheckPrint(empId, from, test, { skipAsk: 1 }); });
+        .then(function (y) { if (y) bpCheckPrint(empId, from, test, { skipAsk: 1, stub: opt.stub }); });
     }
+    if (opt.stub == null && $('ckStub')) opt.stub = $('ckStub').checked;
+    if (opt.stub) stubCss();
     var first = parseInt(($('ckNo') || {}).value || chkGet('next', 1001), 10) || 1001;
     var date = ($('ckDate') || {}).value || today(), memoIn = $('ckMemo') ? $('ckMemo').value : null;
     if (empId && $('ckAddr')) { var A = chkGet('addr', {}); A[empId] = $('ckAddr').value; chkSet('addr', A); }
     var addrs = chkGet('addr', {});
     var pages = ids.map(function (id, i) { var d = stubData(id, from); if (!d) return '';
-      return sheet(d, { bg: !!test, sig: opt.sig || null, no: String(first + i), date: date, memo: memoIn != null && empId ? memoIn : 'Pay ' + nice(d.from) + ' – ' + nice(d.to), addr: addrs[id] || '', top: !!chkGet('top', true) }); }).join('');
+      return sheet(d, { bg: !!test, sig: opt.sig || null, no: String(first + i), date: date, memo: memoIn != null && empId ? memoIn : 'Pay ' + nice(d.from) + ' – ' + nice(d.to), addr: addrs[id] || '', top: !!chkGet('top', true) })
+        + (opt.stub ? '<div class="ps-page">' + stubHtml(d) + '</div>' : ''); }).join('');
     if (!test) chkSet('next', first + ids.length);
     ckCss();
-    var css = (document.getElementById('ck-css') || {}).textContent || '';
+    var css = ((document.getElementById('ck-css') || {}).textContent || '') + (opt.stub ? ((document.getElementById('ps-css') || {}).textContent || '') + '.ps-page{box-sizing:border-box;width:8.5in;min-height:11in;padding:.5in;background:#fff;page-break-after:always}.ps-page .ps-doc{border:0;border-radius:0;padding:0;margin:0}@media screen{.ps-page{margin:0 auto 20px}}' : '');
     var w = window.open('', '_blank');
     if (!w) { alert('Your browser blocked the new tab. Allow pop-ups for this site and try again.'); return; }
     w.document.open();
     w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>' + (test ? 'Check test' : 'Checks') + '</title><style>@page{size:letter;margin:0}html,body{margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#000}'
       + css.replace(/#bpx\s*/g, '') + '.ck-page{width:8.5in;height:11in;page-break-after:always;overflow:hidden}.ck{width:8.5in;height:3.5in}@media screen{body{background:#888;padding:20px}.ck-page{background:#fff;margin:0 auto 20px}}</style></head><body>'
-      + pages + '<script>setTimeout(function(){print()},400)<\/script></body></html>');
+      + pages + '<script>(function(){var done=0,go=function(){if(done++)return;setTimeout(function(){print()},150)};var im=[].slice.call(document.images).filter(function(i){return !i.complete});if(!im.length)return go();var n=im.length,t=setTimeout(go,4000);im.forEach(function(i){i.onload=i.onerror=function(){if(--n<=0){clearTimeout(t);go()}}})})()<\/script></body></html>');
     w.document.close();
     if (!test && $('ckNo')) $('ckNo').value = String(first + ids.length);
   };
@@ -1003,7 +1054,7 @@
       + '#bpx .ck-sigimg{position:absolute;height:17%;max-width:34%;object-fit:contain;object-position:left bottom}'
       + '#bpx .ck-top{display:flex;align-items:center;gap:1.3cqw;max-width:40%;white-space:normal;color:#000}#bpx .ck-top img{height:6.6cqw;max-width:14cqw;object-fit:contain;flex:none}#bpx .ck-top b{display:block;font-size:1.95cqw;font-weight:700;line-height:1.15}#bpx .ck-top i{display:block;font-style:normal;font-size:1.3cqw;line-height:1.35;color:#222}'
       + '#bpx .ck-vh b{display:flex;align-items:center;gap:8px}#bpx .ck-vh img{height:22px;max-width:90px;object-fit:contain}'
-      + '#bpx .ck-chk label{display:flex !important;align-items:flex-start;gap:8px;font-size:13.5px !important;font-weight:600;color:var(--ink) !important;flex-wrap:wrap}#bpx .ck-chk input{width:18px;height:18px;margin:1px 0 0;flex:none;accent-color:var(--blue)}#bpx .ck-chk small{flex-basis:100%;margin-left:26px;font-weight:400;color:var(--grey)}'
+      + '#bpx .ck-chk label{display:flex !important;align-items:flex-start;gap:8px;font-size:13.5px !important;font-weight:600;color:var(--ink) !important;flex-wrap:wrap}#bpx .ck-form .ck-chk input[type=checkbox]{width:18px !important;min-width:18px !important;height:18px !important;min-height:0 !important;margin:1px 0 0 !important;padding:0 !important;flex:none !important;accent-color:var(--blue)}#bpx .ck-form .ck-chk label{margin:0 !important;cursor:pointer}#bpx .ck-chk small{flex-basis:100%;margin-left:26px;font-weight:400;color:var(--grey)}'
       + '#bpx .ck-micr{left:22%;top:93%;font-family:"Courier New",monospace;font-size:1.7cqw;letter-spacing:.12em;text-transform:none}'
       + '#bpx .ck-v{box-sizing:border-box;height:3.75in;padding:.35in .5in 0;font-size:10pt;color:#000;border-top:1px dashed #bbb}#bpx .ck-vh,#bpx .ck-vp,#bpx .ck-vt{display:flex;justify-content:space-between;gap:12px}'
       + '#bpx .ck-vh b{font-size:11pt}#bpx .ck-vp{margin:8px 0}#bpx .ck-vp span,#bpx .ck-vh span{color:#444}'

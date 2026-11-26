@@ -132,3 +132,8 @@
 @top #bpx-nj-people .cw-row:has(input:checked){border-color:var(--blue) !important;background:var(--blue-l) !important}
 @top #bpx-nj-people .cw-row input[type=checkbox]{flex:none !important;width:22px !important;height:22px !important;margin:0 !important;accent-color:var(--blue) !important}
 @top #bpx-nj-people .cw-n{flex:1 !important;min-width:0 !important;line-height:1.35 !important;margin:0 !important;padding:0 !important}
+
+/* Pay period rows (2026-11-26): Pay and Mark paid the same height, side by side, centred on the row */
+@top .bpx-ctable td:last-child:has(.ps-btn){vertical-align:middle !important}
+@top .bpx-ctable td:last-child .ps-btn,@top .bpx-ctable td:last-child .bpx-donebtn{display:inline-flex !important;align-items:center !important;justify-content:center !important;gap:5px !important;height:36px !important;min-height:36px !important;margin:0 0 0 6px !important;padding:0 14px !important;font-size:13px !important;font-weight:600 !important;line-height:1 !important;vertical-align:middle !important}
+@top .bpx-ctable td:last-child .ps-btn .ms{font-size:17px !important}
