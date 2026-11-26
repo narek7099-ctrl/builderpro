@@ -46,7 +46,8 @@
   var TABS = {
     /* owner: the big + in the middle makes anything new; everything else is under the avatar (top right) */
     /* Leads is a tab because new customers are the money; Calendar is one tap from Home (Today card, Apps) */
-    owner: [['home', 'Home', 'home', 'dashboard'], ['leads', 'Leads', 'leads', 'contacts'], ['create', 'New', 'plus', null], ['projects', 'Jobs', 'projects', 'activejobs'], ['inbox', 'Inbox', 'convos', 'messaging']],
+    /* 2026-11-26: five plain tabs like a native app; "More" opens every section, the + is in the top bar */
+    owner: [['home', 'Home', 'home', 'dashboard'], ['leads', 'Leads', 'leads', 'contacts'], ['projects', 'Jobs', 'projects', 'activejobs'], ['inbox', 'Inbox', 'convos', 'messaging'], ['apps', 'More', 'apps', null]],
     crew: [['home', 'Today', 'home', 'crewdash'], ['projects', 'Jobs', 'projects', 'crewprojects'], ['msgs', 'Messages', 'convos', 'crewmsgs'], ['apps', 'Me', 'user', null]],
     sub: [['jobs', 'Jobs', 'projects', 'subjobs'], ['inv', 'Invoices', 'inv', 'subinvoices'], ['chg', 'Changes', 'page', 'subchanges'], ['msgs', 'Messages', 'convos', 'crewmsgs'], ['apps', 'More', 'dots', null]]
   };
@@ -59,7 +60,7 @@
       if (g === 'convos') return 'inbox';
       if (g === 'projects') return 'projects';
       if (g === 'leads' || v === 'closedeals') return 'leads';
-      return '';
+      return 'apps';   /* everything else is reached through More */
     }
     if (r === 'crew' && v === 'crewclock') return 'home';   /* the time clock belongs to the Today tab */
     var hit = TABS[r].filter(function (t) { return t[3] === v; })[0];
@@ -130,11 +131,34 @@
     var av0 = $('hlAv');
     if (av0 && role() === 'owner' && !av0._m) { av0._m = 1; var po = av0.onclick; av0.onclick = function (e) { if (M.on()) { e.preventDefault(); M.apps(); } else if (po) po.call(av0, e); }; }
     var acts = $('hlTacts');
+    if (acts && role() === 'owner' && !$('bpMNew')) {
+      var nb = document.createElement('button'); nb.type = 'button'; nb.id = 'bpMNew'; nb.className = 'hl-rb bp-m-only bp-mnew'; nb.title = 'New'; nb.setAttribute('aria-label', 'Create something new');
+      nb.innerHTML = '<svg class="hl-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'; nb.onclick = function () { M.create(); };
+      acts.insertBefore(nb, acts.firstChild);
+    }
+    bigTitle(v || window._bpCurView);
     if (acts && role() === 'owner' && allows('settings') && !$('bpMGear')) {
       var g = document.createElement('button'); g.type = 'button'; g.id = 'bpMGear'; g.className = 'hl-rb bp-m-only'; g.title = 'Settings'; g.setAttribute('aria-label', 'Settings');
       g.innerHTML = ico('settings'); g.onclick = function () { bpNav('settings'); };
       var av = $('hlAv'); acts.insertBefore(g, av || null);
     }
+  }
+
+  /* a large title at the top of each page, like iOS; the bar's own title shows once it scrolls away */
+  function bigTitle(v) {
+    var main = document.querySelector('#bpx .bpx-main'), x = $('bpx'); if (!main || !x) return;
+    var lt = $('bpLTitle');
+    var skip = !M.on() || homeView(v) || v === 'crewdash';
+    if (!lt) {
+      lt = document.createElement('div'); lt.id = 'bpLTitle'; lt.className = 'bp-ltitle'; lt.innerHTML = '<h2></h2>';
+      var top0 = $('hlTop'); main.insertBefore(lt, top0 && top0.parentNode === main ? top0.nextSibling : main.firstChild);
+      main.addEventListener('scroll', function () { var b = $('bpLTitle'); x.classList.toggle('bp-lt-up', !!b && !b.hidden && b.getBoundingClientRect().bottom < 60); }, { passive: true });
+    }
+    lt.hidden = skip; x.classList.toggle('bp-lt-on', !skip); if (skip) { x.classList.remove('bp-lt-up'); return; }
+    var tt = document.querySelector('#hlTop .hl-ttl h1') || document.querySelector('#hlTop .hl-ttl');
+    var name = tt ? tt.textContent.trim() : '';
+    if (lt.firstChild.textContent !== name) lt.firstChild.textContent = name;
+    x.classList.toggle('bp-lt-up', lt.getBoundingClientRect().bottom < 60);
   }
 
   /* ------------------------------------------------------ apps sheet --- */
@@ -164,7 +188,7 @@
     var dark = !!($('bpx') && $('bpx').classList.contains('bpx-dark'));
     var el = document.createElement('div'); el.id = 'bpApps'; el.className = 'bp-sheet'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', r === 'owner' ? 'Apps' : 'More');
     el.innerHTML = '<div class="bp-sheet-bg" onclick="bpMobile.appsClose()"></div><div class="bp-sheet-card"><i class="bp-sheet-grab"></i>'
-      + '<div class="bp-sheet-h"><b>' + (r === 'owner' ? 'Apps' : r === 'crew' ? 'Me' : 'More') + '</b><button type="button" class="bp-sheet-x" onclick="bpMobile.appsClose()" aria-label="Close">×</button></div>'
+      + '<div class="bp-sheet-h"><b>' + (r === 'owner' ? 'More' : r === 'crew' ? 'Me' : 'More') + '</b><button type="button" class="bp-sheet-x" onclick="bpMobile.appsClose()" aria-label="Close">×</button></div>'
       + '<div class="bp-apps">' + grid + '</div>'
       + '<div class="bp-sheet-rows">' + more
         + (window.bpTour ? '<button type="button" class="bp-sheet-row" onclick="bpMobile.appsClose();bpTour()">' + ico('help') + '<span>Take the tour</span></button>' : '')
@@ -706,7 +730,7 @@
     var v = window._bpCurView, a = $('bpxViewArea');
     if (!a || (v !== 'calculator' && v !== 'automations') || a.querySelector('.set-back')) return;
     var b = document.createElement('button'); b.type = 'button'; b.className = 'eq-back set-back'; b.hidden = !M.on();
-    b.innerHTML = '<span class="ms">chevron_left</span>Settings'; b.onclick = function () { bpNav('settings'); };
+    b.innerHTML = '<span class="ms">chevron_left</span>Settings'; b.onclick = function () { window._bpBackAt = Date.now(); bpNav('settings'); };
     a.insertBefore(b, a.firstChild);
   }
   function backHook() {
@@ -724,7 +748,7 @@
     }
     var name = (lk.textContent || '').replace(/[←\u2190]/g, '').replace(/arrow_back|chevron_left/g, '').trim();
     b.setAttribute('aria-label', 'Back to ' + (name || 'the list'));
-    b.hidden = false; b.onclick = function () { lk.click(); };
+    b.hidden = false; b.onclick = function () { window._bpBackAt = Date.now(); lk.click(); };
   }
 
   /* Calendar's "+ Add" is a round + on the phone (the word goes, the menu stays) */

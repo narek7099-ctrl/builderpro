@@ -35,8 +35,17 @@
     var wrapped = function (v) {
       var before = window._bpCurView, r = nav.apply(this, arguments);
       if (on() && !calm() && v !== before) {
-        var a = $('bpxViewArea');
-        if (a) { a.classList.remove('bp-enter'); void a.offsetWidth; a.classList.add('bp-enter'); setTimeout(function () { a.classList.remove('bp-enter'); }, 320); }
+        /* 2026-11-26: like a native app, a page further in slides in from the right, going back
+           slides it the other way, and switching tabs or tabs within a section just fades */
+        var a = $('bpxViewArea'), g = window.bpNavGroupOf || function () { return null; };
+        var ROOT = /^(dashboard|contacts|activejobs|messaging|crewdash|crewprojects|crewmsgs|subjobs|subinvoices|subchanges)$/;
+        var back = Date.now() - (window._bpBackAt || 0) < 900;
+        var cls = back ? 'bp-pop' : (ROOT.test(v) || (g(v) && g(v) === g(before))) ? 'bp-enter' : 'bp-push';
+        [a, $('bpLTitle')].forEach(function (el) {
+          if (!el) return; el.classList.remove('bp-enter', 'bp-push', 'bp-pop'); void el.offsetWidth; el.classList.add(cls);
+          setTimeout(function () { el.classList.remove(cls); }, 360);
+        });
+        if (cls !== 'bp-enter') bpHaptic('light');
       }
       return r;
     };
