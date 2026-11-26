@@ -97,3 +97,24 @@
 @top .bpx-panel.emp-flat>.bpx-jobtabs{margin-bottom:16px !important}
 @top .hr6-tags{align-items:center !important}
 @top .hr6-tags .hr6-clear{height:26px !important;font-size:12px !important}
+/* pay stub buttons in the Pay period table */
+@top .ps-btn{display:inline-flex !important;align-items:center !important;gap:4px !important;width:auto !important;margin:0 !important;padding:6px 12px !important;font-size:12.5px !important}
+@top .ps-btn .ms{font-size:16px !important}
+@top .ps-modal .ps-doc{color:#001530 !important;background:#fff !important}
+/* pay period on a phone: a card per person */
+@top .pp6-list{display:flex !important;flex-direction:column !important;gap:10px !important;margin-top:12px !important}
+@top .pp6{padding:14px !important;border:1px solid var(--line) !important;border-radius:16px !important;background:var(--card) !important}
+@top .pp6.disp{border-color:#f5c451 !important}
+@top .pp6-h{display:flex !important;align-items:flex-start !important;justify-content:space-between !important;gap:12px !important}
+@top .pp6-t{min-width:0 !important;display:flex !important;flex-direction:column !important}
+@top .pp6-t b{font-size:16px !important;font-weight:700 !important;color:var(--ink) !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important}
+@top .pp6-t small{font-size:13px !important;color:var(--grey) !important}
+@top .pp6-amt{flex:none !important;text-align:right !important;display:flex !important;flex-direction:column !important}
+@top .pp6-amt b{font-size:20px !important;font-weight:800 !important;color:var(--ink) !important}
+@top .pp6-amt small{font-size:12px !important;color:var(--grey) !important}
+@top .pp6-jobs{margin-top:6px !important;font-size:13px !important;color:var(--grey) !important}
+@top .pp6-flag{display:inline-flex !important;align-items:center !important;gap:4px !important;margin-top:8px !important;font-size:12.5px !important;font-weight:600 !important;color:#b45309 !important}
+@top .pp6-flag .ms{font-size:16px !important}
+@top .pp6-b{display:grid !important;grid-template-columns:1fr 1fr !important;gap:8px !important;margin-top:12px !important}
+@top .pp6-b .bpx-btn{display:inline-flex !important;align-items:center !important;justify-content:center !important;gap:6px !important;width:100% !important;height:42px !important;margin:0 !important;padding:0 10px !important;font-size:14px !important;border-radius:12px !important}
+@top .pp6-b .bpx-btn .ms{font-size:18px !important}

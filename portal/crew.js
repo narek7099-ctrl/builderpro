@@ -655,6 +655,7 @@
   }
 
   function payPeriod(el) {
+    stubCss();
     var cur = periodOf(Date.now());
     var f = S.payFrom || cur[0], t = periodEnd(f);
     var list = dueFor(f, t);
@@ -698,7 +699,17 @@
       + '<div class="bg-top"><div><b>' + money(owed) + '</b><span>still to pay</span></div>'
       + '<div><b>' + money(paid) + '</b><span>paid, in Finances</span></div>'
       + '<div><b>' + list.length + '</b><span>' + (list.length === 1 ? 'person' : 'people') + '</span></div></div>'
-      + '<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr>'
+      /* on a phone (2026-11-26): one card per person instead of a seven-column table */
+      + ((window.innerWidth || 1000) <= 760 ? '<div class="pp6-list">' + list.map(function (r) {
+          var amt = r.paid ? +r.paid.amount || 0 : r.gross;
+          return '<div class="pp6' + (r.disp.length ? ' disp' : '') + '"><div class="pp6-h"><div class="pp6-t"><b>' + esc(r.e.name) + '</b><small>' + (r.e.kind === '1099' ? '1099' : 'W-2')
+            + ' \u00b7 ' + (r.e.pay_type === 'salary' && !r.h ? 'salary' : r.h + ' hrs' + (r.ot ? ' + ' + r.ot + ' OT' : '')) + '</small></div><div class="pp6-amt"><b>' + money(amt) + '</b><small>' + (r.paid ? 'paid' : 'due') + '</small></div></div>'
+            + (Object.keys(r.jobs).length ? '<div class="pp6-jobs">' + esc(Object.keys(r.jobs).join(', ').replace(/\s*\(sample\)/g, '')) + '</div>' : '')
+            + (r.disp.length ? '<div class="pp6-flag"><span class="ms">flag</span>' + r.disp.length + ' disputed ' + (r.disp.length === 1 ? 'day' : 'days') + '</div>' : '')
+            + '<div class="pp6-b"><button class="bpx-btn ghost" onclick="bpPayStub(\'' + r.e.id + '\',\'' + f + '\')"><span class="ms">receipt_long</span>Pay stub</button>'
+            + (r.paid ? '<button class="bpx-btn ghost" onclick="bpPayMark(\'' + r.e.id + '\',\'' + f + '\',0)">\u2713 Paid</button>'
+              : '<button class="bpx-btn" onclick="bpPayMark(\'' + r.e.id + '\',\'' + f + '\',1)">Mark paid</button>') + '</div></div>';
+        }).join('') + '</div>' : '<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr>'
       + '<th>Who</th><th>Type</th><th>Hours</th><th>OT</th><th>Due</th><th>Jobs</th><th></th>'
       + '</tr></thead><tbody>'
       + list.map(function (r) {
@@ -711,15 +722,102 @@
             + '<td>' + (r.e.pay_type === 'salary' && !r.h ? '<span class="bpx-mut">salary</span>' : r.h) + '</td><td>' + (r.ot || '—') + '</td>'
             + '<td><b>' + money(amt) + '</b></td>'
             + '<td class="bpx-mut" style="font-size:11.5px">' + esc(Object.keys(r.jobs).join(', ') || '—') + '</td>'
-            + '<td style="text-align:right">' + (r.paid
-                ? '<button class="bpx-btn ghost" style="padding:6px 12px;font-size:12px" title="Undo: takes it back out of Finances" onclick="bpPayMark(\'' + r.e.id + '\',\'' + f + '\',0)">✓ Paid</button>'
-                : '<button class="bpx-btn" style="padding:6px 12px;font-size:12px" onclick="bpPayMark(\'' + r.e.id + '\',\'' + f + '\',1)">Mark paid</button>')
+            + '<td style="text-align:right;white-space:nowrap"><button class="bpx-btn ghost ps-btn" onclick="bpPayStub(\'' + r.e.id + '\',\'' + f + '\')"><span class="ms">receipt_long</span>Pay stub</button> ' + (r.paid
+                ? '<button class="bpx-btn ghost bpx-donebtn" style="padding:6px 12px;font-size:12px" title="Undo: takes it back out of Finances" onclick="bpPayMark(\'' + r.e.id + '\',\'' + f + '\',0)">✓ Paid</button>'
+                : '<button class="bpx-btn bpx-donebtn" style="padding:6px 12px;font-size:12px" onclick="bpPayMark(\'' + r.e.id + '\',\'' + f + '\',1)">Mark paid</button>')
             + '</td></tr>';
         }).join('')
-      + '</tbody></table></div>'
+      + '</tbody></table></div>')
+      + '<div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button class="bpx-btn ghost" onclick="bpPayStubPrint(\'\',\'' + f + '\')">Print every pay stub</button></div>'
       + (owed > 0 && list.filter(function (r) { return !r.paid; }).length > 1
           ? '<div style="margin-top:10px;text-align:right"><button class="bpx-btn" onclick="bpPayAll(\'' + f + '\')">Mark everyone paid · ' + money(owed) + '</button></div>' : '')
       + note;
+  }
+
+  /* ------------------------------------------------------- pay stubs --- */
+  /* 2026-11-26: a pay stub per person per period, shown first as a preview (like an
+     invoice or an estimate) and printed or saved as a PDF from there. Gross pay only:
+     BuilderPro does not withhold or file tax, and the stub says so. */
+  var m2 = function (n) { n = Math.round((+n || 0) * 100) / 100; return (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+  function stubData(empId, from) {
+    var to = periodEnd(from), r = dueFor(from, to).filter(function (x) { return x.e.id === empId; })[0]; if (!r) return null;
+    var e = r.e, rt = +e.rate || 0, lines = [];
+    if (e.pay_type === 'hourly') {
+      if (r.h) lines.push(['Regular hours', r.h, rt, r.h * rt]);
+      if (r.ot) lines.push(['Overtime (time and a half)', r.ot, rt * 1.5, r.ot * rt * 1.5]);
+    } else if (e.pay_type === 'day') lines.push(['Days worked', Math.round(r.h / 8 * 100) / 100, rt, (r.h / 8) * rt]);
+    else lines.push(['Salary for this period', 1, rt / perYear(), rt / perYear()]);
+    var days = S.entries.filter(function (x) { return x.employee_id === e.id && x.worked_on >= from && x.worked_on <= to; })
+      .sort(function (a, b) { return a.worked_on < b.worked_on ? -1 : 1; });
+    /* year to date: every period from January 1 to the end of this one */
+    var y0 = to.slice(0, 4) + '-01-01', ytd = 0;
+    if (e.pay_type === 'salary') ytd = rt * Math.max(0, (at(to) - at(y0)) / (365 * 864e5)) + 0;
+    else S.entries.forEach(function (x) { if (x.employee_id !== e.id || x.worked_on < y0 || x.worked_on > to) return; var h = +x.hours || 0, ot = +x.ot_hours || 0; ytd += e.pay_type === 'day' ? (h / 8) * rt : h * rt + ot * rt * 1.5; });
+    var co = ((window.bpSettingsGet && bpSettingsGet()) || {}).company || {};
+    return { r: r, e: e, from: from, to: to, lines: lines, days: days, ytd: ytd, co: co, paid: r.paid,
+      no: 'PS-' + to.replace(/-/g, '') + '-' + String(e.name || 'X').replace(/\([^)]*\)/g, '').trim().split(/\s+/).map(function (w) { return w.charAt(0); }).join('').toUpperCase() };
+  }
+  function stubHtml(d) {
+    var e = d.e, co = d.co, logo = co.logoUrl || (window.BPLOGO || '');
+    var w2 = e.kind !== '1099', when = function (s) { return new Date(at(s)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); };
+    var payDate = d.paid && d.paid.when ? new Date(d.paid.when).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null;
+    var rateTxt = e.pay_type === 'hourly' ? m2(e.rate) + '/hr' : e.pay_type === 'day' ? m2(e.rate) + '/day' : m2(e.rate) + '/yr';
+    return '<div class="ps-doc">'
+      + '<div class="ps-top"><div class="ps-co">' + (logo ? '<img src="' + esc(logo) + '" alt="">' : '<span class="ps-mono">' + esc(String(co.name || 'B').charAt(0)) + '</span>')
+        + '<div><b>' + esc(co.name || 'Your business') + '</b>' + (co.address ? '<small>' + esc(co.address) + '</small>' : '') + (co.phone ? '<small>' + esc(co.phone) + '</small>' : '') + '</div></div>'
+        + '<div class="ps-title"><b>Pay stub</b><small>' + esc(d.no) + '</small></div></div>'
+      + '<div class="ps-meta"><div><small>Paid to</small><b>' + esc(e.name) + '</b><span>' + esc(e.trade || '') + (e.trade ? ' · ' : '') + (w2 ? 'W-2 employee' : '1099 contractor') + '</span></div>'
+        + '<div><small>Pay period</small><b>' + when(d.from) + ' – ' + when(d.to) + '</b><span>' + ({ weekly: 'Weekly', biweekly: 'Every two weeks', monthly: 'Monthly' })[freq()] + '</span></div>'
+        + '<div><small>' + (payDate ? 'Paid on' : 'Status') + '</small><b>' + (payDate || 'Not paid yet') + '</b><span>Rate ' + rateTxt + '</span></div></div>'
+      + '<table class="ps-tb"><thead><tr><th>Earnings</th><th class="n">Hours</th><th class="n">Rate</th><th class="n">Amount</th></tr></thead><tbody>'
+        + d.lines.map(function (l) { return '<tr><td>' + esc(l[0]) + '</td><td class="n">' + (e.pay_type === 'salary' ? '—' : l[1]) + '</td><td class="n">' + m2(l[2]) + '</td><td class="n">' + m2(l[3]) + '</td></tr>'; }).join('')
+      + '</tbody></table>'
+      + '<div class="ps-sum"><div><span>Gross pay</span><span>' + m2(d.r.gross) + '</span></div>'
+        + (w2 ? '<div class="ps-tax"><span>Taxes and deductions</span><span>Handled by your payroll</span></div>' : '<div class="ps-tax"><span>Tax withheld</span><span>None (1099)</span></div>')
+        + '<div class="t"><span>' + (w2 ? 'Gross pay this period' : 'Amount paid') + '</span><span>' + m2(d.r.gross) + '</span></div>'
+        + '<div class="ps-ytd"><span>Year to date, gross</span><span>' + m2(d.ytd) + '</span></div></div>'
+      + (d.days.length ? '<div class="ps-days"><b>Days worked</b><table class="ps-tb sm"><thead><tr><th>Day</th><th>Job</th><th class="n">Hours</th><th class="n">OT</th></tr></thead><tbody>'
+        + d.days.map(function (x) { return '<tr><td>' + esc(dayLabel(x.worked_on)) + '</td><td>' + esc(String(x.job_name || '—').replace(/\s*\(sample\)/g, '')) + '</td><td class="n">' + (+x.hours || 0) + '</td><td class="n">' + (+x.ot_hours || '—') + '</td></tr>'; }).join('')
+        + '</tbody></table></div>' : '')
+      + '<div class="ps-foot">' + (w2 ? 'Amounts are before tax. Withholding and filing are done by your payroll provider.' : 'Paid as an independent contractor; no tax was withheld.') + ' Made with BuilderPro.</div>'
+      + (d.paid ? '<div class="ps-stamp">Paid</div>' : '')
+      + '</div>';
+  }
+  window.bpPayStub = function (empId, from) {
+    var d = stubData(empId, from || S.payFrom || periodOf(Date.now())[0]); if (!d) return;
+    bpModal('<h3>Pay stub for ' + esc(d.e.name) + '</h3>' + stubHtml(d)
+      + '<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button>'
+      + '<button class="bpx-btn" onclick="bpPayStubPrint(\'' + d.e.id + '\',\'' + d.from + '\')"><span class="ms" style="font-size:18px;vertical-align:-4px;margin-right:4px">print</span>Print or save PDF</button></div>');
+    var cards = document.querySelectorAll('.bpx-modalcard'), mc = cards[cards.length - 1]; if (mc) { mc.style.maxWidth = '780px'; mc.style.width = '95vw'; mc.classList.add('ps-modal'); }
+  };
+  /* a clean page of its own, printed (or saved as a PDF from the print dialog) */
+  window.bpPayStubPrint = function (empId, from) {
+    var ids = empId ? [empId] : dueFor(from, periodEnd(from)).map(function (r) { return r.e.id; });
+    var body = ids.map(function (id) { var d = stubData(id, from); return d ? stubHtml(d) : ''; }).join('<div class="ps-break"></div>');
+    var css = (document.getElementById('ps-css') || {}).textContent || '';
+    var w = window.open('', '_blank');
+    if (!w) { alert('Your browser blocked the new tab. Allow pop-ups for this site and try again.'); return; }
+    w.document.open();
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Pay stub</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif;color:#001530;--line:#e3e8ef;--grey:#5b6b80;--soft:#f4f7fa;--ink:#001530}' + css.replace(/#bpx\s*/g, '') + '.ps-break{page-break-after:always;height:24px}@media print{body{margin:0}}</style></head><body>' + body + '<script>setTimeout(function(){print()},400)<\/script></body></html>');
+    w.document.close();
+  };
+  function stubCss() {
+    if (document.getElementById('ps-css')) return;
+    var c = document.createElement('style'); c.id = 'ps-css';
+    c.textContent = '#bpx .ps-doc{position:relative;margin:8px 0 14px;padding:28px;border:1px solid var(--line);border-radius:14px;background:#fff;color:#001530;font-size:14px;line-height:1.45;overflow:hidden}'
+      + '#bpx .ps-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding-bottom:16px;border-bottom:2px solid #001530}'
+      + '#bpx .ps-co{display:flex;gap:12px;align-items:center;min-width:0}#bpx .ps-co img{width:52px;height:52px;object-fit:contain;border-radius:10px}#bpx .ps-mono{display:grid;place-items:center;width:52px;height:52px;border-radius:12px;background:#001530;color:#fff;font-weight:800;font-size:22px}'
+      + '#bpx .ps-co b{display:block;font-size:17px}#bpx .ps-co small{display:block;color:#5b6b80;font-size:12.5px}'
+      + '#bpx .ps-title{text-align:right}#bpx .ps-title b{display:block;font-size:22px;letter-spacing:-.01em;text-transform:uppercase}#bpx .ps-title small{color:#5b6b80;font-size:12.5px}'
+      + '#bpx .ps-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}#bpx .ps-meta small{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5b6b80}#bpx .ps-meta b{display:block;margin-top:3px;font-size:15px}#bpx .ps-meta span{display:block;font-size:12.5px;color:#5b6b80}'
+      + '#bpx .ps-tb{width:100%;border-collapse:collapse}#bpx .ps-tb th{padding:8px 0;border-bottom:1px solid #e3e8ef;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#5b6b80;text-align:left}#bpx .ps-tb td{padding:10px 0;border-bottom:1px solid #eef1f5}#bpx .ps-tb .n{text-align:right;white-space:nowrap;padding-left:12px}'
+      + '#bpx .ps-tb.sm td{padding:6px 0;font-size:12.5px}'
+      + '#bpx .ps-sum{margin:12px 0 0 auto;max-width:330px}#bpx .ps-sum>div{display:flex;justify-content:space-between;gap:12px;padding:5px 0}#bpx .ps-tax{color:#5b6b80;font-size:13px}#bpx .ps-sum .t{margin-top:4px;padding-top:10px;border-top:2px solid #001530;font-size:17px;font-weight:800}#bpx .ps-ytd{color:#5b6b80;font-size:12.5px}'
+      + '#bpx .ps-days{margin-top:20px}#bpx .ps-days>b{display:block;margin-bottom:4px;font-size:13px}'
+      + '#bpx .ps-foot{margin-top:20px;padding-top:12px;border-top:1px solid #e3e8ef;font-size:11.5px;color:#5b6b80}'
+      + '#bpx .ps-stamp{position:absolute;top:96px;right:28px;padding:6px 16px;border:3px solid #16c79a;border-radius:10px;color:#0d8f6e;font-weight:900;font-size:20px;letter-spacing:.12em;text-transform:uppercase;transform:rotate(-8deg);opacity:.85}'
+      + '@media (max-width:600px){#bpx .ps-doc{padding:18px}#bpx .ps-meta{grid-template-columns:1fr}#bpx .ps-top{flex-direction:column}#bpx .ps-title{text-align:left}#bpx .ps-stamp{top:18px;right:16px}}';
+    document.head.appendChild(c);
   }
 
   function book(r, from) {

@@ -505,3 +505,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-26 before native phone shell (More tab, plain tab bar, system font, large titles, slides): restore to 0820251
 - 2026-11-26 before roomier phone top bar, sidebar menu back, aligned home tile numbers: restore to 7428032
 - 2026-11-26 before Employees Hours and Crews redesign: restore to ee07f70
+- 2026-11-26 before pay stubs: restore to e20f810
