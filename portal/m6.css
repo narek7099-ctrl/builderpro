@@ -11,10 +11,10 @@
 /* the phone's own font: San Francisco on an iPhone, Roboto on Android */
 @top.bp-m{--sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif !important}
 
-/* top bar: logo on the left, the title once the big one scrolls away, + and the bell on the right */
-@top.bp-m .hl-top .hl-burger,@top.bp-m .hl-top .hl-rb.g,@top.bp-m .hl-top .hl-rb.p,@top.bp-m .hl-top .hl-rb.b,@top.bp-m .hl-top #hlAv,@top.bp-m .hl-top #bpMGear{display:none !important}
-@top.bp-m .hl-top .bp-mnew{display:grid !important;place-items:center !important;width:40px !important;height:40px !important;border-radius:50% !important;background:var(--blue) !important;color:#fff !important;border:0 !important;box-shadow:none !important}
-@top.bp-m .hl-top .bp-mnew svg{width:22px !important;height:22px !important;stroke:#fff !important;stroke-width:2.4 !important;fill:none !important}
+/* top bar: the menu (sidebar) and logo on the left, the title once the big one scrolls away, + and the bell on the right */
+@top.bp-m .hl-top .hl-rb.g,@top.bp-m .hl-top .hl-rb.p,@top.bp-m .hl-top .hl-rb.b,@top.bp-m .hl-top #hlAv,@top.bp-m .hl-top #bpMGear{display:none !important}
+@top.bp-m .hl-top .bp-mnew{display:grid !important;place-items:center !important;flex:none !important;width:34px !important;height:34px !important;min-width:0 !important;min-height:0 !important;padding:0 !important;margin:0 4px 0 0 !important;border-radius:50% !important;background:var(--blue) !important;color:#fff !important;border:0 !important;box-shadow:none !important}
+@top.bp-m .hl-top .bp-mnew svg{width:20px !important;height:20px !important;stroke:#fff !important;stroke-width:2.4 !important;fill:none !important}
 @top.bp-m.bp-lt-on .hl-top .hl-ttl{opacity:0 !important;transform:translateY(6px) !important;transition:opacity .18s ease,transform .18s ease !important}
 @top.bp-m.bp-lt-on.bp-lt-up .hl-top .hl-ttl{opacity:1 !important;transform:none !important}
 @top.bp-m.bp-lt-on .hl-top{border-bottom-color:transparent !important;box-shadow:none !important}
@@ -55,3 +55,8 @@
 @top.bp-m.bp-lt-on:not(.bp-lt-up):not(.bp-m-detail) .hl-top .bp-macct{display:flex !important;flex:0 0 auto !important}
 @top.bp-m.bp-lt-on:not(.bp-lt-up):not(.bp-m-detail) .hl-top .hl-ttl{position:absolute !important;pointer-events:none !important}
 @top.bp-m .hl-top .hl-tacts{margin-left:auto !important}
+/* 2026-11-26: the top bar has room: 56px tall, everything centred in it; the sidebar menu is back */
+@top.bp-m .hl-top{min-height:56px !important;align-items:center !important;gap:6px !important}
+@top.bp-m .hl-top .hl-burger{display:grid !important;place-items:center !important;flex:none !important;width:40px !important;height:40px !important;margin:0 !important}
+@top.bp-m .hl-top .hl-tacts{display:flex !important;align-items:center !important;gap:6px !important}
+@top.bp-m .hl-top #hlBell{width:40px !important;height:40px !important}
