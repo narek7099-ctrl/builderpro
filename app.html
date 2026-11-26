@@ -105,9 +105,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261125-h6c">
-<link rel="stylesheet" href="site/present.css?v=20261125-h6c">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261125-h6c"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261126-ls3">
+<link rel="stylesheet" href="site/present.css?v=20261126-ls3">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261126-ls3"}}</script>
 
 
 <style id="bpi-icons">
@@ -2798,7 +2798,7 @@ function bpLogout(force){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={assets:{t:'Equipment',s:''},connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewdash:{t:'Home',s:''},crewclock:{t:'Time clock',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Jobs',s:''},crewid:{t:'My ID',s:''},crewmsgs:{t:'Messages',s:''},subjobs:{t:'Jobs',s:''},subinvoices:{t:'Invoices',s:''},subchanges:{t:'Change orders',s:''},subcomply:{t:'Compliance',s:''},subcompany:{t:'My company',s:''},subs:{t:'Subcontractors',s:''},routing:{t:'Driving routes',s:''},quote:{t:'Estimate',s:''},invoicebuilder:{t:'Invoice',s:''},teamchat:{t:'Team chat',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active jobs',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finincome:{t:'Income',s:''},finexpenses:{t:'Expenses',s:''},finarchive:{t:'Tax years',s:''},payouts:{t:'Card payments',s:''},quickbooks:{t:'QuickBooks',s:''},checks:{t:'Calculator leads',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Order lists',s:''},receipts:{t:'Receipts',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
+var BPVIEWS={assets:{t:'Equipment',s:''},connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewdash:{t:'Home',s:''},crewclock:{t:'Time clock',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Jobs',s:''},crewid:{t:'My ID',s:''},crewmsgs:{t:'Messages',s:''},subjobs:{t:'Jobs',s:''},subinvoices:{t:'Invoices',s:''},subchanges:{t:'Change orders',s:''},subcomply:{t:'Compliance',s:''},subcompany:{t:'My company',s:''},subs:{t:'Subcontractors',s:''},routing:{t:'Driving routes',s:''},quote:{t:'Estimate',s:''},invoicebuilder:{t:'Invoice',s:''},teamchat:{t:'Team chat',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active jobs',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finincome:{t:'Income',s:''},finexpenses:{t:'Expenses',s:''},finarchive:{t:'Tax years',s:''},payouts:{t:'Card payments',s:''},quickbooks:{t:'QuickBooks',s:''},checks:{t:'Lead stats',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Order lists',s:''},receipts:{t:'Receipts',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -2816,7 +2816,7 @@ var BP_NAV=[
   {id:'dashboard',l:'Dashboard',ico:'dashboard'},
   {id:'convos',l:'Conversations',ico:'convos',kids:[['messaging','Texts'],['email','Email'],['teamchat','Team chat']]},
   {id:'calendar',l:'Calendar',ico:'calendar'},
-  {id:'leads',l:'Leads',ico:'leads',kids:[['contacts','Contacts'],['checks','Calculator leads'],['calculator','Calculators'],['automations','Automations']] /* 'leadsources' still opens if called, just out of the menu */},
+  {id:'leads',l:'Leads',ico:'leads',kids:[['contacts','Contacts'],['checks','Lead stats']] /* 2026-11-25: Calculators and Automations live in Settings now */ /* 'leadsources' still opens if called, just out of the menu */},
   {id:'projects',l:'Jobs',ico:'projects',kids:[['activejobs','Active'],['assets','Equipment'],['routing','Driving routes']]},
   {id:'people',l:'Employees',ico:'hardhat',kids:[['employees','Employees'],['subs','Subcontractors']]} /* its own branch since 2026-11-20 (was under Jobs) */,
   {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['finincome','Income'],['finexpenses','Expenses'],['invoices','Invoices'],['estimates','Estimates'],['finarchive','Tax years'],['payouts','Card payments'],['quickbooks','QuickBooks']]},
@@ -12945,12 +12945,16 @@ function bpSettings(){
     ['phone','Business number','call','Get the number your customers already text into BuilderPro, so every text shows up here and '+BP_AI_NAME+' can answer it.'],
     ['ridge',''+BP_AI_NAME+' (receptionist)','smart_toy','Answers your calls and texts 24/7. Set how she sounds and what she offers.'],
     ['signature','Your signature','draw','Signed on every contract you send, so it goes out already signed by you.'],
+    ['calcs','Calculators','calculate','The instant-quote calculators on your website.','calculator'],
+    ['autos','Automations','bolt','The texts and follow-ups that run on their own.','automations'],
     ['notify','Notifications','notifications','What lands in your bell, and how you hear about it.'],
     ['appearance','Appearance','palette','How the software looks to you.'],
     ['security','Security','lock','Your password, and the devices you are signed in on.'],
     ['team','Team','group','Who else can sign in, and what they can see.'],
     ['plan','Plan & billing','credit_card','Your BuilderPro membership.']].filter(function(t){ return !window.bpTeamIsOwner||bpTeamIsOwner()||(t[0]!=='team'&&t[0]!=='plan'); });
-  var rail=SECS.map(function(t){return '<button class="st-nav'+(_bpSetSec===t[0]?' on':'')+'" data-set-tab="'+t[0]+'" onclick="bpSetTab(\''+t[0]+'\')"><span class="ms">'+t[2]+'</span><span>'+t[1]+'</span></button>';}).join('');
+  /* Calculators and Automations (2026-11-25) are their own pages: their rows open them */
+  var rail=SECS.map(function(t){return t[4]?'<button class="st-nav st-go" onclick="bpNav(\''+t[4]+'\')"><span class="ms">'+t[2]+'</span><span>'+t[1]+'</span><span class="ms st-go-i">chevron_right</span></button>'
+    :'<button class="st-nav'+(_bpSetSec===t[0]?' on':'')+'" data-set-tab="'+t[0]+'" onclick="bpSetTab(\''+t[0]+'\')"><span class="ms">'+t[2]+'</span><span>'+t[1]+'</span></button>';}).join('');
   var sec=function(id,body){var t=SECS.filter(function(x){return x[0]===id;})[0];
     return '<section id="set-sec-'+id+'" class="st-sec"'+(_bpSetSec===id?'':' style="display:none"')+'><div class="st-head"><h2>'+t[1]+'</h2><p>'+t[3]+'</p></div>'+body+'</section>';};
   var themeSeg='<div class="bpx-jobtabs" id="bpx-theme-seg">'+[['light','Light','light_mode'],['dark','Dark','dark_mode'],['system','System','contrast']].map(function(o2){
@@ -15015,7 +15019,7 @@ window.bpRepCopy=function(text,btn){
 <!--/app-only-->
 </body>
 <!--app-only-->
-<link rel="stylesheet" href="portal/app.css?v=2ae92737fb" data-bundle>
+<link rel="stylesheet" href="portal/app.css?v=e69d08a568" data-bundle>
 <script src="portal/team.js?v=20261115a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261124v"></script>
@@ -15063,21 +15067,21 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/aibrain.js?v=20261118f"></script>
 <script src="portal/qr.js?v=20261001a"></script>
 <script src="portal/tools-share.js?v=20261114a"></script>
-<script src="portal/checks.js?v=20261120r"></script>
+<script src="portal/checks.js?v=20261125ls"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261125-h6c"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261125-h6c"></script>
-<script src="site/vendor/SplitText.min.js?v=20261125-h6c"></script>
-<script src="site/site.js?v=20261125-h6c"></script>
-<script src="site/present.js?v=20261125-h6c"></script>
+<script src="site/vendor/gsap.min.js?v=20261126-ls3"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261126-ls3"></script>
+<script src="site/vendor/SplitText.min.js?v=20261126-ls3"></script>
+<script src="site/site.js?v=20261126-ls3"></script>
+<script src="site/present.js?v=20261126-ls3"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>
 <script src="portal/slidetabs.js?v=20261117a"></script>
 <script src="portal/motion.js?v=20261118f"></script>
-<script src="portal/shell.js?v=20261124fo"></script>
-<script src="portal/mobile.js?v=20261125h6"></script>
+<script src="portal/shell.js?v=20261126ls"></script>
+<script src="portal/mobile.js?v=20261126ls"></script>
 <script src="portal/appfeel.js?v=20261124a"></script>
 <script src="portal/filming.js?v=20261101a"></script>
 <script src="portal/notify.js?v=20261124fh"></script>

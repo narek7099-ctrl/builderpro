@@ -242,7 +242,7 @@
     teamchat: 'Chat with your crew and office',
     calendar: 'Inspections, jobs and crew days on one calendar',
     contacts: 'Everyone you’ve worked with or quoted: leads and customers',
-    checks: 'Homeowners who priced a job with the calculators on your website',
+    checks: 'Every lead combined: where they come from and where they are now',
     automations: 'Texts and emails that go out on their own after a lead, a quote or a finished job',
     leadsources: 'Leads from Angi, Thumbtack, HomeAdvisor and the rest, pulled from your email',
     calculator: 'The price calculators on your website and what they quote',
@@ -279,8 +279,8 @@
   var EXTRA = { quote: 'finances', invoicebuilder: 'finances', ledger: 'finances', leadsources: 'leads', mattemplates: 'supply', suppliers: 'supply', closedeals: 'leads', connections: 'marketing', supply: 'supply', supplyorders: 'supply', prices: 'supply', customize: 'leads' };
   function secOf(v) {
     if (crew()) return v;
-    if (v === 'settings') return 'settings';
-    if (v === 'customize') return (window._bpCust && _bpCust.kind === 'calendar') ? 'calendar' : 'leads';
+    if (v === 'settings' || v === 'calculator' || v === 'automations') return 'settings';   /* both live in Settings since 2026-11-25 */
+    if (v === 'customize') return (window._bpCust && _bpCust.kind === 'calendar') ? 'calendar' : 'settings';
     var g = window.bpNavGroupOf ? bpNavGroupOf(v) : null;
     return g || EXTRA[v] || null;
   }
@@ -813,7 +813,7 @@
 (function () {
   var IC = { estimates: 'request_quote', quote: 'request_quote', invoices: 'receipt_long', income: 'payments', expense: 'receipt',
     matlists: 'inventory_2', supply: 'inventory_2', supplyorders: 'local_shipping', leadsources: 'mail', messaging: 'sms', email: 'mail',
-    contacts: 'group', checks: 'calculate', activejobs: 'work', employees: 'engineering', calendar: 'event', marketing: 'campaign',
+    contacts: 'group', checks: 'insights', activejobs: 'work', employees: 'engineering', calendar: 'event', marketing: 'campaign',
     aiteam: 'smart_toy', reputation: 'star', automations: 'bolt' };
   function icon(area) {
     var f = area.getAttribute('data-fin'), v = window._bpCurView || '';

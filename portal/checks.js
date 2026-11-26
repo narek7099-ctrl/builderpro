@@ -17,61 +17,98 @@ var CHK_DEMO=[
    (calc_id 'health:<trade>' / 'damage:<trade>', embed/health-*.html, embed/damage-*.html) */
 var CHK_TRADE_NAMES={roofing:'Roofing',hvac:'HVAC',countertops:'Countertops',trim:'Trim',painting:'Painting',pools:'Pools',landscaping:'Landscaping',plumbing:'Plumbing',electrical:'Electrical',general:'Remodel',concrete:'Concrete',flooring:'Flooring'};
 function bpChkKind(c){var id=String(c.calc_id||'roofing'),m=id.match(/^(health|damage):(\w+)$/);if(!m)return {tool:'roof',trade:'roofing',label:'Roof age'};var tn=CHK_TRADE_NAMES[m[2]]||m[2];return {tool:m[1],trade:m[2],label:tn+' '+(m[1]==='health'?'health':'damage')};}
+/* 2026-11-25: this page is now "Lead stats", every lead combined, in the same look.
+   Every lead ends up as a contact, so the totals and the per-day line count contacts;
+   where each came from is read from the intake logs: lead_log (calculators, website
+   forms, online booking), lead_events (Angi, Thumbtack and the rest, from email) and
+   roof_checks (the self-checks). A contact none of them knows came in by a call, a
+   text or by hand. Calls the receptionist answered come from the HighLevel dashboard. */
+var LS_SRC_COL={'Calculators':'#006fff','Website forms':'#8fbcff','Online booking':'#16C79A','Lead services':'#001530','Calls, texts & added by hand':'#c3d3ea'};
+function bpLsSrcOf(src){ src=String(src||''); if(/book/i.test(src))return 'Online booking'; if(/calc|estimat|check|damage|health|quote/i.test(src))return 'Calculators'; return 'Website forms'; }
+function bpLsKey(r){ var p=String(r.phone||'').replace(/\D/g,'').slice(-10); return p||String(r.email||'').toLowerCase().trim(); }
 function bpChkLoad(){
   var el=q('bpChkList'); if(!el)return;
-  if(!(window.BP_LIVE&&window.BP_SB)){ bpChkRender(CHK_DEMO,true); return; }
-  Promise.resolve(BP_SB.from('roof_checks').select('*').order('created_at',{ascending:false}).limit(100)).then(function(r){
-    if(r&&r.error)throw r.error; bpChkRender((r&&r.data)||[],false);
-  }).catch(function(e){ el.innerHTML='<span class="bpx-mut">Couldn\'t load checks'+(e&&/relation|does not exist/i.test(String(e.message||e))?' — the roof_checks table isn\'t created yet (run the migration).':'.')+'</span>'; });
+  if(!(window.BP_LIVE&&window.BP_SB)){ bpLsRender(bpLsDemo(),true); return; }
+  var safe=function(p){ return Promise.resolve(p).then(function(r){ return (r&&!r.error&&r.data)||[]; },function(){ return []; }); };
+  Promise.all([
+    (window.bpEnsureContacts?bpEnsureContacts():Promise.resolve()).then(function(){ return window._bpContacts||[]; },function(){ return window._bpContacts||[]; }),
+    safe(BP_SB.from('lead_log').select('source,name,phone,email,created_at').order('created_at',{ascending:false}).limit(2000)),
+    safe(BP_SB.from('lead_events').select('source_id,name,phone,email,received_at,job').order('received_at',{ascending:false}).limit(2000)),
+    safe(BP_SB.from('lead_sources').select('id,vendor,label')),
+    safe(BP_SB.from('roof_checks').select('*').order('created_at',{ascending:false}).limit(500)),
+    (window.bpApi&&window.GHL_DASH_URL?Promise.resolve(bpApi(GHL_DASH_URL,{})).catch(function(){return null;}):Promise.resolve(null))
+  ]).then(function(r){
+    var vend={}; r[3].forEach(function(x){ vend[x.id]=x.label||x.vendor||'Lead service'; });
+    var feed=[];
+    r[1].forEach(function(x){ feed.push({when:x.created_at,name:x.name,phone:x.phone,email:x.email,src:bpLsSrcOf(x.source),detail:x.source||''}); });
+    r[2].forEach(function(x){ feed.push({when:x.received_at,name:x.name,phone:x.phone,email:x.email,src:'Lead services',detail:vend[x.source_id]||'Lead service'}); });
+    var seen={}; feed.forEach(function(f){ var k=bpLsKey(f); if(k)seen[k]=1; });
+    r[4].forEach(function(c){ var k=bpLsKey(c); if(k&&seen[k])return; feed.push({when:c.created_at,name:c.name,phone:c.phone,email:c.email,src:'Calculators',detail:bpChkKind(c).label}); });
+    window._bpChkRows=r[4];
+    var rec=r[5]&&r[5].recovery; bpLsRender({contacts:r[0],feed:feed,calls:rec?(+rec.calls||0):null,texts:rec?(+rec.texts||0):null},false);
+  }).catch(function(){ el.innerHTML='<span class="bpx-mut">Couldn\'t load your lead numbers. Pull down or open the page again.</span>'; });
 }
-/* Calculator leads are worked by the automations (they go straight into the
-   CRM and the follow-up workflows), so this page only reports on them:
-   how many, how warm, which tools and areas bring them, and the latest few. */
-function bpChkRender(rows,demo){
+function bpLsDemo(){
+  var now=Date.now(), DAY=864e5, srcs=[['Calculators','Roof estimator'],['Website forms','website'],['Online booking','booking'],['Lead services','Angi'],['Lead services','Thumbtack'],['Calculators','Damage check (roofing)']];
+  var names=['Dana M.','Luis R.','Priya S.','Tom B.','Rosa M.','Kevin O.','Carlos R.','Ann C.','Mike J.','Sarah K.','Ethan W.','Nina P.','Omar H.','Jess T.','Bob L.','Ava G.','Ray D.','Lena F.'];
+  var feed=[], contacts=[];
+  names.forEach(function(n,i){ var w=new Date(now-((i*37)%29+.3)*DAY).toISOString(); var sc=srcs[i%srcs.length]; contacts.push({name:n,dateAdded:w,phone:'(512) 555-01'+(10+i)});
+    if(i%4!==3) feed.push({when:w,name:n,phone:'(512) 555-01'+(10+i),src:sc[0],detail:sc[1]}); });
+  return {contacts:contacts,feed:feed,calls:14,texts:31};
+}
+function bpLsRender(D,demo){
   var el=q('bpChkList'); if(!el)return; el.classList.remove('bpx-mut');
-  window._bpChkRows=rows; window._bpChkDemo=demo;
-  var DAY=864e5, now=Date.now(), t=function(c){return c.created_at?Date.parse(c.created_at):0;};
-  var m30=rows.filter(function(c){return now-t(c)<30*DAY;}), prev=rows.filter(function(c){var a=now-t(c);return a>=30*DAY&&a<60*DAY;});
-  var withC=rows.filter(function(c){return c.phone||c.email;}).length, urgent=m30.filter(function(c){return c.band==='bad'||c.band==='warn';}).length;
-  var pct=function(a,b){return b?Math.round(a/b*100):0;}, delta=prev.length?Math.round((m30.length-prev.length)/prev.length*100):null;
-  /* 2026-11-20: the number is the point; no icons on these */
-  var tile=function(lbl,val,sub,txt){return '<div class="cl-tile'+(txt?' txt':'')+'"><small>'+lbl+'</small><b>'+val+'</b><em>'+sub+'</em></div>';};
-  /* last 30 days, one bar a day */
-  var days=[];for(var i=29;i>=0;i--){var d0=new Date(now-i*DAY);d0.setHours(0,0,0,0);days.push({d:d0,n:0});}
-  m30.forEach(function(c){var d=new Date(t(c));d.setHours(0,0,0,0);days.forEach(function(x){if(x.d.getTime()===d.getTime())x.n++;});});
-  var mx=Math.max(1,Math.max.apply(0,days.map(function(x){return x.n;})));
-  var bars=days.map(function(x){return '<i title="'+x.d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+': '+x.n+'" style="height:'+Math.max(4,x.n/mx*100)+'%"'+(x.n?'':' class="z"')+'></i>';}).join('');
-  var count=function(fn){var o={};rows.forEach(function(c){var k=fn(c);if(k)o[k]=(o[k]||0)+1;});return Object.keys(o).map(function(k){return [k,o[k]];}).sort(function(a,b){return b[1]-a[1];});};
-  var list=function(arr,empty){if(!arr.length)return '<div class="bpx-mut" style="font-size:12.5px">'+empty+'</div>';var top=arr[0][1];return arr.slice(0,6).map(function(r){return '<div class="cl-row"><span>'+bpEsc(r[0])+'</span><i><b style="width:'+Math.round(r[1]/top*100)+'%"></b></i><em>'+r[1]+'</em></div>';}).join('');};
-  var tools=count(function(c){return bpChkKind(c).label;}), zips=count(function(c){return c.zip||'';});
-  var bands=[['bad','Needs attention now','#001530'],['warn','Needs attention soon','#0c6cea'],['mid','Keep an eye on it','#0661d9'],['good','Healthy','#16C79A']].map(function(bd){return [bd,rows.filter(function(c){return c.band===bd[0];}).length];});
-  var bandBar=rows.length?'<div class="cl-stack">'+bands.filter(function(x){return x[1];}).map(function(x){return '<i style="flex:'+x[1]+';background:'+x[0][2]+'" title="'+x[0][1]+': '+x[1]+'"></i>';}).join('')+'</div><div class="cl-legend">'+bands.map(function(x){return '<span><i style="background:'+x[0][2]+'"></i>'+x[0][1]+' <b>'+x[1]+'</b></span>';}).join('')+'</div>':'<div class="bpx-mut" style="font-size:12.5px">No results yet.</div>';
+  var DAY=864e5, now=Date.now(), t=function(x){ return x?Date.parse(x):0; };
+  var ct=(D.contacts||[]).filter(function(c){ return c&&c.dateAdded; });
+  /* one list of leads for a window of time: each person once (by phone or email), from the
+     intake logs first, then the contacts none of them knows (calls, texts, added by hand) */
+  var leadsIn=function(from,to){
+    var out=[], keys={};
+    (D.feed||[]).slice().sort(function(a,b){ return t(a.when)-t(b.when); }).forEach(function(f){ var w=t(f.when); if(w<from||w>=to)return; var k=bpLsKey(f); if(k){ if(keys[k])return; keys[k]=1; } out.push({when:f.when,src:f.src,detail:f.detail}); });
+    ct.forEach(function(c){ var w=t(c.dateAdded); if(w<from||w>=to)return; var k=bpLsKey(c); if(k&&keys[k])return; if(k)keys[k]=1; out.push({when:c.dateAdded,src:'Calls, texts & added by hand'}); });
+    return out;
+  };
+  var m30=leadsIn(now-30*DAY,now+DAY), prev=leadsIn(now-60*DAY,now-30*DAY);
+  var delta=prev.length?Math.round((m30.length-prev.length)/prev.length*100):null;
+  var bySrc={}; m30.forEach(function(f){ bySrc[f.src]=(bySrc[f.src]||0)+1; });
+  var srcRows=Object.keys(bySrc).map(function(k){ return [k,bySrc[k]]; }).sort(function(a,b){ return b[1]-a[1]; });
+  var f30=m30;
+  var calc30=bySrc['Calculators']||0;
   var cnt=function(v){ v=Math.round(+v||0); return v+(v===1?' lead':' leads'); };
-  /* a circle holds four parts at most: the biggest three or four, then "Other" */
-  var fold=function(arr){ if(arr.length<=4) return arr.map(function(r){return {label:r[0],value:r[1]};}); var top=arr.slice(0,3).map(function(r){return {label:r[0],value:r[1]};}); top.push({label:'Other',value:arr.slice(3).reduce(function(t,r){return t+r[1];},0),other:true}); return top; };
-  var circle=function(title,lead,rws,empty){ if(!rws.length||!window.bpChart) return '<div class="cl-h"><b>'+title+'</b></div><div class="bpx-mut" style="font-size:12.5px">'+empty+'</div>'; var tot=rws.reduce(function(t,r){return t+r.value;},0); return bpChart.donut({title:title,lead:lead,rows:rws,fixed:true,fmt:cnt,centre:String(tot),centreNote:'leads',axis:title}); };
-  var recent=rows.slice(0,8).map(function(c){
-    var ck=bpChkKind(c), when=c.created_at?new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
-    var col=c.band==='good'?'#16C79A':c.band==='mid'?'#0661d9':c.band==='warn'?'#0c6cea':'#001530';
-    return '<div class="cl-lead"><span class="cl-score" style="background:'+col+'">'+(c.score!=null?c.score:'–')+'</span><div><b>'+bpEsc(c.name||(c.phone?c.phone:'Anonymous'))+'</b><small>'+bpEsc(ck.label)+(c.zip?' · '+bpEsc(c.zip):'')+(c.label?' · '+bpEsc(c.label):'')+'</small></div><em>'+when+'</em></div>';
+  var tile=function(lbl,val,sub,txt){return '<div class="cl-tile'+(txt?' txt':'')+'"><small>'+lbl+'</small><b>'+val+'</b><em>'+sub+'</em></div>';};
+  /* last 30 days, one point a day */
+  var days=[]; for(var i=29;i>=0;i--){ var d0=new Date(now-i*DAY); d0.setHours(0,0,0,0); days.push({d:d0,n:0}); }
+  m30.forEach(function(c){ var d=new Date(t(c.when)); d.setHours(0,0,0,0); days.forEach(function(x){ if(x.d.getTime()===d.getTime())x.n++; }); });
+  var mx=Math.max(1,Math.max.apply(0,days.map(function(x){ return x.n; })));
+  var fold=function(arr){ if(arr.length<=4) return arr.map(function(r){return {label:r[0],value:r[1]};}); var top=arr.slice(0,3).map(function(r){return {label:r[0],value:r[1]};}); top.push({label:'Other',value:arr.slice(3).reduce(function(s2,r){return s2+r[1];},0),other:true}); return top; };
+  var circle=function(title,lead,rws,empty,ramp){ if(!rws.length||!window.bpChart) return '<div class="cl-h"><b>'+title+'</b></div><div class="bpx-mut" style="font-size:12.5px">'+empty+'</div>'; var tot=rws.reduce(function(s2,r){return s2+r.value;},0); var o={title:title,lead:lead,rows:rws,fixed:true,fmt:cnt,centre:String(tot),centreNote:'leads',axis:title}; if(ramp)o.ramp=ramp; return bpChart.donut(o); };
+  var grp=window.bpCtGroup||function(){ return 'new'; }, GN={new:'New lead',booked:'Inspection booked',quoted:'Estimate out',customer:'Customer'};
+  var stages={}; ct.forEach(function(c){ var g='new'; try{ g=grp(c); }catch(e){} stages[GN[g]||'New lead']=(stages[GN[g]||'New lead']||0)+1; });
+  var stageRows=['New lead','Inspection booked','Estimate out','Customer'].filter(function(k){ return stages[k]; }).map(function(k){ return {label:k,value:stages[k]}; });
+  var det={}; f30.forEach(function(f){ if(f.src==='Calculators'||f.src==='Lead services'){ var k=f.src==='Lead services'?f.detail:String(f.detail||'Calculator').replace(/^.*\b(estimat\w*)\b.*$/i,'Estimator'); det[k]=(det[k]||0)+1; } });
+  var detRows=Object.keys(det).map(function(k){ return [k,det[k]]; }).sort(function(a,b){ return b[1]-a[1]; });
+  var recent=(D.feed||[]).slice().sort(function(a,b){ return t(b.when)-t(a.when); }).slice(0,8).map(function(f){
+    var when=f.when?new Date(f.when).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+    var col=LS_SRC_COL[f.src]||'#006fff', ic={'Calculators':'calculate','Website forms':'language','Online booking':'event_available','Lead services':'storefront'}[f.src]||'person';
+    return '<div class="cl-lead"><span class="cl-score" style="background:'+col+'"><span class="ms" style="font-size:17px">'+ic+'</span></span><div><b>'+bpEsc(f.name||(f.phone?f.phone:'Anonymous'))+'</b><small>'+bpEsc(f.src)+(f.detail&&f.detail!==f.src&&!/^(website|booking)$/i.test(f.detail)?' · '+bpEsc(f.detail):'')+'</small></div><em>'+when+'</em></div>';
   }).join('');
-  el.innerHTML=(demo?'<div class="cl-demo"><span class=ms>info</span> Sample numbers. Sign in to see your real calculator leads.</div>':'')
+  el.innerHTML=(demo?'<div class="cl-demo"><span class=ms>info</span> Sample numbers. Sign in to see your real leads.</div>':'')
     +'<div class="cl-tiles">'
-      +tile('Leads, last 30 days',m30.length,delta==null?'from your calculators':(delta>=0?'▲ ':'▼ ')+Math.abs(delta)+'% vs the 30 before')
-      +tile('Left contact info',pct(withC,rows.length)+'%',withC+' of '+rows.length+' all time')
-      +tile('Urgent, last 30 days',urgent,'need work now or soon')
-      +tile('Top tool',tools.length?bpEsc(tools[0][0]):'—',tools.length?tools[0][1]+' leads':'no leads yet',1)
+      +tile('Leads, last 30 days',m30.length,delta==null?'every source combined':(delta>=0?'▲ ':'▼ ')+Math.abs(delta)+'% vs the 30 before')
+      +tile('Calls answered',D.calls==null?'—':D.calls,D.calls==null?'shows once your number is set up':'by '+bpEsc(window.BP_AI_NAME||'Lisa')+' this month')
+      +tile('Calculator leads',calc30,'last 30 days')
+      +tile('Top source',srcRows.length?bpEsc(srcRows[0][0]):'—',srcRows.length?cnt(srcRows[0][1])+', last 30 days':'no leads yet',1)
     +'</div>'
-    /* 2026-11-20: a line for leads over time, circles for where they come from and how urgent */
     +'<div class="cl-grid2">'
-      +'<section class="cl-card cl-chart">'+(window.bpChart?bpChart.area({title:'Leads per day',lead:'last 30 days',x:{label:'Day',values:days.map(function(x){return x.d.toLocaleDateString('en-US',{month:'short',day:'numeric'});})},series:[{name:'Leads',values:days.map(function(x){return x.n;})}],fmt:cnt,fmtKind:'count',yFrom:0,yTo:Math.max(4,Math.ceil(mx/4)*4),height:190}):'')+'</section>'
+      +'<section class="cl-card cl-chart">'+(window.bpChart?bpChart.area({title:'Leads per day',lead:'last 30 days, every source',x:{label:'Day',values:days.map(function(x){return x.d.toLocaleDateString('en-US',{month:'short',day:'numeric'});})},series:[{name:'Leads',values:days.map(function(x){return x.n;})}],fmt:cnt,fmtKind:'count',yFrom:0,yTo:Math.max(4,Math.ceil(mx/4)*4),height:190}):'')+'</section>'
       +'<div class="cl-3">'
-        +'<section class="cl-card cl-chart">'+circle('Which tools bring leads','all time',fold(tools),'No leads yet.')+'</section>'
-        +'<section class="cl-card cl-chart">'+(rows.length&&window.bpChart?bpChart.donut({title:'How urgent',lead:'every calculator lead',rows:bands.map(function(x){return {label:x[0][1],value:x[1]};}),fixed:true,ramp:['#001530','#006fff','#8fbcff','#16C79A'],fmt:cnt,centre:String(rows.length),centreNote:'leads',axis:'Urgency'}):'<div class="cl-h"><b>How urgent</b></div><div class="bpx-mut" style="font-size:12.5px">No leads yet.</div>')+'</section>'
-        +'<section class="cl-card cl-chart">'+circle('Top ZIP codes','where they live',fold(zips),'No ZIP codes yet.')+'</section>'
+        +'<section class="cl-card cl-chart">'+circle('Where leads come from','last 30 days',fold(srcRows),'No leads in the last 30 days.')+'</section>'
+        +'<section class="cl-card cl-chart">'+circle('Where they are now','every contact',stageRows,'No contacts yet.',['#c3d3ea','#8fbcff','#006fff','#16C79A'])+'</section>'
+        +'<section class="cl-card cl-chart">'+circle('Calculators and lead services','last 30 days',fold(detRows),'None in the last 30 days.')+'</section>'
       +'</div>'
-      +'<section class="cl-card"><div class="cl-h"><b>Latest leads</b><span>followed up automatically</span></div>'+(recent||'<div class="bpx-mut" style="font-size:12.5px">Nothing yet.</div>')+'</section>'
+      +'<section class="cl-card"><div class="cl-h"><b>Latest leads</b><span>every source</span></div>'+(recent||'<div class="bpx-mut" style="font-size:12.5px">Nothing yet.</div>')+'</section>'
     +'</div>';
+  window._bpLsFeed=D.feed||[];
 }
 /* Test runs, duplicates, and the contractor's own kids playing with the widget
    all land in here — they need to be able to clear them out. */
@@ -80,7 +117,7 @@ window.bpChkDel=function(id){
   var row=(window._bpChkRows||[]).filter(function(c){return String(c.id)===String(id);})[0];
   if(!bpAskDel('the check for '+((row&&(row.address||row.name))||'this homeowner')))return;
   window._bpChkRows=(window._bpChkRows||[]).filter(function(c){return String(c.id)!==String(id);});
-  bpChkRender(window._bpChkRows,window._bpChkDemo);
+  bpChkLoad();
   Promise.resolve(BP_SB.from('roof_checks').delete().eq('id',id)).then(function(){},function(){ bpChkLoad(); });
 };
 window.bpChkStatus=function(btn,id,status){
@@ -88,6 +125,7 @@ window.bpChkStatus=function(btn,id,status){
   btn.disabled=true;
   Promise.resolve(BP_SB.from('roof_checks').update({status:status}).eq('id',id)).then(function(){bpChkLoad();},function(){btn.disabled=false;alert('Couldn\'t save that — try again.');});
 };
+window.bpCsvLeadStats=function(){var rows=(window._bpLsFeed||[]).slice().sort(function(a,b){return Date.parse(b.when||0)-Date.parse(a.when||0);});bpCsv('leads',['When','Source','Detail','Name','Phone','Email'],rows.map(function(f){return [f.when||'',f.src,f.detail||'',f.name||'',f.phone||'',f.email||''];}));};
 window.bpCsvRoofChecks=function(){var rows=window._bpChkRows||[];bpCsv('checks',['When','Check','Score','Result','Address','ZIP','Name','Phone','Email','Age','Material','Issues','Storm','Permit year','Built year','Status'],rows.map(function(c){return [c.created_at||'',bpChkKind(c).label,c.score,c.label||'',c.address||'',c.zip||'',c.name||'',c.phone||'',c.email||'',c.age==null?'':c.age,c.material||'',(c.issues||[]).filter(function(x){return !/^photo:/.test(x);}).join('; '),c.storm||'',c.permit_year||'',c.built_year||'',c.status||''];}));};
 /* the page shell */
 window.bpChecks=function(){
@@ -95,8 +133,8 @@ window.bpChecks=function(){
   bpChkCss();
   area.innerHTML='<div class="cl">'
     /* 2026-11-20: the title and blurb repeated the page's own line, and the Calculators tab sits right beside this one */
-    +'<div class="cl-top"><div><p>Follow-up on these happens on its own, through your automations.</p></div>'
-    +'<div class="cl-acts">'+bpCsvBtn('bpCsvRoofChecks()','Export CSV')+'</div></div>'
+    +'<div class="cl-top"><div><p>Every lead combined: calculators, website forms, online booking, lead services, calls and the ones you add.</p></div>'
+    +'<div class="cl-acts">'+bpCsvBtn('bpCsvLeadStats()','Export CSV')+'</div></div>'
     +'<div id="bpChkList" class="bpx-mut" style="font-size:13px">Loading…</div></div>';
   if(window.bpSpin)bpSpin(false);
   bpChkLoad();

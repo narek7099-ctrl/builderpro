@@ -842,3 +842,7 @@ html{overscroll-behavior-y:none}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead.bp-mpinwrap{margin-bottom:8px !important;padding-bottom:8px !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-chead.bp-mpinwrap .bpx-jobtabs{margin-bottom:0 !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .pjk-bar{margin-top:0 !important}
+
+/* Settings rows that open their own page (Calculators, Automations; 2026-11-25) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .st-nav.st-go .st-go-i{margin-left:auto;font-size:18px;color:var(--grey-l,#9aa3b1)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .st.st-menu .st-nav.st-go .st-go-i{display:none}
