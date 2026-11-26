@@ -60,3 +60,7 @@
 @top.bp-m .hl-top .hl-burger{display:grid !important;place-items:center !important;flex:none !important;width:40px !important;height:40px !important;margin:0 !important}
 @top.bp-m .hl-top .hl-tacts{display:flex !important;align-items:center !important;gap:6px !important}
 @top.bp-m .hl-top #hlBell{width:40px !important;height:40px !important}
+
+/* 2026-11-26 test sweep: a pop-up's pinned button row covers what scrolls
+   under it, including the strip of padding below it (rows showed through). */
+@top.bp-m .bpx-modalcard>.row:last-child{box-shadow:0 26px 0 0 var(--card,#fff) !important}

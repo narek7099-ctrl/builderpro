@@ -125,3 +125,10 @@
 @top .ck-bg :is(.ck-dline,.ck-pline,.ck-wline,.ck-mline,.ck-sline){height:0 !important;border:0 !important;border-top:1px solid #a9b6c6 !important;background:none !important}
 @top .ck-bg .ck-box{display:block !important;text-align:left !important;line-height:1.5 !important}
 @top .ck{text-align:left !important}
+
+/* Add a job: "People on it" rows, the same as on the project sheet (2026-11-26 sweep) */
+@top #bpx-nj-people.cw-list,@top #bpx-nj-people{display:flex !important;flex-direction:column !important;gap:8px !important;margin:0 0 4px !important}
+@top #bpx-nj-people .cw-row{display:flex !important;align-items:center !important;gap:12px !important;min-height:52px !important;margin:0 !important;padding:9px 14px !important;border:1px solid var(--line) !important;border-radius:12px !important;background:var(--card,#fff) !important;font-size:15px !important;font-weight:400 !important;letter-spacing:0 !important;text-transform:none !important;cursor:pointer !important}
+@top #bpx-nj-people .cw-row:has(input:checked){border-color:var(--blue) !important;background:var(--blue-l) !important}
+@top #bpx-nj-people .cw-row input[type=checkbox]{flex:none !important;width:22px !important;height:22px !important;margin:0 !important;accent-color:var(--blue) !important}
+@top #bpx-nj-people .cw-n{flex:1 !important;min-width:0 !important;line-height:1.35 !important;margin:0 !important;padding:0 !important}
