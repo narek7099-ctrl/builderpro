@@ -502,3 +502,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-25 before white phone home: restore to 57b5197
 - 2026-11-25 before brand-new phone home (week strip, round actions, tiles, photo job cards): restore to 4bbbff4
 - 2026-11-26 before Calculators/Automations moved to Settings and Lead stats: restore to 342c7a8
+- 2026-11-26 before native phone shell (More tab, plain tab bar, system font, large titles, slides): restore to 0820251

@@ -1,0 +1,57 @@
+/* ==================================================================
+   Phone app shell, 2026-11-26 (portal/mobile.js, portal/appfeel.js).
+   What makes a phone app feel native, from a look at LeadConnector:
+   the phone's own font, a plain full-width tab bar (no floating pill,
+   no big + in it), no hamburger (More holds every section), a large
+   page title that hands over to the bar as it scrolls away, pages that
+   slide in and back, and no explanation lines under the titles.
+   Phones only (.bp-m). "@top" is expanded in site/assemble.py.
+   ================================================================== */
+
+/* the phone's own font: San Francisco on an iPhone, Roboto on Android */
+@top.bp-m{--sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif !important}
+
+/* top bar: logo on the left, the title once the big one scrolls away, + and the bell on the right */
+@top.bp-m .hl-top .hl-burger,@top.bp-m .hl-top .hl-rb.g,@top.bp-m .hl-top .hl-rb.p,@top.bp-m .hl-top .hl-rb.b,@top.bp-m .hl-top #hlAv,@top.bp-m .hl-top #bpMGear{display:none !important}
+@top.bp-m .hl-top .bp-mnew{display:grid !important;place-items:center !important;width:40px !important;height:40px !important;border-radius:50% !important;background:var(--blue) !important;color:#fff !important;border:0 !important;box-shadow:none !important}
+@top.bp-m .hl-top .bp-mnew svg{width:22px !important;height:22px !important;stroke:#fff !important;stroke-width:2.4 !important;fill:none !important}
+@top.bp-m.bp-lt-on .hl-top .hl-ttl{opacity:0 !important;transform:translateY(6px) !important;transition:opacity .18s ease,transform .18s ease !important}
+@top.bp-m.bp-lt-on.bp-lt-up .hl-top .hl-ttl{opacity:1 !important;transform:none !important}
+@top.bp-m.bp-lt-on .hl-top{border-bottom-color:transparent !important;box-shadow:none !important}
+@top.bp-m.bp-lt-on.bp-lt-up .hl-top{border-bottom:.5px solid var(--line) !important}
+
+/* the large title */
+@top .bp-ltitle{display:none !important}
+@top.bp-m .bp-ltitle:not([hidden]){display:block !important;padding:2px 20px 10px !important;background:var(--bg) !important}
+@top.bp-m .bp-ltitle h2{margin:0 !important;font-size:34px !important;line-height:1.12 !important;font-weight:800 !important;letter-spacing:-.025em !important;color:var(--ink) !important}
+
+/* a plain tab bar, stuck to the bottom edge, five even tabs */
+@top.bp-m:not(.qs-focus) .bpx-app.on .bp-tabbar{position:fixed !important;left:0 !important;right:0 !important;bottom:0 !important;width:auto !important;margin:0 !important;
+  display:grid !important;grid-auto-flow:column !important;grid-auto-columns:minmax(0,1fr) !important;gap:0 !important;align-items:start !important;height:auto !important;
+  padding:6px 4px calc(4px + env(safe-area-inset-bottom)) !important;border:0 !important;border-top:.5px solid var(--line) !important;border-radius:0 !important;
+  background:color-mix(in srgb,var(--card) 92%,transparent) !important;-webkit-backdrop-filter:saturate(1.8) blur(20px) !important;backdrop-filter:saturate(1.8) blur(20px) !important;box-shadow:none !important}
+@top.bp-m .bp-tabbar .bp-tab{display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:flex-start !important;gap:3px !important;height:auto !important;min-height:50px !important;margin:0 !important;padding:2px 0 0 !important;
+  border:0 !important;border-radius:0 !important;background:none !important;box-shadow:none !important;color:var(--grey) !important;transform:none !important}
+@top.bp-m .bp-tabbar .bp-tab-i{display:grid !important;place-items:center !important;width:58px !important;height:30px !important;border-radius:15px !important;background:none !important;transition:background-color .2s ease !important}
+@top.bp-m .bp-tabbar .bp-tab-i svg{width:24px !important;height:24px !important}
+@top.bp-m .bp-tabbar .bp-tab-l{display:block !important;font-size:11px !important;font-weight:600 !important;line-height:1.1 !important;letter-spacing:0 !important;color:inherit !important;opacity:1 !important;max-width:none !important}
+@top.bp-m .bp-tabbar .bp-tab.on{color:var(--blue) !important}
+@top.bp-m .bp-tabbar .bp-tab.on .bp-tab-i{background:var(--blue-l) !important}
+@top.bp-m .bp-tabbar .bp-tab-new,@top.bp-m .bp-tabbar .bp-slide{display:none !important}
+
+/* pages slide in from the right, back to the left; tab changes fade (portal/appfeel.js) */
+@keyframes bpPush{from{transform:translateX(34%);opacity:.4}to{transform:none;opacity:1}}
+@keyframes bpPop{from{transform:translateX(-26%);opacity:.4}to{transform:none;opacity:1}}
+@top.bp-m #bpxViewArea.bp-push,@top.bp-m .bp-ltitle.bp-push{animation:bpPush .3s cubic-bezier(.2,.8,.2,1) both !important}
+@top.bp-m #bpxViewArea.bp-pop,@top.bp-m .bp-ltitle.bp-pop{animation:bpPop .28s cubic-bezier(.2,.8,.2,1) both !important}
+@top.bp-m .bpx-main{overflow-x:hidden !important}
+@media (prefers-reduced-motion:reduce){@top.bp-m #bpxViewArea:is(.bp-push,.bp-pop),@top.bp-m .bp-ltitle:is(.bp-push,.bp-pop){animation:none !important}}
+
+/* no explanation lines under titles on a phone (they are still there on a computer) */
+@top.bp-m #bpxVsub,@top.bp-m #bpxViewArea .bpx-sub,@top.bp-m #bpxViewArea .cl-top p,@top.bp-m #bpxViewArea .st-head p,@top.bp-m #bpxViewArea .bp-hint{display:none !important}
+@top.bp-m #bpxViewArea .cl-top:not(:has(.cl-acts > *)){display:none !important}
+@top.bp-m #bpxViewArea .ml-note,@top.bp-m #bpxViewArea .arc-set-t .bpx-mut{display:none !important}
+/* the logo sits top left while the big title shows; once it scrolls away the small title takes its place */
+@top.bp-m.bp-lt-on:not(.bp-lt-up):not(.bp-m-detail) .hl-top .bp-macct{display:flex !important;flex:0 0 auto !important}
+@top.bp-m.bp-lt-on:not(.bp-lt-up):not(.bp-m-detail) .hl-top .hl-ttl{position:absolute !important;pointer-events:none !important}
+@top.bp-m .hl-top .hl-tacts{margin-left:auto !important}
