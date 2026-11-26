@@ -510,3 +510,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-26 before Pay by check (signed) and double confirmation on money: restore to 3d43ec6
 - 2026-11-26 inspections setup note: restore to 09b0160
 - 2026-11-26 phone calendar day screen: restore to 6d4510c
+- 2026-11-26 computer calendar day panel: restore to 2e9b075

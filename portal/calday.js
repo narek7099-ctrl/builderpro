@@ -4,7 +4,9 @@
    day laid out hour by hour (the same day view the computer has, drawn by
    bpDrawDay in app.html). Swipe the hours sideways for the next or the
    previous day, swipe the strip for the next or the previous week.
-   The computer keeps its Day / Week / Month switch. */
+   The computer works the same way (the owner's ask, same day): month only,
+   and a clicked day opens the same screen as a panel from the right, over
+   a dimmed month, with arrows and the arrow keys for the next day. */
 (function () {
   'use strict';
   var MN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -49,7 +51,14 @@
       if (window.bpDayMove) bpDayMove(onStrip ? n * 7 : n);
     }, { passive: true });
   }
-  function key(e) { if (e.key === 'Escape' && document.getElementById('bpDayScr') && !document.querySelector('.bpx-modal')) { e.preventDefault(); window.bpCalDayClose(); } }
+  function key(e) {
+    if (!document.getElementById('bpDayScr') || document.querySelector('.bpx-modal')) return;
+    var tg = e.target && e.target.tagName; if (tg === 'INPUT' || tg === 'TEXTAREA' || tg === 'SELECT') return;
+    if (e.key === 'Escape') { e.preventDefault(); window.bpCalDayClose(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); window.bpCalDayStep(e.key === 'ArrowRight' ? 1 : -1); }
+  }
+  window.bpCalDayStep = function (n) { var el = document.getElementById('bpDayScr'); if (!el || !window.bpDayMove) return; slide(el, n); bpDayMove(n); };
+  function drop() { var b = document.getElementById('bpDayScrBg'); if (b) b.remove(); }
 
   window.bpCalDayOpen = function (day) {
     if (!window.bpDayPick) return;
@@ -61,10 +70,15 @@
       el.innerHTML = '<div class="cds-bar">'
         + '<button type="button" class="cds-back" onclick="bpCalDayClose()" aria-label="Back to the month"><span class="ms">chevron_left</span><b class="cds-mon"></b></button>'
         + '<span class="cds-sp"></span>'
+        + '<button type="button" class="cds-arr" onclick="bpCalDayStep(-1)" aria-label="Previous day"><span class="ms">chevron_left</span></button>'
+        + '<button type="button" class="cds-arr" onclick="bpCalDayStep(1)" aria-label="Next day"><span class="ms">chevron_right</span></button>'
         + '<button type="button" class="cds-today" onclick="bpCalDayToday()">Today</button>'
         + '<button type="button" class="cds-add" onclick="bpCalDayAdd()" aria-label="Add to this day"><span class="ms">add</span></button></div>'
         + '<div class="cds-body"><div id="bpx-dayview" class="cd-wrap"></div><div class="cds-kind"></div></div>';
-      (document.getElementById('bpx') || document.body).appendChild(el);
+      var host = document.getElementById('bpx') || document.body;
+      var bg = document.createElement('div'); bg.id = 'bpDayScrBg'; bg.className = 'cds-bg'; bg.onclick = function () { window.bpCalDayClose(); };
+      host.appendChild(bg);
+      host.appendChild(el);
       swipe(el);
       document.addEventListener('keydown', key, true);
       if (window.bpHaptic) bpHaptic('light');
@@ -75,7 +89,8 @@
     var el = document.getElementById('bpDayScr'); if (!el) return;
     document.removeEventListener('keydown', key, true);
     el.classList.add('cds-out');
-    setTimeout(function () { el.remove(); }, 200);
+    var b = document.getElementById('bpDayScrBg'); if (b) b.classList.add('cds-out');
+    setTimeout(function () { el.remove(); drop(); }, 200);
     /* the month underneath follows the day you were on */
     if (document.getElementById('bpx-calgrid') && window.bpCalRedrawMonth) bpCalRedrawMonth();
   };
@@ -88,7 +103,7 @@
   function hookNav() {
     if (!window.bpNav || window.bpNav._cds) return;
     nav0 = window.bpNav;
-    var w = function () { var el = document.getElementById('bpDayScr'); if (el) { document.removeEventListener('keydown', key, true); el.remove(); } return nav0.apply(this, arguments); };
+    var w = function () { var el = document.getElementById('bpDayScr'); if (el) { document.removeEventListener('keydown', key, true); el.remove(); drop(); } return nav0.apply(this, arguments); };
     w._cds = 1; window.bpNav = w;
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hookNav); else hookNav();
