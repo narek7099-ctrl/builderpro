@@ -198,7 +198,7 @@
   /* header: on the page, with room from the bar and the sides */
   @top .pjs-hero{padding:12px 20px 0 !important;background:none !important}
   @top .pjs-hero-top{gap:16px !important}
-  @top .pjs-x{display:none !important}
+  @top .pjs-card:has(.pjs-nav) .pjs-x{display:none !important}   /* the owner's sheet has "‹ Jobs" in its bar; crew and sub sheets keep their close button */
   @top .pjs-hero h2,@top .pjs-hero .pjs-title{font-size:27px !important}
   @top .pjs-job{font-size:16px !important}
   @top .pjs-ring{width:68px !important;height:68px !important}
