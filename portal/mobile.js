@@ -701,7 +701,16 @@
   }
   M.pageAdd = function () { var h = pageAddNow(); M.createClose(); if (h) h.el.click(); };
   var BACKS = '.ctp-back,.eq-back,.qx-back';
+  /* Calculators and Automations open from Settings (2026-11-25): the phone's back arrow goes there */
+  function setBack() {
+    var v = window._bpCurView, a = $('bpxViewArea');
+    if (!a || (v !== 'calculator' && v !== 'automations') || a.querySelector('.set-back')) return;
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'eq-back set-back'; b.hidden = !M.on();
+    b.innerHTML = '<span class="ms">chevron_left</span>Settings'; b.onclick = function () { bpNav('settings'); };
+    a.insertBefore(b, a.firstChild);
+  }
   function backHook() {
+    setBack();
     var x = $('bpx'), top = $('hlTop'); if (!x || !top) return;
     var lk = null;
     if (M.on() && role() === 'owner') Array.prototype.some.call(document.querySelectorAll('#bpxViewArea :is(' + BACKS + ')'), function (e) { if (e.closest('.qs-head')) return false; lk = e; return true; });
