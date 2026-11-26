@@ -706,7 +706,8 @@
             + ' \u00b7 ' + (r.e.pay_type === 'salary' && !r.h ? 'salary' : r.h + ' hrs' + (r.ot ? ' + ' + r.ot + ' OT' : '')) + '</small></div><div class="pp6-amt"><b>' + money(amt) + '</b><small>' + (r.paid ? 'paid' : 'due') + '</small></div></div>'
             + (Object.keys(r.jobs).length ? '<div class="pp6-jobs">' + esc(Object.keys(r.jobs).join(', ').replace(/\s*\(sample\)/g, '')) + '</div>' : '')
             + (r.disp.length ? '<div class="pp6-flag"><span class="ms">flag</span>' + r.disp.length + ' disputed ' + (r.disp.length === 1 ? 'day' : 'days') + '</div>' : '')
-            + '<div class="pp6-b"><button class="bpx-btn ghost" onclick="bpPayStub(\'' + r.e.id + '\',\'' + f + '\')"><span class="ms">receipt_long</span>Pay stub</button>'
+            + '<div class="pp6-b' + (r.e.kind === '1099' ? ' three' : '') + '"><button class="bpx-btn ghost" onclick="bpPayStub(\'' + r.e.id + '\',\'' + f + '\')"><span class="ms">receipt_long</span>Pay stub</button>'
+            + (r.e.kind === '1099' ? '<button class="bpx-btn ghost" onclick="bpPayCheck(\'' + r.e.id + '\',\'' + f + '\')"><span class="ms">payments</span>Check</button>' : '')
             + (r.paid ? '<button class="bpx-btn ghost" onclick="bpPayMark(\'' + r.e.id + '\',\'' + f + '\',0)">\u2713 Paid</button>'
               : '<button class="bpx-btn" onclick="bpPayMark(\'' + r.e.id + '\',\'' + f + '\',1)">Mark paid</button>') + '</div></div>';
         }).join('') + '</div>' : '<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr>'
@@ -722,13 +723,14 @@
             + '<td>' + (r.e.pay_type === 'salary' && !r.h ? '<span class="bpx-mut">salary</span>' : r.h) + '</td><td>' + (r.ot || '—') + '</td>'
             + '<td><b>' + money(amt) + '</b></td>'
             + '<td class="bpx-mut" style="font-size:11.5px">' + esc(Object.keys(r.jobs).join(', ') || '—') + '</td>'
-            + '<td style="text-align:right;white-space:nowrap"><button class="bpx-btn ghost ps-btn" onclick="bpPayStub(\'' + r.e.id + '\',\'' + f + '\')"><span class="ms">receipt_long</span>Pay stub</button> ' + (r.paid
+            + '<td style="text-align:right;white-space:nowrap"><button class="bpx-btn ghost ps-btn hl-keep" onclick="bpPayStub(\'' + r.e.id + '\',\'' + f + '\')"><span class="ms">receipt_long</span>Pay stub</button> ' + (r.e.kind === '1099' ? '<button class="bpx-btn ghost ps-btn hl-keep" onclick="bpPayCheck(\'' + r.e.id + '\',\'' + f + '\')"><span class="ms">payments</span>Check</button> ' : '') + (r.paid
                 ? '<button class="bpx-btn ghost bpx-donebtn" style="padding:6px 12px;font-size:12px" title="Undo: takes it back out of Finances" onclick="bpPayMark(\'' + r.e.id + '\',\'' + f + '\',0)">✓ Paid</button>'
                 : '<button class="bpx-btn bpx-donebtn" style="padding:6px 12px;font-size:12px" onclick="bpPayMark(\'' + r.e.id + '\',\'' + f + '\',1)">Mark paid</button>')
             + '</td></tr>';
         }).join('')
       + '</tbody></table></div>')
-      + '<div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button class="bpx-btn ghost" onclick="bpPayStubPrint(\'\',\'' + f + '\')">Print every pay stub</button></div>'
+      + '<div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button class="bpx-btn ghost" onclick="bpPayStubPrint(\'\',\'' + f + '\')">Print every pay stub</button>'
+      + (list.some(function (r) { return r.e.kind === '1099'; }) ? '<button class="bpx-btn ghost" onclick="bpCheckPrint(\'\',\'' + f + '\',0)">Print checks for 1099 contractors</button>' : '') + '</div>'
       + (owed > 0 && list.filter(function (r) { return !r.paid; }).length > 1
           ? '<div style="margin-top:10px;text-align:right"><button class="bpx-btn" onclick="bpPayAll(\'' + f + '\')">Mark everyone paid · ' + money(owed) + '</button></div>' : '')
       + note;
@@ -817,6 +819,135 @@
       + '#bpx .ps-foot{margin-top:20px;padding-top:12px;border-top:1px solid #e3e8ef;font-size:11.5px;color:#5b6b80}'
       + '#bpx .ps-stamp{position:absolute;top:96px;right:28px;padding:6px 16px;border:3px solid #16c79a;border-radius:10px;color:#0d8f6e;font-weight:900;font-size:20px;letter-spacing:.12em;text-transform:uppercase;transform:rotate(-8deg);opacity:.85}'
       + '@media (max-width:600px){#bpx .ps-doc{padding:18px}#bpx .ps-meta{grid-template-columns:1fr}#bpx .ps-top{flex-direction:column}#bpx .ps-title{text-align:left}#bpx .ps-stamp{top:18px;right:16px}}';
+    document.head.appendChild(c);
+  }
+
+  /* ------------------------------------------------- 1099 checks --- */
+  /* 2026-11-26: checks for 1099 contractors, printed onto PRE-PRINTED business checks (the
+     standard "check on top, two stubs below" sheet). The bank's name, routing and account
+     numbers, the magnetic MICR line and the check number are already on the paper, so
+     BuilderPro never stores bank details; it prints the date, who it's to, the amount in
+     numbers and words, the address and the memo where those go, and fills both stubs.
+     W-2 pay needs tax withheld, so those go through payroll instead. */
+  var ONES = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+  var TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+  function words(n) {
+    var dol = Math.floor(n + 1e-9), cents = Math.round((n - dol) * 100);
+    var three = function (x) { var o = []; if (x >= 100) { o.push(ONES[Math.floor(x / 100)] + ' hundred'); x %= 100; } if (x >= 20) { o.push(TENS[Math.floor(x / 10)] + (x % 10 ? '-' + ONES[x % 10] : '')); } else if (x) o.push(ONES[x]); return o.join(' '); };
+    var parts = [], units = [[1e9, 'billion'], [1e6, 'million'], [1e3, 'thousand']];
+    units.forEach(function (u) { if (dol >= u[0]) { parts.push(three(Math.floor(dol / u[0])) + ' ' + u[1]); dol %= u[0]; } });
+    if (dol) parts.push(three(dol));
+    var w = parts.join(' ') || 'zero';
+    return w.charAt(0).toUpperCase() + w.slice(1) + ' and ' + ('0' + cents).slice(-2) + '/100';
+  }
+  function chkGet(k, d) { try { var v = JSON.parse(localStorage.getItem('bpChk') || '{}'); return v[k] == null ? d : v[k]; } catch (e) { return d; } }
+  function chkSet(k, val) { try { var v = JSON.parse(localStorage.getItem('bpChk') || '{}'); v[k] = val; localStorage.setItem('bpChk', JSON.stringify(v)); } catch (e) {} }
+  /* the check itself, 8.5 x 3.5 in; positions in % of the check, type in cqw so the preview and the paper match */
+  function checkFace(d, o) {
+    o = o || {}; var co = d.co, amt = d.r.paid ? +d.r.paid.amount || d.r.gross : d.r.gross;
+    var adj = chkGet('adj', { x: 0, y: 0 }), dx = (+adj.x || 0) / 16 / 8.5 * 100, dy = (+adj.y || 0) / 16 / 3.5 * 100;
+    var at2 = function (l, t) { return 'left:' + (l + dx).toFixed(2) + '%;top:' + (t + dy).toFixed(2) + '%'; };
+    var amtTxt = (Math.round(amt * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    var addr = String(o.addr || '').split(/\n/).map(function (l) { return esc(l); }).join('<br>');
+    var bg = o.bg ? '<div class="ck-bg"><div class="ck-co"><b>' + esc(co.name || 'Your business') + '</b>' + (co.address ? '<span>' + esc(co.address) + '</span>' : '') + '</div>'
+        + '<div class="ck-bank">Your bank</div><div class="ck-no">' + esc(o.no || '') + '</div><div class="ck-dl">Date</div><div class="ck-dline"></div>'
+        + '<div class="ck-pay">Pay to the<br>order of</div><div class="ck-pline"></div><div class="ck-box">$</div><div class="ck-wline"></div><div class="ck-dol">Dollars</div>'
+        + '<div class="ck-memo">Memo</div><div class="ck-mline"></div><div class="ck-sline"></div><div class="ck-sig">Signature</div>'
+        + '<div class="ck-micr">⑆ 000000000 ⑆ 0000000000 ⑈ ' + esc(o.no || '') + '</div></div>' : '';
+    return '<div class="ck' + (o.bg ? ' bg' : '') + '">' + bg
+      + '<span class="ck-f" style="' + at2(76.5, 19) + '">' + esc(o.date || '') + '</span>'
+      + '<span class="ck-f ck-name" style="' + at2(14, 36.5) + '">' + esc(String(d.e.name || '').replace(/\s*\(sample\)/, '')) + '</span>'
+      + '<span class="ck-f ck-amt" style="' + at2(80.5, 36.5) + '">**' + amtTxt + '</span>'
+      + '<span class="ck-f ck-words" style="' + at2(5.5, 49) + '">' + esc(words(amt)) + ' <i>' + Array(60).join('*') + '</i></span>'
+      + (addr ? '<span class="ck-f ck-addr" style="' + at2(14, 60) + '">' + esc(String(d.e.name || '').replace(/\s*\(sample\)/, '')) + '<br>' + addr + '</span>' : '')
+      + '<span class="ck-f ck-mm" style="' + at2(10.5, 82.5) + '">' + esc(o.memo || '') + '</span></div>';
+  }
+  function voucher(d, o, keep) {
+    var rt = +d.e.rate || 0;
+    return '<div class="ck-v"><div class="ck-vh"><b>' + esc(d.co.name || 'Your business') + '</b><span>Check ' + esc(o.no || '') + ' · ' + esc(o.date || '') + '</span></div>'
+      + '<div class="ck-vp"><b>Paid to ' + esc(d.e.name) + '</b><span>1099 contractor · no tax withheld</span></div>'
+      + '<table><thead><tr><th>For</th><th class="n">Hours</th><th class="n">Rate</th><th class="n">Amount</th></tr></thead><tbody>'
+      + d.lines.map(function (l) { return '<tr><td>' + esc(l[0]) + ', ' + esc(nice(d.from)) + ' – ' + esc(nice(d.to)) + '</td><td class="n">' + (d.e.pay_type === 'salary' ? '—' : l[1]) + '</td><td class="n">' + m2(l[2]) + '</td><td class="n">' + m2(l[3]) + '</td></tr>'; }).join('')
+      + '</tbody></table><div class="ck-vt"><span>' + esc(o.memo || '') + '</span><b>Total ' + m2(d.r.paid ? +d.r.paid.amount || d.r.gross : d.r.gross) + '</b></div>'
+      + '<div class="ck-vk">' + (keep ? 'Keep for your records' : 'Contractor’s copy') + '</div></div>';
+  }
+  function sheet(d, o) { return '<div class="ck-page">' + checkFace(d, o) + voucher(d, o, false) + voucher(d, o, true) + '</div>'; }
+  function today() { return new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+  window.bpPayCheck = function (empId, from) {
+    ckCss();
+    var d = stubData(empId, from || S.payFrom || periodOf(Date.now())[0]); if (!d) return;
+    var no = String(chkGet('next', 1001)), addrs = chkGet('addr', {}), memo = 'Pay ' + nice(d.from) + ' – ' + nice(d.to);
+    bpModal('<h3>Check for ' + esc(d.e.name) + '</h3>'
+      + '<div class="ck-wrap" id="ckPrev"></div>'
+      + '<div class="ck-legend"><span><i class="b"></i>BuilderPro prints this</span><span><i class="g"></i>Already on your checks</span></div>'
+      + '<div class="ck-form"><div><label>Check number</label><input id="ckNo" inputmode="numeric" value="' + esc(no) + '"></div>'
+      + '<div><label>Date</label><input id="ckDate" value="' + esc(today()) + '"></div>'
+      + '<div class="w"><label>Memo</label><input id="ckMemo" value="' + esc(memo) + '"></div>'
+      + '<div class="w"><label>Mailing address <small>for a window envelope, optional</small></label><textarea id="ckAddr" rows="2" placeholder="Street\nCity, State ZIP">' + esc(addrs[empId] || '') + '</textarea></div></div>'
+      + '<p class="ck-note">Print onto pre-printed business checks with the check on top (from your bank or an office store). Your bank details and the magnetic number line are already on them, so BuilderPro never asks for them. Two stubs with the pay details print below the check.</p>'
+      + '<div class="row"><button class="bpx-btn ghost" onclick="bpCheckAdjOpen()">Line up</button><button class="bpx-btn ghost" onclick="bpCheckPrint(\'' + d.e.id + '\',\'' + d.from + '\',1)">Test on plain paper</button>'
+      + '<button class="bpx-btn" onclick="bpCheckPrint(\'' + d.e.id + '\',\'' + d.from + '\',0)"><span class="ms" style="font-size:18px;vertical-align:-4px;margin-right:4px">print</span>Print check</button></div>');
+    var cards = document.querySelectorAll('.bpx-modalcard'), mc = cards[cards.length - 1]; if (mc) { mc.style.maxWidth = '820px'; mc.style.width = '95vw'; mc.classList.add('ps-modal'); }
+    var draw = function () { var el = $('ckPrev'); if (el) el.innerHTML = checkFace(d, { bg: 1, no: ($('ckNo') || {}).value, date: ($('ckDate') || {}).value, memo: ($('ckMemo') || {}).value, addr: ($('ckAddr') || {}).value }); };
+    ['ckNo', 'ckDate', 'ckMemo', 'ckAddr'].forEach(function (id) { var el = $(id); if (el) el.oninput = draw; });
+    draw();
+  };
+  /* nudge everything up, down, left or right in sixteenths of an inch, for printers that feed a little off */
+  window.bpCheckAdjOpen = function () {
+    var a = chkGet('adj', { x: 0, y: 0 }), el = document.querySelector('.ck-form'); if (!el || $('ckAdj')) return;
+    el.insertAdjacentHTML('beforeend', '<div class="w ck-adj" id="ckAdj"><label>Line up <small>in sixteenths of an inch: right and down are +, left and up are −</small></label>'
+      + '<div><span>Across</span><input id="ckAx" type="number" step="1" value="' + (+a.x || 0) + '"><span>Down</span><input id="ckAy" type="number" step="1" value="' + (+a.y || 0) + '"></div></div>');
+    var save = function () { chkSet('adj', { x: +$('ckAx').value || 0, y: +$('ckAy').value || 0 }); var i = $('ckNo'); if (i) i.oninput(); };
+    $('ckAx').oninput = save; $('ckAy').oninput = save;
+  };
+  window.bpCheckPrint = function (empId, from, test) {
+    var ids = empId ? [empId] : dueFor(from, periodEnd(from)).filter(function (r) { return r.e.kind === '1099'; }).map(function (r) { return r.e.id; });
+    if (!ids.length) { alert('No 1099 contractors to pay in this period.'); return; }
+    var first = parseInt(($('ckNo') || {}).value || chkGet('next', 1001), 10) || 1001;
+    var date = ($('ckDate') || {}).value || today(), memoIn = $('ckMemo') ? $('ckMemo').value : null;
+    if (empId && $('ckAddr')) { var A = chkGet('addr', {}); A[empId] = $('ckAddr').value; chkSet('addr', A); }
+    var addrs = chkGet('addr', {});
+    var pages = ids.map(function (id, i) { var d = stubData(id, from); if (!d) return '';
+      return sheet(d, { bg: !!test, no: String(first + i), date: date, memo: memoIn != null && empId ? memoIn : 'Pay ' + nice(d.from) + ' – ' + nice(d.to), addr: addrs[id] || '' }); }).join('');
+    if (!test) chkSet('next', first + ids.length);
+    ckCss();
+    var css = (document.getElementById('ck-css') || {}).textContent || '';
+    var w = window.open('', '_blank');
+    if (!w) { alert('Your browser blocked the new tab. Allow pop-ups for this site and try again.'); return; }
+    w.document.open();
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>' + (test ? 'Check test' : 'Checks') + '</title><style>@page{size:letter;margin:0}html,body{margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#000}'
+      + css.replace(/#bpx\s*/g, '') + '.ck-page{width:8.5in;height:11in;page-break-after:always;overflow:hidden}.ck{width:8.5in;height:3.5in}@media screen{body{background:#888;padding:20px}.ck-page{background:#fff;margin:0 auto 20px}}</style></head><body>'
+      + pages + '<script>setTimeout(function(){print()},400)<\/script></body></html>');
+    w.document.close();
+    if (!test && $('ckNo')) $('ckNo').value = String(first + ids.length);
+  };
+  function ckCss() {
+    if (document.getElementById('ck-css')) return;
+    var c = document.createElement('style'); c.id = 'ck-css';
+    c.textContent = '#bpx .ck{position:relative;width:100%;aspect-ratio:8.5/3.5;container-type:inline-size;background:#fff;color:#000;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}'
+      + '#bpx .ck.bg{border-radius:6px;box-shadow:0 0 0 1px #cfd8e3;background:repeating-linear-gradient(135deg,#f3f8f4 0 6px,#eef5f0 6px 12px)}'
+      + '#bpx .ck-f{position:absolute;font-size:1.75cqw;line-height:1.25;white-space:nowrap;color:#000;font-weight:500}'
+      + '#bpx .ck-name{font-size:1.9cqw;font-weight:600}#bpx .ck-amt{font-size:1.95cqw;font-weight:700;letter-spacing:.02em}#bpx .ck-words{max-width:78%;overflow:hidden}#bpx .ck-words i{font-style:normal;letter-spacing:.1em}'
+      + '#bpx .ck-addr{white-space:normal;font-size:1.6cqw}#bpx .ck-mm{font-size:1.55cqw}'
+      + '#bpx .ck-bg>*{position:absolute;color:#8a99ad;font-size:1.35cqw;text-transform:uppercase;letter-spacing:.04em}'
+      + '#bpx .ck-co{left:4%;top:7%;text-transform:none;letter-spacing:0}#bpx .ck-co b{display:block;font-size:1.9cqw;color:#7d8da3}#bpx .ck-co span{display:block;font-size:1.35cqw}'
+      + '#bpx .ck-bank{left:45%;top:8%;font-size:1.6cqw}#bpx .ck-no{right:4%;top:7%;font-size:1.9cqw;font-weight:700}'
+      + '#bpx .ck-dl{left:70%;top:20.5%}#bpx .ck-dline{left:76%;top:27%;width:18%;border-top:1px solid #a9b6c6}'
+      + '#bpx .ck-pay{left:4%;top:34%;font-size:1.15cqw;line-height:1.15}#bpx .ck-pline{left:13.5%;top:44%;width:62%;border-top:1px solid #a9b6c6}'
+      + '#bpx .ck-box{left:78%;top:33%;width:17%;height:12%;border:1px solid #a9b6c6;padding-left:.6%;font-size:1.9cqw;color:#7d8da3;box-sizing:border-box}'
+      + '#bpx .ck-wline{left:4%;top:56%;width:80%;border-top:1px solid #a9b6c6}#bpx .ck-dol{left:85%;top:51.5%}'
+      + '#bpx .ck-memo{left:4%;top:83%}#bpx .ck-mline{left:10%;top:89%;width:36%;border-top:1px solid #a9b6c6}'
+      + '#bpx .ck-sline{left:58%;top:86%;width:37%;border-top:1px solid #a9b6c6}#bpx .ck-sig{left:58%;top:87.5%;font-size:1.1cqw}'
+      + '#bpx .ck-micr{left:22%;top:93%;font-family:"Courier New",monospace;font-size:1.7cqw;letter-spacing:.12em;text-transform:none}'
+      + '#bpx .ck-v{box-sizing:border-box;height:3.75in;padding:.35in .5in 0;font-size:10pt;color:#000;border-top:1px dashed #bbb}#bpx .ck-vh,#bpx .ck-vp,#bpx .ck-vt{display:flex;justify-content:space-between;gap:12px}'
+      + '#bpx .ck-vh b{font-size:11pt}#bpx .ck-vp{margin:8px 0}#bpx .ck-vp span,#bpx .ck-vh span{color:#444}'
+      + '#bpx .ck-v table{width:100%;border-collapse:collapse;margin-top:6px}#bpx .ck-v th{text-align:left;font-size:8.5pt;text-transform:uppercase;letter-spacing:.04em;color:#555;border-bottom:1px solid #999;padding:4px 0}#bpx .ck-v td{padding:5px 0;border-bottom:1px solid #ddd}#bpx .ck-v .n{text-align:right}'
+      + '#bpx .ck-vt{margin-top:8px}#bpx .ck-vt b{font-size:11pt}#bpx .ck-vk{margin-top:10px;font-size:8.5pt;color:#666;text-transform:uppercase;letter-spacing:.05em}'
+      + '#bpx .ck-wrap{margin:6px 0 8px}#bpx .ck-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--grey)}#bpx .ck-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}#bpx .ck-legend .b{background:#000}#bpx .ck-legend .g{background:#a9b6c6}'
+      + '#bpx .ck-form{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;margin-top:14px}#bpx .ck-form .w{grid-column:1/-1}#bpx .ck-form label{display:block;margin:0 0 4px;font-size:12.5px;font-weight:600;color:var(--grey)}#bpx .ck-form label small{font-weight:400}#bpx .ck-form input,#bpx .ck-form textarea{width:100%;box-sizing:border-box}'
+      + '#bpx .ck-adj>div{display:flex;align-items:center;gap:8px}#bpx .ck-adj input{width:80px}#bpx .ck-adj span{font-size:13px;color:var(--grey)}'
+      + '#bpx .ck-note{margin:12px 0 0;font-size:12.5px;line-height:1.5;color:var(--grey)}'
+      + '@media (max-width:600px){#bpx .ck-form{grid-template-columns:1fr}}';
     document.head.appendChild(c);
   }
 

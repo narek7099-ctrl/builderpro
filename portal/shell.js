@@ -650,7 +650,7 @@
       dataRows(tb).forEach(function (r) {
         var c = r.cells[r.cells.length - 1]; if (!c || c.querySelector('.hl-rowkeb')) return;
         if (hs.length && hs[hs.length - 1] && hs[hs.length - 1].textContent.trim()) return;
-        var bs = [].slice.call(c.querySelectorAll('button')).filter(function (b) { return !b.classList.contains('bpx-donebtn') && !b.classList.contains('primary') && !b.classList.contains('pj-mark'); });
+        var bs = [].slice.call(c.querySelectorAll('button')).filter(function (b) { return !b.classList.contains('bpx-donebtn') && !b.classList.contains('primary') && !b.classList.contains('pj-mark') && !b.classList.contains('hl-keep'); });   /* .hl-keep: always shown in the row */
         if (bs.length < 2) return;
         bs.forEach(function (b) { b.classList.add('hl-inmenu'); });
         var k = document.createElement('button');

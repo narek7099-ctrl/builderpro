@@ -118,3 +118,8 @@
 @top .pp6-b{display:grid !important;grid-template-columns:1fr 1fr !important;gap:8px !important;margin-top:12px !important}
 @top .pp6-b .bpx-btn{display:inline-flex !important;align-items:center !important;justify-content:center !important;gap:6px !important;width:100% !important;height:42px !important;margin:0 !important;padding:0 10px !important;font-size:14px !important;border-radius:12px !important}
 @top .pp6-b .bpx-btn .ms{font-size:18px !important}
+@top .pp6-b.three{grid-template-columns:1fr 1fr 1fr !important}
+/* check preview: pop-up rules must not resize the check's printed-on boxes */
+@top .ck-bg>*{margin:0 !important;padding:0 !important;min-height:0 !important;max-width:none !important}
+@top .ck-bg .ck-box{width:17% !important;height:12% !important;padding-left:.6% !important;border:1px solid #a9b6c6 !important;box-sizing:border-box !important;background:none !important;border-radius:0 !important}
+@top .ck-bg :is(.ck-dline,.ck-pline,.ck-wline,.ck-mline,.ck-sline){height:0 !important;border:0 !important;border-top:1px solid #a9b6c6 !important;background:none !important}
