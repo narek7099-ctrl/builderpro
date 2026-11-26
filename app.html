@@ -105,9 +105,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261126-tb2">
-<link rel="stylesheet" href="site/present.css?v=20261126-tb2">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261126-tb2"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261126-e6d">
+<link rel="stylesheet" href="site/present.css?v=20261126-e6d">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261126-e6d"}}</script>
 
 
 <style id="bpi-icons">
@@ -7244,26 +7244,34 @@ window.bpCrewAvatars=function(people,color,max){ max=max||4; var shown=people.sl
    draft away (a brand-new crew is never added). Saving writes the list to
    client_settings and waits for the server before saying "Saved". */
 var _bpCrewEd=null, _bpCrewSaved='';
+/* 2026-11-26 redesign: a card per crew (its color across the top, the name, the trade and how
+   many people), then each person on a line with their trade and a Lead badge; Edit and delete
+   sit quietly in the corner. Anyone not in a crew is listed at the end. */
 window.bpCrewsHtml=function(inline){
   var crews=pjCrews(), emps=window.bpEmpsActive?bpEmpsActive():[], ed=_bpCrewEd;
   var list=crews.slice(); if(ed&&ed.isNew) list.push(ed.draft);
   var adding=!!(ed&&ed.isNew);
-  var addBtn='<button class="bpx-btn" id="pjcAdd" style="width:auto;margin:0;padding:9px 16px;font-size:13px"'+(adding?' disabled':'')+' onclick="bpCrewAdd()">+ Add crew</button>';
-  return (inline?'<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">Crews<span class="lg2" style="margin-left:8px">each crew gets its own color on the calendar and the map, and its own route</span></div>'
-      +addBtn+'</div>'
+  var ini=function(n){var p=String(n||'?').replace(/\([^)]*\)/g,' ').trim().split(/\s+/).filter(Boolean);return ((p[0]||'?').charAt(0)+(p.length>1?p[p.length-1].charAt(0):'')).toUpperCase();};
+  var addBtn='<button class="bpx-btn cr6-add" id="pjcAdd"'+(adding?' disabled':'')+' onclick="bpCrewAdd()"><span class="ms">add</span>Add crew</button>';
+  var inAny={}; crews.forEach(function(c){(c.members||[]).forEach(function(id){inAny[id]=1;});});
+  var loose=emps.filter(function(e){return !inAny[e.id];});
+  var card=function(c){
+    if(ed&&ed.id===c.id) return bpCrewEditCard(ed,emps,crews);
+    var ppl=bpCrewPeople(c), tr=bpCrewTrade(c), saved=_bpCrewSaved===c.id;
+    return '<div class="cr6" data-crew="'+bpEsc(c.id)+'" style="--cc:'+c.color+'">'
+      +'<div class="cr6-h"><i class="cr6-dot"></i><div class="cr6-t"><b>'+bpEsc(c.name)+'</b><small>'+(tr?bpEsc(tr)+' crew · ':'')+ppl.length+(ppl.length===1?' person':' people')+'</small></div>'
+      +(saved?'<span class="cr6-ok"><span class=ms>check_circle</span>Saved</span>':'')
+      +'<button class="cr6-edit" '+(ed?'disabled ':'')+'onclick="bpCrewEditOpen(\''+c.id+'\')"><span class=ms>edit</span>Edit</button></div>'
+      +(ppl.length?'<div class="cr6-ppl">'+ppl.map(function(e){return '<div class="cr6-p"><span class="cr6-av">'+bpEsc(ini(e.name))+'</span><span class="cr6-pt"><b>'+bpEsc(e.name)+'</b>'+(e.trade?'<small>'+bpEsc(e.trade)+'</small>':'')+'</span>'+(c.lead===e.id?'<span class="cr6-lead"><span class=ms>star</span>Lead</span>':'')+'</div>';}).join('')+'</div>'
+        :'<div class="cr6-none">Nobody in this crew yet. Tap Edit to add people.</div>')
+      +'<div class="cr6-f"><span>'+(c.lead?'The lead can clock the crew in and out':'No lead yet')+'</span><button class="cr6-del" '+(ed?'disabled ':'')+'onclick="bpCrewDelId(\''+c.id+'\')" aria-label="Delete crew" title="Delete crew"><span class=ms>delete</span></button></div></div>';
+  };
+  return (inline?'<div class="hr6-bar"><div class="hr6-bt"><b>Crews</b><span>each crew has its own color on the calendar and the map</span></div><div class="hr6-ba">'+addBtn+'</div></div>'
     :'<h3>Crews</h3><div class="bpx-sub">Each crew gets its own color on the calendar and the map, and its own route.</div>')
-    +(list.length?list.map(function(c){
-      if(ed&&ed.id===c.id) return bpCrewEditCard(ed,emps,crews);
-      var ppl=bpCrewPeople(c), tr=bpCrewTrade(c), saved=_bpCrewSaved===c.id;
-      return '<div class="pjc pjc-saved" data-crew="'+bpEsc(c.id)+'" style="border-left:4px solid '+c.color+'"><div class="pjc-top"><i class="pjc-dot" style="background:'+c.color+'"></i>'
-        +'<div class="pjc-ttl"><b>'+bpEsc(c.name)+'</b><small>'+ppl.length+(ppl.length===1?' person':' people')+'</small></div>'
-        +(tr?'<span class="pjc-chip">'+bpEsc(tr)+' crew</span>':'')
-        +(saved?'<span class="pjc-ok"><span class=ms>check_circle</span>Saved</span>':'')
-        +'<span class="pjc-act"><button class="bpx-btn ghost pjc-edit" '+(ed?'disabled ':'')+'onclick="bpCrewEditOpen(\''+c.id+'\')"><span class=ms>edit</span>Edit</button>'
-        +'<button class="pjc-del" '+(ed?'disabled ':'')+'onclick="bpCrewDelId(\''+c.id+'\')" aria-label="Delete crew"><span class=ms>delete</span></button></span></div>'
-        +(ppl.length?'<div class="pjc-sum">'+bpCrewAvatars(ppl,c.color,5)+'<span class="pjc-names">'+ppl.map(function(e){return '<span><b>'+bpEsc(e.name)+'</b>'+(c.lead===e.id?bpCrewLeadBadge(c):'')+(e.trade?' · '+bpEsc(e.trade):'')+'</span>';}).join('')+'</span></div>'
-          :'<div class="bpx-mut" style="font-size:12.5px;margin-top:6px">Nobody in this crew yet. Tap Edit to add people.</div>')+'</div>';
-    }).join(''):'<div class="bpx-empty2"><b>No crews yet.</b><div class="bpx-mut" style="font-size:13px;margin-top:4px">Make one per team you send out, e.g. “Roof crew A” and “Gutter crew”.</div></div>')
+    +(list.length?'<div class="cr6-grid">'+list.map(card).join('')
+        +(inline&&loose.length&&crews.length?'<div class="cr6 cr6-loose"><div class="cr6-h"><div class="cr6-t"><b>Not in a crew yet</b><small>'+loose.length+(loose.length===1?' person':' people')+'</small></div></div><div class="cr6-ppl">'+loose.map(function(e){return '<div class="cr6-p"><span class="cr6-av">'+bpEsc(ini(e.name))+'</span><span class="cr6-pt"><b>'+bpEsc(e.name)+'</b>'+(e.trade?'<small>'+bpEsc(e.trade)+'</small>':'')+'</span></div>';}).join('')+'</div><div class="cr6-f"><span>Tap Edit on a crew to add them</span></div></div>':'')
+      +'</div>'
+      :'<div class="hr6-empty"><span class="ms">groups</span><b>No crews yet</b><p>Make one for each team you send out, like “Roof crew A” and “Gutter crew”.</p><button class="bpx-btn" onclick="bpCrewAdd()">Make the first crew</button></div>')
     +(inline?'':'<div class="row" style="margin-top:12px"><button class="bpx-btn ghost" '+(adding?'disabled ':'')+'onclick="bpCrewAdd()">+ Add crew</button><button class="bpx-btn" '+(ed?'disabled title="Save or cancel the crew you are editing first" ':'')+'onclick="bpCloseModal();pjAfterEdit()">Done</button></div>');
 };
 function bpCrewEditCard(ed,emps,crews){
@@ -7320,7 +7328,7 @@ window.bpCrewSave=function(){
     _bpCrewEd=null; _bpCrewSaved=d.id; bpCrewsRefresh();
     if(window.bpToast) bpToast(d.name+(ok===false?' saved on this device.':' saved.'),'success');
     if(window.pjAfterEdit) try{ pjAfterEdit(); }catch(e){}
-    setTimeout(function(){ if(_bpCrewSaved===d.id){ _bpCrewSaved=''; var el=document.querySelector('.pjc-saved[data-crew="'+d.id+'"] .pjc-ok'); if(el) el.remove(); } },4000);
+    setTimeout(function(){ if(_bpCrewSaved===d.id){ _bpCrewSaved=''; var el=document.querySelector('.cr6[data-crew="'+d.id+'"] .cr6-ok'); if(el) el.remove(); } },4000);
   }).catch(function(){
     /* kept on this device; the card stays open so they can try again */
     ed.isNew=false;
@@ -15019,10 +15027,10 @@ window.bpRepCopy=function(text,btn){
 <!--/app-only-->
 </body>
 <!--app-only-->
-<link rel="stylesheet" href="portal/app.css?v=d199085717" data-bundle>
+<link rel="stylesheet" href="portal/app.css?v=6ea821d3ef" data-bundle>
 <script src="portal/team.js?v=20261115a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
-<script src="portal/crew.js?v=20261124v"></script>
+<script src="portal/crew.js?v=20261126e7"></script>
 <script src="portal/charts.js?v=20261124ff"></script>
 <script src="portal/progress.js?v=20261110a"></script>
 <script src="portal/supply.js?v=20261124fb"></script>
@@ -15070,11 +15078,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261125ls"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261126-tb2"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261126-tb2"></script>
-<script src="site/vendor/SplitText.min.js?v=20261126-tb2"></script>
-<script src="site/site.js?v=20261126-tb2"></script>
-<script src="site/present.js?v=20261126-tb2"></script>
+<script src="site/vendor/gsap.min.js?v=20261126-e6d"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261126-e6d"></script>
+<script src="site/vendor/SplitText.min.js?v=20261126-e6d"></script>
+<script src="site/site.js?v=20261126-e6d"></script>
+<script src="site/present.js?v=20261126-e6d"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>

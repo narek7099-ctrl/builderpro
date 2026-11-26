@@ -1,0 +1,99 @@
+/* ==================================================================
+   Employees: Hours and Crews, redesigned 2026-11-26 (portal/crew.js
+   hours(), app.html bpCrewsHtml). Phone and computer. "@top" is
+   expanded in site/assemble.py.
+   ================================================================== */
+/* a page bar: title and a short line on the left, the actions on the right */
+@top .hr6-bar{display:flex !important;align-items:center !important;justify-content:space-between !important;gap:12px !important;flex-wrap:wrap !important;margin:4px 0 16px !important}
+@top .hr6-bt{display:flex !important;align-items:baseline !important;gap:10px !important;flex-wrap:wrap !important;min-width:0 !important}
+@top .hr6-bt b{font-size:20px !important;font-weight:750 !important;letter-spacing:-.015em !important;color:var(--ink) !important}
+@top .hr6-bt span{font-size:13.5px !important;color:var(--grey) !important}
+@top .hr6-ba{display:flex !important;gap:8px !important;align-items:center !important}
+@top .hr6-ba .bpx-btn{display:inline-flex !important;align-items:center !important;gap:6px !important;width:auto !important;margin:0 !important;height:40px !important;padding:0 16px !important;font-size:14px !important;border-radius:999px !important}
+@top .hr6-ba .bpx-btn .ms{font-size:19px !important}
+/* four figures */
+@top .hr6-tiles{display:grid !important;grid-template-columns:repeat(4,minmax(0,1fr)) !important;gap:12px !important;margin:0 0 14px !important}
+@top .hr6-tile{min-width:0 !important;padding:14px 16px !important;border:1px solid var(--line) !important;border-radius:16px !important;background:var(--card) !important}
+@top .hr6-tile small{display:block !important;font-size:12.5px !important;font-weight:600 !important;color:var(--grey) !important}
+@top .hr6-tile b{display:block !important;margin-top:6px !important;font-size:24px !important;font-weight:800 !important;letter-spacing:-.02em !important;color:var(--ink) !important;white-space:nowrap !important}
+@top .hr6-tile em{display:block !important;margin-top:2px !important;font-style:normal !important;font-size:12.5px !important;color:var(--grey) !important}
+/* cards */
+@top .hr6-card{margin:0 0 14px !important;padding:16px 18px !important;border:1px solid var(--line) !important;border-radius:16px !important;background:var(--card) !important}
+@top .hr6-lh{display:flex !important;align-items:center !important;justify-content:space-between !important;gap:12px !important;margin:0 0 6px !important}
+@top .hr6-lh b{font-size:16px !important;font-weight:700 !important;color:var(--ink) !important}
+@top .hr6-who{width:auto !important;max-width:60% !important;height:36px !important;margin:0 !important;padding:0 32px 0 12px !important;border:1px solid var(--line) !important;border-radius:999px !important;background-color:var(--soft) !important;font-size:14px !important;color:var(--ink) !important}
+/* a day */
+@top .hr6-day{margin-top:10px !important}
+@top .hr6-dh{display:flex !important;align-items:baseline !important;justify-content:space-between !important;gap:10px !important;padding:10px 0 6px !important;border-bottom:1px solid var(--line) !important}
+@top .hr6-dh b{font-size:14px !important;font-weight:700 !important;color:var(--ink) !important}
+@top .hr6-dh span{font-size:13px !important;font-weight:600 !important;color:var(--grey) !important}
+@top .hr6-row{display:flex !important;align-items:center !important;gap:12px !important;padding:10px 0 !important;border-bottom:1px solid var(--line-2) !important}
+@top .hr6-row:last-child{border-bottom:0 !important}
+@top .hr6-row.disp{background:linear-gradient(90deg,rgba(255,193,7,.10),transparent 70%) !important}
+@top .hr6-av{flex:none !important;display:grid !important;place-items:center !important;width:38px !important;height:38px !important;border-radius:50% !important;background:var(--blue-l) !important;color:var(--blue) !important;font-size:13px !important;font-weight:700 !important}
+@top .hr6-rt{flex:1 !important;min-width:0 !important;display:flex !important;flex-direction:column !important}
+@top .hr6-rt b{font-size:15px !important;font-weight:650 !important;color:var(--ink) !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important}
+@top .hr6-rt small{font-size:13px !important;color:var(--grey) !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important}
+@top .hr6-tags{display:flex !important;flex-wrap:wrap !important;gap:4px !important;margin-top:4px !important}
+@top .hr6-rh{flex:none !important;text-align:right !important;display:flex !important;flex-direction:column !important;align-items:flex-end !important}
+@top .hr6-rh b{font-size:16px !important;font-weight:750 !important;color:var(--ink) !important;white-space:nowrap !important}
+@top .hr6-rh b i{margin-left:4px !important;font-style:normal !important;font-size:12px !important;font-weight:700 !important;color:var(--blue) !important}
+@top .hr6-rh small{font-size:12.5px !important;color:var(--grey) !important}
+@top .hr6-del{flex:none !important;display:grid !important;place-items:center !important;width:34px !important;height:34px !important;min-height:0 !important;margin:0 !important;padding:0 !important;border:0 !important;border-radius:50% !important;background:none !important;color:var(--grey-l) !important;box-shadow:none !important;cursor:pointer !important}
+@top .hr6-del:hover{background:var(--soft) !important;color:#d14343 !important}
+@top .hr6-del .ms{font-size:19px !important}
+@top .hr6-clear{flex:none !important;height:30px !important;min-height:0 !important;margin:0 !important;padding:0 10px !important;border:1px solid var(--line) !important;border-radius:999px !important;background:var(--card) !important;font-size:12.5px !important;font-weight:600 !important;color:var(--ink) !important;box-shadow:none !important}
+@top .hr6-more{display:block !important;width:100% !important;height:42px !important;margin:12px 0 0 !important;border:1px dashed var(--line) !important;border-radius:12px !important;background:none !important;color:var(--blue) !important;font-size:14px !important;font-weight:600 !important;box-shadow:none !important}
+@top .hr6-foot{margin:12px 0 0 !important;font-size:12px !important;color:var(--grey) !important}
+@top .hr6-none{padding:18px 0 !important;font-size:14px !important;color:var(--grey) !important}
+/* empty pages */
+@top .hr6-empty{display:flex !important;flex-direction:column !important;align-items:center !important;text-align:center !important;padding:36px 20px !important;border:1px solid var(--line) !important;border-radius:16px !important;background:var(--card) !important}
+@top .hr6-empty>.ms{display:grid !important;place-items:center !important;width:56px !important;height:56px !important;margin-bottom:12px !important;border-radius:50% !important;background:var(--blue-l) !important;color:var(--blue) !important;font-size:28px !important}
+@top .hr6-empty b{font-size:17px !important;font-weight:700 !important;color:var(--ink) !important}
+@top .hr6-empty p{max-width:380px !important;margin:6px 0 16px !important;font-size:14px !important;line-height:1.5 !important;color:var(--grey) !important}
+@top .hr6-empty .bpx-btn{width:auto !important;margin:0 !important;padding:0 18px !important;height:40px !important;border-radius:999px !important}
+
+/* crews */
+@top .cr6-grid{display:grid !important;grid-template-columns:repeat(auto-fill,minmax(300px,1fr)) !important;gap:14px !important;align-items:start !important}
+@top .cr6-grid>.pjc-editing{grid-column:1/-1 !important}
+@top .cr6{position:relative !important;overflow:hidden !important;border:1px solid var(--line) !important;border-radius:18px !important;background:var(--card) !important}
+@top .cr6::before{content:"" !important;display:block !important;height:5px !important;background:var(--cc,#006fff) !important}
+@top .cr6-loose::before{background:var(--line) !important}
+@top .cr6-h{display:flex !important;align-items:center !important;gap:10px !important;padding:14px 16px 10px !important}
+@top .cr6-dot{flex:none !important;width:12px !important;height:12px !important;border-radius:50% !important;background:var(--cc,#006fff) !important}
+@top .cr6-t{flex:1 !important;min-width:0 !important;display:flex !important;flex-direction:column !important}
+@top .cr6-t b{font-size:17px !important;font-weight:750 !important;color:var(--ink) !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important}
+@top .cr6-t small{font-size:13px !important;color:var(--grey) !important}
+@top .cr6-edit{flex:none !important;display:inline-flex !important;align-items:center !important;gap:4px !important;height:34px !important;min-height:0 !important;margin:0 !important;padding:0 12px !important;border:1px solid var(--line) !important;border-radius:999px !important;background:var(--card) !important;color:var(--ink) !important;font-size:13.5px !important;font-weight:600 !important;box-shadow:none !important}
+@top .cr6-edit .ms{font-size:17px !important}
+@top .cr6-ok{display:inline-flex !important;align-items:center !important;gap:4px !important;font-size:12.5px !important;font-weight:600 !important;color:#0d8f6e !important}
+@top .cr6-ok .ms{font-size:16px !important}
+@top .cr6-ppl{padding:0 16px !important}
+@top .cr6-p{display:flex !important;align-items:center !important;gap:10px !important;padding:9px 0 !important;border-top:1px solid var(--line-2) !important}
+@top .cr6-av{flex:none !important;display:grid !important;place-items:center !important;width:34px !important;height:34px !important;border-radius:50% !important;background:color-mix(in srgb,var(--cc,#006fff) 16%,var(--card)) !important;color:var(--cc,#006fff) !important;font-size:12.5px !important;font-weight:700 !important}
+@top .cr6-loose .cr6-av{background:var(--soft) !important;color:var(--grey) !important}
+@top .cr6-pt{flex:1 !important;min-width:0 !important;display:flex !important;flex-direction:column !important}
+@top .cr6-pt b{font-size:14.5px !important;font-weight:650 !important;color:var(--ink) !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important}
+@top .cr6-pt small{font-size:12.5px !important;color:var(--grey) !important}
+@top .cr6-lead{flex:none !important;display:inline-flex !important;align-items:center !important;gap:3px !important;height:24px !important;padding:0 9px !important;border-radius:999px !important;background:color-mix(in srgb,var(--cc,#006fff) 14%,var(--card)) !important;color:var(--cc,#006fff) !important;font-size:12px !important;font-weight:700 !important}
+@top .cr6-lead .ms{font-size:14px !important}
+@top .cr6-none{padding:4px 16px 8px !important;font-size:13.5px !important;color:var(--grey) !important}
+@top .cr6-f{display:flex !important;align-items:center !important;justify-content:space-between !important;gap:10px !important;margin-top:6px !important;padding:8px 10px 8px 16px !important;border-top:1px solid var(--line-2) !important;background:var(--soft) !important;font-size:12.5px !important;color:var(--grey) !important;min-height:44px !important}
+@top .cr6-del{flex:none !important;display:grid !important;place-items:center !important;width:32px !important;height:32px !important;min-height:0 !important;margin:0 !important;padding:0 !important;border:0 !important;border-radius:50% !important;background:none !important;color:var(--grey-l) !important;box-shadow:none !important}
+@top .cr6-del:hover{color:#d14343 !important;background:var(--card) !important}
+@top .cr6-del .ms{font-size:19px !important}
+
+/* phone */
+@media (max-width:760px){
+  @top .hr6-bar{margin:0 0 12px !important}
+  @top .hr6-bt span{display:none !important}
+  @top .hr6-tiles{grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:10px !important}
+  @top .hr6-tile b{font-size:21px !important}
+  @top .hr6-card{padding:14px !important}
+  @top .hr6-rh b{font-size:15px !important}
+  @top .cr6-grid{grid-template-columns:1fr !important}
+}
+@top .bpx-panel.emp-flat{padding:0 !important;border:0 !important;background:none !important;box-shadow:none !important}
+@top .bpx-panel.emp-flat>.bpx-jobtabs{margin-bottom:16px !important}
+@top .hr6-tags{align-items:center !important}
+@top .hr6-tags .hr6-clear{height:26px !important;font-size:12px !important}
