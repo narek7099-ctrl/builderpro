@@ -43,6 +43,12 @@
 @top .cds .cd-foot{display:grid !important;grid-template-columns:1fr !important;gap:8px !important;margin:16px 0 0 !important;padding:14px 0 0 !important;border-top:1px solid var(--line,rgba(0,0,0,.08)) !important}
 @top .cds .cd-foot .bpx-rowbtn,@top .cds .cds-kind .bpx-rowbtn{display:flex !important;align-items:center !important;justify-content:center !important;gap:6px !important;width:100% !important;min-height:46px !important;margin:0 !important}
 @top .cds .cds-kind{margin-top:8px !important}
+@top .cds .cds-hint{margin:12px 0 0 !important;font-size:12.5px !important;line-height:1.45 !important;color:var(--grey,#788493) !important;text-align:center !important}
+@top .cds .cd-ev{-webkit-user-select:none !important;user-select:none !important;-webkit-touch-callout:none !important;cursor:grab !important}
+@top .cds .cd-ev:not([data-move]){cursor:pointer !important}
+@top .cds .cd-ev.cd-drag{z-index:6 !important;cursor:grabbing !important;box-shadow:0 12px 30px rgba(0,21,48,.28) !important;transition:opacity .12s !important}
+@top .cds .cd-dragging .cd-strip{background:var(--soft,#f1f4f8) !important}
+@top .cds .cd-chip.cd-drop b{background:var(--blue,#006fff) !important;color:#fff !important;transform:scale(1.12) !important}
 @top .cds .cds-kind:empty{display:none !important}
 @media (min-width:761px){
 @top .cds-bg{position:fixed !important;inset:0 !important;z-index:2899 !important;background:rgba(0,21,48,.28) !important;animation:cdsFade .2s ease both !important}

@@ -26,6 +26,8 @@
     var m = el.querySelector('.cds-mon'); if (m) m.textContent = MN[d.getMonth()];
     var t = el.querySelector('.cds-today'); if (t) t.disabled = cur === iso(new Date());
     var tab = document.querySelector('#bpxViewArea .cal-tabs .bpx-jt.on');
+    var h = el.querySelector('.cds-hint');
+    if (h) h.textContent = bpCalIsPhone() ? 'Hold a block, then drag it to a new time, or onto a date up top to move it to that day.' : 'Drag a block to a new time, or onto a date up top to move it to that day.';
     var k = el.querySelector('.cds-kind');
     if (k) k.innerHTML = (tab && /Inspections/.test(tab.textContent) && window.bpCalDayTap)
       ? '<button type="button" class="bpx-rowbtn" onclick="bpCalDayTap(\'' + cur + '\')"><span class="ms">event_busy</span> Close or reopen this day for inspections</button>' : '';
@@ -42,6 +44,8 @@
     }, { passive: true });
     el.addEventListener('touchend', function (e) {
       if (!on) return; on = false;
+      if (window._bpDayDragAt && Date.now() - window._bpDayDragAt < 600) return;   /* that was a drag, not a swipe */
+      if (e.target.closest && e.target.closest('.cd-ev')) return;
       var t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0;
       if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
       if (x0 < 24) return;                         /* the phone's own edge-swipe */
@@ -74,7 +78,7 @@
         + '<button type="button" class="cds-arr" onclick="bpCalDayStep(1)" aria-label="Next day"><span class="ms">chevron_right</span></button>'
         + '<button type="button" class="cds-today" onclick="bpCalDayToday()">Today</button>'
         + '<button type="button" class="cds-add" onclick="bpCalDayAdd()" aria-label="Add to this day"><span class="ms">add</span></button></div>'
-        + '<div class="cds-body"><div id="bpx-dayview" class="cd-wrap"></div><div class="cds-kind"></div></div>';
+        + '<div class="cds-body"><div id="bpx-dayview" class="cd-wrap"></div><p class="cds-hint"></p><div class="cds-kind"></div></div>';
       var host = document.getElementById('bpx') || document.body;
       var bg = document.createElement('div'); bg.id = 'bpDayScrBg'; bg.className = 'cds-bg'; bg.onclick = function () { window.bpCalDayClose(); };
       host.appendChild(bg);
