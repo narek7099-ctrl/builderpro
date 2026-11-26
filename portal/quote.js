@@ -811,7 +811,16 @@
     var phone = (ct && ct.phone) || j.phone || '', email = (ct && ct.email) || j.email || '';
     if (q.via !== 'email' && !phone) return say('This customer has no phone number. Send by email instead.');
     if (q.via !== 'sms' && !email) return say('This customer has no email. Send by text instead.');
-    if (!auto && ((q.opt && q.opt.status === 'sent') || q.estId) && !q.pendingSend && !confirm('Send it again with your changes? The link sent before stops working.')) return;
+    /* double confirmation for money (2026-11-26): who, how much and how, then a second tap */
+    if (!auto && window.bpMoneyOk) {
+      var again = ((q.opt && q.opt.status === 'sent') || q.estId) && !q.pendingSend;
+      var tots = ts.map(function (t) { return tierCalc(j, t.lines).total; }), lo = Math.min.apply(0, tots), hi = Math.max.apply(0, tots);
+      var amtS = tots.length > 1 ? (window.bpMoneyFmt2 ? bpMoneyFmt2(lo) + ' \u2013 ' + bpMoneyFmt2(hi) : '') : tots[0];
+      if (!(await bpMoneyOk({ kind: 'estimate', title: again ? 'Send this estimate again?' : 'Send this estimate?', amount: amtS, who: 'To ' + (j.name || 'your customer'),
+        how: q.via === 'email' ? 'By email to ' + email : q.via === 'sms' ? 'By text to ' + phone : 'By text and email',
+        lines: [tots.length > 1 ? ts.length + ' options for them to pick from' : '', again ? 'The link you sent before stops working.' : '', 'They can accept and sign from the link.'],
+        cta: again ? 'Yes, send again' : 'Yes, send estimate' }))) return;
+    } else if (!auto && ((q.opt && q.opt.status === 'sent') || q.estId) && !q.pendingSend && !confirm('Send it again with your changes? The link sent before stops working.')) return;
     if (!window.BP_LIVE || !window.bpAuthApi) return say('Sign in to send estimates.');
     /* no signal: into the outbox, sent by itself when the signal comes back */
     if (!auto && navigator.onLine === false) return outEst(j, say);
@@ -1187,6 +1196,9 @@
       toast('No signal. The invoice to ' + (ct.name || 'the customer') + ' is in your outbox and sends by itself when you’re back online.', 'success');
       Q.inv = null; if (quick) { if ($('qb-qsend') && window.bpCloseModal) bpCloseModal(); if (window.bpQbInvs) bpQbInvs(); } else bpNav('invoices');
     };
+    if (window.bpMoneyOk && !(await bpMoneyOk({ kind: 'invoice', title: 'Send this invoice?', amount: tot, who: 'To ' + (ct.name || 'your customer') + (title ? ' \u00b7 ' + title : ''),
+        how: s.via === 'email' ? 'By email to ' + ct.email : s.via === 'sms' ? 'By text to ' + ct.phone : 'By text and email',
+        lines: [disc ? 'Includes a discount of ' + (window.bpMoneyFmt2 ? bpMoneyFmt2(disc) : disc) : '', 'Due in ' + (+s.days || 0) + ' days', 'They can pay by card from the link.'], cta: 'Yes, send ' + (window.bpMoneyFmt2 ? bpMoneyFmt2(tot) : 'invoice') }))) return;
     if (navigator.onLine === false) return queueInv();
     btn.disabled = true; say('Sending…', true);
     try {

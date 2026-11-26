@@ -383,9 +383,12 @@
   P.paidBy = function (jid, stepId) {
     var j = job(jid), s = j && P.step(j, stepId); if (!s) return;
     if (j.sample) { toast('This is the sample, so nothing is recorded.'); return; }
+    var go = function () { collect(j, s.left); save(); P.render(jid); if (window.bpQbInvs) bpQbInvs(); toast(m2(s.left) + ' recorded as paid.', 'success'); };
+    /* double confirmation for money (2026-11-26) */
+    if (window.bpMoneyOk) return bpMoneyOk({ kind: 'pay', title: 'Record this as paid?', amount: s.left, who: (j.name || 'Customer') + ' \u00b7 ' + s.name,
+      how: 'Paid by check, cash or transfer', lines: ['It counts as money in on this job and in Finances.', 'Card payments come in on their own; you don\u2019t need this for those.'], cta: 'Yes, mark ' + m2(s.left) + ' paid' }).then(function (ok) { if (ok) go(); });
     if (!confirm('Record ' + m2(s.left) + ' for the ' + s.name.toLowerCase() + ' as paid (check, cash or transfer)?')) return;
-    collect(j, s.left); save(); P.render(jid); if (window.bpQbInvs) bpQbInvs();
-    toast(m2(s.left) + ' recorded as paid.', 'success');
+    go();
   };
   P.ready = function (jid, stepId) {
     var j = job(jid); if (!j || !j.pay) return;
