@@ -513,3 +513,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-26 computer calendar day panel: restore to 2e9b075
 - 2026-11-26 day-screen dragging + sample check: restore to 7923388
 - 2026-11-26 test sweep fixes: restore to e866bab
+- 2026-11-26 calendar cleanup: restore to a31bf9a
