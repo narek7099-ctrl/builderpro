@@ -116,9 +116,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261126-lg1">
-<link rel="stylesheet" href="site/present.css?v=20261126-lg1">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261126-lg1"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261126-hp2">
+<link rel="stylesheet" href="site/present.css?v=20261126-hp2">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261126-hp2"}}</script>
 
 
 <style id="bpi-icons">
@@ -718,8 +718,10 @@ html.bp-standalone .my-inst{display:none !important}
          loop that takes over when it ends. If the clips are missing, the
          live cube stands in. -->
     <div class="hero_right">
-      <video class="hero_video is-intro" id="videoIntro" muted playsinline preload="auto" src="assets/site/hero-intro.mp4?v=20261113c"></video>
-      <video class="hero_video is-loop" id="videoLoop" muted playsinline loop preload="auto" src="assets/site/hero-loop.mp4?v=20261113d"></video>
+      <!-- the hero clips only on the homepage: inside the app (/app) this page is hidden, so the
+           clips are not written at all and nothing downloads (2026-11-26) -->
+      <script>window.__bpInApp=/[?&](portal|app)=1/.test(location.search)||(/^\/app(\.html)?\/?$/.test(location.pathname)&&!/^#(home|est|sign|pay|my|pros|find-a-pro|access_token|error)\b|[#&](access_token|error)=/i.test(location.hash));
+      if(!window.__bpInApp)document.write('<video class="hero_video is-intro" id="videoIntro" muted playsinline preload="auto" src="assets/site/hero-intro.mp4?v=20261113c"></video><video class="hero_video is-loop" id="videoLoop" muted playsinline loop preload="auto" src="assets/site/hero-loop.mp4?v=20261113d"></video>');</script>
       <canvas aria-hidden="true"></canvas>
       <div class="hero_fallback" aria-hidden="true"><i></i></div>
     </div>
@@ -2508,9 +2510,9 @@ function ccSubmit(e){
 }
 </style>
 </body>
-<script src="site/vendor/gsap.min.js?v=20261126-lg1"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261126-lg1"></script>
-<script src="site/vendor/SplitText.min.js?v=20261126-lg1"></script>
-<script src="site/site.js?v=20261126-lg1"></script>
-<script src="site/present.js?v=20261126-lg1"></script>
+<script src="site/vendor/gsap.min.js?v=20261126-hp2"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261126-hp2"></script>
+<script src="site/vendor/SplitText.min.js?v=20261126-hp2"></script>
+<script src="site/site.js?v=20261126-hp2"></script>
+<script src="site/present.js?v=20261126-hp2"></script>
 </html>

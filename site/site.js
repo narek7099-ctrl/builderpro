@@ -34,6 +34,9 @@
      leaves the portal, the chat, the estimator and the legal pages to scroll
      natively. */
   var lenis = null;
+  /* inside the app (/app) the homepage is hidden: no smooth scrolling, no scroll effects,
+     no hero; they ran on every frame under the app (2026-11-26) */
+  if (window.__bpInApp) return;
   if (!REDUCED && window.Lenis) {
     try {
       lenis = new Lenis({
@@ -173,7 +176,7 @@
     /* after the page has shown (and the browser is idle), so the 3D code never
        holds up the first paint */
     var go = function () {
-      import('./hero3d.js?v=20261126-lg1').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
+      import('./hero3d.js?v=20261126-hp2').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
         .catch(function () { right.classList.add('nogl'); });
     };
     var later = function () { window.requestIdleCallback ? requestIdleCallback(go, { timeout: 1500 }) : setTimeout(go, 300); };

@@ -22,6 +22,9 @@
 
 /* ---------- the app fills the window ---------- */
 html.bp-appmode body{overflow:hidden}
+/* the marketing homepage shares this file; inside the app it is never seen, so it is not
+   laid out or painted either (2026-11-26 sweep: it was 15,000px of hidden page under the app) */
+html.bp-appmode body>.pnav,html.bp-appmode #pnavSheet,html.bp-appmode #menuOverlay,html.bp-appmode #menu,html.bp-appmode #drawerOverlay,html.bp-appmode #drawer,html.bp-appmode #calcOverlay,html.bp-appmode #calc,html.bp-appmode #main.dl-page{display:none !important}
 #bpx#bpx#bpx#bpx .bpx-close,#bpx#bpx#bpx#bpx .bpx-themebtn,#bpx#bpx#bpx#bpx .bpx-user2,#bpx#bpx#bpx#bpx .bpx-side .bpx-brand2,#bpx#bpx#bpx#bpx .bpx-mhdr,#bpx#bpx#bpx#bpx .bpx-mobbar{display:none !important}
 .oaw-btn{display:none !important}
 .oaw-panel{top:60px !important;bottom:auto !important;right:16px !important;max-height:min(560px,calc(100vh - 80px)) !important;border-radius:10px !important;z-index:2900 !important}

@@ -515,3 +515,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-26 test sweep fixes: restore to e866bab
 - 2026-11-26 calendar cleanup: restore to a31bf9a
 - 2026-11-26 logo on checks: restore to da5eb7d
+- 2026-11-26 app no longer runs the hidden homepage: restore to 38a18d3
