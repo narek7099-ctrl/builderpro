@@ -105,9 +105,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261126-cal2">
-<link rel="stylesheet" href="site/present.css?v=20261126-cal2">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261126-cal2"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261126-cd4">
+<link rel="stylesheet" href="site/present.css?v=20261126-cd4">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261126-cd4"}}</script>
 
 
 <style id="bpi-icons">
@@ -4188,6 +4188,7 @@ function bpCalUnsched(){
   function bpRenderCalendar(){
     window._bpCalConnOpen=false; if(typeof _bpCalLink!=='undefined') _bpCalLink.open=0; if(window.bpGcal) bpGcal.open=false;
     var k=_bpCalKind, all=k==='all', insp=k==='inspection', jobs=k==='jobs';
+    if(window.bpCalIsPhone&&bpCalIsPhone()) _bpCalView='month';   /* phone: month only; a tapped day opens the day screen (portal/calday.js) */
     var tab=function(id,ico,label){ return '<button class="bpx-jt'+(k===id?' on':'')+'" onclick="bpCalKind(\''+id+'\')"><span class=ms>'+ico+'</span> '+label+'</button>'; };
     q('bpxViewArea').innerHTML=
       '<div class="cal-top"><div class="cal-left"><div class="bpx-jobtabs cal-tabs">'+tab('all','calendar_month','Everything')+tab('inspection','roofing','Inspections')+tab('jobs','construction','Jobs')+'</div>'
@@ -4872,7 +4873,9 @@ function bpCalUnsched(){
   function bpFmtTime(iso){ try{ var dt=new Date(iso); return dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } }
 
 /* ==== bpDrawCalendar ==== */
+  window.bpCalRedrawMonth=function(){ bpDrawCalendar(); };
   function bpDrawCalendar(){
+    if(window.bpCalDayRedraw) bpCalDayRedraw();
     if(_bpCalView==='day'){ bpDrawDay(); bpCalSide(); return; }
     if(_bpCalView==='week'){ bpDrawWeek(); bpCalSide(); return; }
     var mn=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -4898,7 +4901,7 @@ function bpCalUnsched(){
       var isClosed=_bpCalKind==='inspection'&&!!closedMap[key];
       var count=pevs.length+evs.length+notes.length+gevs.length;
       var cls='bpx-day'+((isThisMonth&&today.getDate()===dnum)?' today':'')+(isPast?' past':'')+(count?' has':'')+(isClosed?' closed':'')+(all?' tap':'');
-      var tap=all?' onclick="bpDaySheet(\''+key+'\')" title="Open this day"':((_bpCalKind==='inspection'&&!isPast)?' onclick="bpCalDayTap(\''+key+'\')" title="'+(isClosed?'Closed \u2014 tap to manage':'Tap to close this day')+'"':'');
+      var tap=(window.bpCalDayOpen&&bpCalIsPhone())?' onclick="bpCalDayOpen(\''+key+'\')" title="Open this day"':all?' onclick="bpDaySheet(\''+key+'\')" title="Open this day"':((_bpCalKind==='inspection'&&!isPast)?' onclick="bpCalDayTap(\''+key+'\')" title="'+(isClosed?'Closed \u2014 tap to manage':'Tap to close this day')+'"':'');
       html+='<div class="'+cls+'"'+(all?tap:'')+'><div class="bpx-daynum"'+(all?'':tap)+'><span>'+dnum+'</span>'+(isClosed?'<em class="cal-closed-tag">Closed</em>':(count>0?'<i class="cal-dot"></i>':''))+'</div>';
       var stop=all?'event.stopPropagation();':'';
       for(var j=0;j<pevs.length;j++){ html+='<div class="bpx-appt job" onclick="'+stop+'bpProjOpen(\''+pevs[j].id+'\')"><b>'+bpEsc(pevs[j].label)+'</b></div>'; }
@@ -15038,7 +15041,7 @@ window.bpRepCopy=function(text,btn){
 <!--/app-only-->
 </body>
 <!--app-only-->
-<link rel="stylesheet" href="portal/app.css?v=52e4514ce5" data-bundle>
+<link rel="stylesheet" href="portal/app.css?v=e525f74123" data-bundle>
 <script src="portal/team.js?v=20261115a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261126mp"></script>
@@ -15090,11 +15093,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261125ls"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261126-cal2"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261126-cal2"></script>
-<script src="site/vendor/SplitText.min.js?v=20261126-cal2"></script>
-<script src="site/site.js?v=20261126-cal2"></script>
-<script src="site/present.js?v=20261126-cal2"></script>
+<script src="site/vendor/gsap.min.js?v=20261126-cd4"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261126-cd4"></script>
+<script src="site/vendor/SplitText.min.js?v=20261126-cd4"></script>
+<script src="site/site.js?v=20261126-cd4"></script>
+<script src="site/present.js?v=20261126-cd4"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>
@@ -15103,6 +15106,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/shell.js?v=20261126ck"></script>
 <script src="portal/mobile.js?v=20261126m7"></script>
 <script src="portal/appfeel.js?v=20261126m6"></script>
+<script src="portal/calday.js?v=20261126cd"></script>
 <script src="portal/filming.js?v=20261101a"></script>
 <script src="portal/notify.js?v=20261124fh"></script>
 <script src="portal/contacts-import.js?v=20261118f"></script>

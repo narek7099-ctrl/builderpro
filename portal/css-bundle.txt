@@ -34,3 +34,4 @@ portal/dash5.css
 portal/m6.css
 portal/emp6.css
 portal/pjs.css
+portal/calday.css
