@@ -105,9 +105,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261126-mo4">
-<link rel="stylesheet" href="site/present.css?v=20261126-mo4">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261126-mo4"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261126-cal2">
+<link rel="stylesheet" href="site/present.css?v=20261126-cal2">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261126-cal2"}}</script>
 
 
 <style id="bpi-icons">
@@ -4724,7 +4724,7 @@ function bpCalUnsched(){
         if(my!==_bpCalLink.seq||!r||r.ok===undefined) return;
         _bpCalLink.ready=!!r.ready; _bpCalLink.reason=r.reason||''; _bpCalLink.mode=r.mode||'';
         bpCalLinkDraw();
-        if(!r.ready&&_bpCalLink.cals===null) bpCalLoadCals('',my);
+        /* 2026-11-26: the connect box no longer opens by itself; "Set up" opens it */
         /* the page greets homeowners with the business name from the account
            record; if that is blank, push what Settings knows, once */
         if(r.ready&&!r.business&&!_bpCalLink.profiled){
@@ -4797,9 +4797,9 @@ function bpCalUnsched(){
       var why={no_token:'BuilderPro can\u2019t reach your calendars right now, so the list is empty.',
                unreachable:'Your calendars didn\u2019t load, so the list is empty. Try again in a minute.'}[s.reason]
               ||(/^ghl_/.test(s.reason||'')?'Your calendars couldn\u2019t be loaded ('+bpEsc(s.reason.slice(4))+').':'No calendars came back for this workspace.');
-      h+='<div class="bpx-mut" style="font-size:12.5px;margin-bottom:8px">'+why+' You can still paste the calendar id.</div>'
-        +'<div class="cal-conn-r"><input id="bpx-cl-man" placeholder="Paste the calendar id" value="'+bpEsc(s.sel)+'"><button class="bpx-btn" id="bpx-cl-save" onclick="bpCalConnSave()"'+(s.busy?' disabled':'')+'>'+(s.busy?'Saving\u2026':'Connect')+'</button></div>'
-        +'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">Don\u2019t have it? Email <a href="mailto:support@builderpro-os.com">support@builderpro-os.com</a> and we\u2019ll connect your calendar for you.</div>';
+      /* plain words (2026-11-26): support connects it; a code from them can be pasted here */
+      h+='<div class="bpx-mut" style="font-size:13px;margin-bottom:10px">BuilderPro support connects this for you: email <a href="mailto:support@builderpro-os.com">support@builderpro-os.com</a>. If they sent you a calendar code, paste it here.</div>'
+        +'<div class="cal-conn-r"><input id="bpx-cl-man" placeholder="Calendar code from support" value="'+bpEsc(s.sel)+'"><button class="bpx-btn" id="bpx-cl-save" onclick="bpCalConnSave()"'+(s.busy?' disabled':'')+'>'+(s.busy?'Saving\u2026':'Connect')+'</button></div>';
     }
     return h+err+'</div>';
   }
@@ -4813,10 +4813,14 @@ function bpCalUnsched(){
     if(s.ready===true) bpCalConnSeen();
     el.hidden=(s.ready===null)||(s.ready===true&&!s.show&&!s.open);
     if(el.hidden) return;
-    el.innerHTML='<div class="cal-side-h"><b>Inspection calendar</b><span class="bpx-badge">'+(s.ready===false?'Not set':'Connected')+'</span></div>'
+    /* not set up and not being set up: one calm line, not a technical box (2026-11-26) */
+    if(s.ready===false&&!s.show){
+      el.innerHTML='<div class="cal-note"><span class="ms">info</span><span><b>'+bpEsc(window.BP_AI_NAME||'Lisa')+' can\u2019t book inspections yet.</b> Until it\u2019s set up, homeowners who chat with her are asked to call you.</span><button type="button" class="bpx-btn ghost" onclick="bpCalConnOpen()">Set up</button></div>';
+      return;
+    }
+    el.innerHTML='<div class="cal-side-h"><b>Inspection calendar</b><span class="bpx-badge">'+(s.ready===false?'Not set':'Connected')+'</span>'+(s.ready===false?'<button type="button" class="bpx-linkbtn" style="margin-left:auto" onclick="_bpCalLink.show=false;bpCalLinkDraw()">Not now</button>':'')+'</div>'
       +'<div class="bpx-mut" style="font-size:13px;margin-bottom:12px">The calendar '+bpEsc(window.BP_AI_NAME||'Lisa')+' books inspections into when a homeowner chats on your website.</div>'
-      +(s.ready===false?'<div class="cal-warn"><span class=ms>warning</span><span>'+bpEsc(window.BP_AI_NAME||'Lisa')+' can\u2019t book inspections until you pick which calendar takes them. Until then homeowners are asked to call you.</span></div>':'')
-      +(s.ready===false&&!s.show?'<div class="cal-link-acts" style="margin:0 0 10px"><button class="bpx-btn" onclick="bpCalConnOpen()"><span class=ms>event_available</span> Connect calendar</button></div>':'')
+
       +bpCalConnHtml()
       +(s.ready===true?'<div class="cal-link-acts"><button class="bpx-rowbtn" onclick="bpCalConnOpen()"><span class=ms>event_available</span> '+(s.mode==='portal'?'Use a different calendar':'Change calendar')+'</button><button class="bpx-linkbtn conn-hide" onclick="bpCalConnToggle(false)">Hide</button></div>':'');
   }
@@ -14822,6 +14826,10 @@ window.bpRepCopy=function(text,btn){
 #bpx .cal-embed .em-code .bpx-rowbtn{top:auto;bottom:10px;right:10px;left:auto}
 #bpx .cal-warn{display:flex;gap:8px;align-items:flex-start;background:#ecf4ff;border:1px solid #bdd4f2;color:#163b6b;border-radius:10px;padding:9px 11px;font-size:12.5px;line-height:1.5;margin-bottom:10px}
 #bpx .cal-warn .ms{font-size:18px;flex:none;margin-top:1px}
+#bpx .cal-note{display:flex;gap:10px;align-items:center;padding:0;margin:0;font-size:13px;line-height:1.45;color:var(--ink2,var(--ink))}
+#bpx .cal-note>.ms{font-size:18px;flex:none;color:var(--blue,#006fff)}
+#bpx .cal-note>span:nth-child(2){flex:1;min-width:0}
+#bpx .cal-note .bpx-btn{flex:none;padding:7px 14px;font-size:13px;margin:0 !important;align-self:center}
 #bpx .cal-conn{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
 #bpx .cal-conn-h{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:8px}
 #bpx .cal-conn-r{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -15082,11 +15090,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261125ls"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261126-mo4"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261126-mo4"></script>
-<script src="site/vendor/SplitText.min.js?v=20261126-mo4"></script>
-<script src="site/site.js?v=20261126-mo4"></script>
-<script src="site/present.js?v=20261126-mo4"></script>
+<script src="site/vendor/gsap.min.js?v=20261126-cal2"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261126-cal2"></script>
+<script src="site/vendor/SplitText.min.js?v=20261126-cal2"></script>
+<script src="site/site.js?v=20261126-cal2"></script>
+<script src="site/present.js?v=20261126-cal2"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>
