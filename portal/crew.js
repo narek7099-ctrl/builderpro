@@ -688,6 +688,13 @@
       + '<b>Mark paid once the money has gone out.</b> That books it in Finances as an expense — W-2 wages as Labor / crew, 1099 as Subcontractor. '
       + 'Amounts are gross: no tax is withheld or filed here, so hand them to Gusto, QuickBooks, ADP or your bookkeeper as usual.</span></div>';
 
+    /* checks only print for 1099 contractors; say so when there is no one to print one for (2026-11-26) */
+    var has1099 = list.some(function (r) { return r.e.kind === '1099'; }), any1099 = S.emps.some(function (e) { return e.active && e.kind === '1099'; });
+    var ckHint = has1099 ? '' : '<div class="bg-warn ck-hint" style="margin-top:14px"><span class="ms">payments</span><span><b>Paying by check?</b> '
+      + (any1099 ? 'None of your 1099 contractors has hours in this period, so there are no checks to print.'
+        : 'Checks print for 1099 contractors, and everyone on your team is set as W-2. (A W-2 paycheck needs tax taken out, so it goes through your payroll.) To pay someone by check, open them in Employees and set Type to 1099 subcontractor.')
+      + '</span><button type="button" class="bpx-btn ghost hl-keep" onclick="bpCheckSample()">See a sample check</button></div>';
+    note = ckHint + note;
     var nDisp = list.reduce(function (n, r) { return n + r.disp.length; }, 0);
     if (nDisp) head += '<div class="pay-disp" role="alert"><span class="ms">flag</span><span><b>' + nDisp + ' disputed ' + (nDisp === 1 ? 'entry' : 'entries') + '</b> — review before paying.</span>'
       + '<button type="button" onclick="bpHoursDisputed()">Review</button></div>';
@@ -895,6 +902,22 @@
     if (window.bpUsLoad) bpUsLoad().then(function (row) { sig = row && row.image; if (sig) draw(); }, function () {});
     ['ckNo', 'ckDate', 'ckMemo', 'ckAddr'].forEach(function (id) { var el = $(id); if (el) el.oninput = draw; });
     draw();
+  };
+  /* a sample check, so the owner can see what BuilderPro prints before anyone is set to 1099 */
+  window.bpCheckSample = function () {
+    ckCss();
+    var co = ((window.bpSettingsGet && bpSettingsGet()) || {}).company || {}, to = new Date(), fr = new Date(to.getTime() - 13 * 864e5);
+    var iso = function (x) { return x.getFullYear() + '-' + ('0' + (x.getMonth() + 1)).slice(-2) + '-' + ('0' + x.getDate()).slice(-2); };
+    var d = { co: co, e: { id: 'sample', name: 'Alex Rivera (sample)', kind: '1099', rate: 45, pay_type: 'hourly' }, r: { gross: 1440, paid: null }, paid: null,
+      from: iso(fr), to: iso(to), lines: [['Regular hours', 32, 45, 1440]] };
+    var o = { bg: 1, no: String(chkGet('next', 1001)), date: today(), memo: 'Pay ' + nice(d.from) + ' – ' + nice(d.to), addr: '123 Main St\nYour City, ST 00000' };
+    bpModal('<h3>A sample check</h3>'
+      + '<div class="ck-wrap">' + checkFace(d, o) + '</div>'
+      + '<div class="ck-legend"><span><i class="b"></i>BuilderPro prints this</span><span><i class="g"></i>Already on your checks</span></div>'
+      + '<p class="ck-note">This is what prints for a 1099 contractor: the date, who it\u2019s to, the amount in numbers and words, the address for a window envelope and the memo, onto pre-printed business checks from your bank or an office store. Two stubs print under it, one for them and one for you. With your saved e-signature it can print signed.</p>'
+      + '<p class="ck-note">To use it, open someone in Employees and set Type to 1099 subcontractor. Their row in Pay period then gets a Pay by check button.</p>'
+      + '<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button><button class="bpx-btn" onclick="bpCloseModal();bpCrewTab(\'people\')">Go to People</button></div>');
+    var cards = document.querySelectorAll('.bpx-modalcard'), mc = cards[cards.length - 1]; if (mc) { mc.style.maxWidth = '820px'; mc.style.width = '95vw'; mc.classList.add('ps-modal'); }
   };
   /* nudge everything up, down, left or right in sixteenths of an inch, for printers that feed a little off */
   window.bpCheckAdjOpen = function () {

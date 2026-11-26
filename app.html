@@ -105,9 +105,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261126-c3">
-<link rel="stylesheet" href="site/present.css?v=20261126-c3">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261126-c3"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261126-dr3">
+<link rel="stylesheet" href="site/present.css?v=20261126-dr3">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261126-dr3"}}</script>
 
 
 <style id="bpi-icons">
@@ -4310,6 +4310,7 @@ function bpCalUnsched(){
     open=Math.max(0,Math.floor(open/60)*60); close=Math.min(24*60,Math.ceil(close/60)*60);
     if(close-open<6*60) close=Math.min(24*60,open+6*60);
     var span=close-open, PX=54, TOP=12, H=span/60*PX+TOP;
+    _bpDayG={open:open,close:close,PX:PX};
 
     /* side by side when they overlap, so nothing is hidden behind anything */
     var cols=[];
@@ -4335,7 +4336,7 @@ function bpCalUnsched(){
     for(var i=0;i<7;i++){
       var dd2=new Date(s0); dd2.setDate(s0.getDate()+i); var k=bpIso(dd2);
       var n=bpDayItems(k).length;
-      strip+='<button class="cd-chip'+(k===iso?' on':'')+(k===today?' today':'')+'" onclick="bpDayPick(\''+k+'\')">'
+      strip+='<button class="cd-chip'+(k===iso?' on':'')+(k===today?' today':'')+'" data-day="'+k+'" onclick="bpDayPick(\''+k+'\')">'
         +'<small>'+dd2.toLocaleDateString('en-US',{weekday:'short'})+'</small><b>'+dd2.getDate()+'</b>'
         +'<i'+(n?'':' class="none"')+'>'+(n?n:'')+'</i></button>';
     }
@@ -4353,7 +4354,7 @@ function bpCalUnsched(){
     var blocks=timed.map(function(x){
       var top=TOP+(x.from-open)/60*PX, h=Math.max(38,(x.to-x.from)/60*PX-3);   /* a half-hour block still has to fit both its lines */
       var w=100/x.lanes, left=(x.col||0)*w;
-      return '<div class="cd-ev '+x.kind+(x.done?' done':'')+'" style="top:'+top+'px;height:'+h+'px;left:calc('+left+'% + 2px);width:calc('+w+'% - 6px)'+bpCrewCss(x)+'" onclick="'+x.act+'">'
+      return '<div class="cd-ev '+x.kind+(x.done?' done':'')+'" style="top:'+top+'px;height:'+h+'px;left:calc('+left+'% + 2px);width:calc('+w+'% - 6px)'+bpCrewCss(x)+'"'+bpDayAttrs(x,iso)+'>'
         +'<b>'+bpEsc(x.title)+'</b><span>'+bpClock(x.from)+' – '+bpClock(x.to)+(x.sub?' · '+bpEsc(x.sub):'')+'</span></div>';
     }).join('');
 
@@ -4367,14 +4368,103 @@ function bpCalUnsched(){
       +'</div>'
       +'<div class="cd-strip">'+strip+'</div>'
       +(allDay.length?'<div class="cd-allday">'+allDay.map(function(x){
-          return '<div class="cd-ev '+x.kind+(x.done?' done':'')+' flat" style="'+bpCrewCss(x)+'" onclick="'+x.act+'"><b>'+bpEsc(x.title)+'</b><span>'+bpEsc(x.sub)+'</span></div>';
+          return '<div class="cd-ev '+x.kind+(x.done?' done':'')+' flat" style="'+bpCrewCss(x)+'"'+bpDayAttrs(x,iso)+'><b>'+bpEsc(x.title)+'</b><span>'+bpEsc(x.sub)+'</span></div>';
         }).join('')+'</div>':'')
       +'<div class="cd-grid" style="height:'+H+'px">'+lines+nowLine+'<div class="cd-lane">'+blocks+'</div>'
         +(timed.length?'':'<div class="cd-free">'+(allDay.length?'No set times today.':'Nothing booked yet.')+' <button type="button" onclick="bpDaySheet(\''+iso+'\',true)">Add something</button></div>')+'</div>'
       +'<div class="cd-foot"><button class="bpx-rowbtn" onclick="bpDaySheet(\''+iso+'\',true)"><span class=ms>add</span> Add to this day</button>'
         +'<button class="bpx-rowbtn" onclick="window._bpApptCal=\'inspection\';bpOpenBook()"><span class=ms>event</span> Book an inspection</button>'
         +'<button class="bpx-rowbtn" onclick="bpCrewBookOpen(\''+iso+'\')"><span class=ms>groups</span> Schedule a crew</button></div>';
+    bpDayBind(host);
   }
+
+/* ==== Day view: drag to move (2026-11-26) =========================
+   The week view's dragging, on the day screen. Drag a block up or down
+   to change its time; drop it on a date in the week strip to move it to
+   that day. On a phone a block has to be held for a moment first, so a
+   finger that is only scrolling never moves anything. Moves go through
+   bpWkCommit, the same road the week view used: appointments through the
+   calendar API (the customer gets the update), crew days across days
+   only (one project keeps one start time), notes and to-dos freely. */
+  var _bpDayG={open:7*60,close:18*60,PX:54};
+  function bpDayCan(x){ var t=(x.ref||'').split(':')[0]; return (t==='note'||t==='appt')?(x.from==null?'day':'both'):t==='crew'?'day':''; }
+  function bpDayAttrs(x,iso){
+    var can=bpDayCan(x);
+    return ' data-ref="'+bpEsc(x.ref||'')+'" data-day="'+iso+'" data-from="'+(x.from==null?'':x.from)+'" data-to="'+(x.to==null?'':x.to)+'"'
+      +(can?' data-move="'+can+'"':'')+' data-act="'+bpEsc(x.act||'')+'"';
+  }
+  function bpDayBind(host){
+    if(host._bpDayBound) return; host._bpDayBound=1;
+    host.addEventListener('pointerdown',function(ev){
+      if(ev.button) return;
+      var box=ev.target.closest?ev.target.closest('.cd-ev'):null;
+      if(box&&host.contains(box)) bpDayDrag(ev,box,host);
+    });
+  }
+  function bpDayDrag(ev,box,host){
+    var move=box.getAttribute('data-move'), act=box.getAttribute('data-act'), touch=ev.pointerType!=='mouse';
+    var f0=box.getAttribute('data-from'), from=f0===''?null:+f0, to=+box.getAttribute('data-to')||0;
+    var dur=from==null?0:Math.max(15,to-from), day0=box.getAttribute('data-day'), ref=box.getAttribute('data-ref');
+    var x0=ev.clientX, y0=ev.clientY, live=false, gone=false, timer=null, tip=null, chip=null, tgt={day:day0,from:from}, G=_bpDayG;
+    function start(){
+      live=true; box.classList.add('cd-drag'); host.classList.add('cd-dragging'); if(window.bpHaptic) bpHaptic('medium');
+      tip=document.createElement('div'); tip.className='cw-tip'; tip.style.zIndex='3100'; (q('bpx')||document.body).appendChild(tip);
+    }
+    function paint(cx,cy){
+      var el=document.elementFromPoint(cx,cy), c=el&&el.closest?el.closest('.cd-chip'):null;
+      if(chip&&chip!==c) chip.classList.remove('cd-drop');
+      chip=c; if(c) c.classList.add('cd-drop');
+      var d=c?c.getAttribute('data-day'):day0;
+      var mn=(move==='both'&&!c)?bpWkSnap(from+(cy-y0)/G.PX*60):from;
+      if(mn!=null) mn=Math.max(G.open,Math.min(G.close-dur,mn));
+      tgt={day:d,from:mn};
+      if(box.isConnected){ box.style.transform=c?'scale(.94)':'translateY('+(mn!=null&&from!=null?(mn-from)/60*G.PX:0)+'px)'; box.style.opacity=c?'.55':''; }
+      var lbl=d!==day0?new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}):'';
+      tip.textContent=(lbl+(lbl&&mn!=null?' \u00b7 ':'')+(mn!=null?bpClock(mn)+(dur?' \u2013 '+bpClock(mn+dur):''):''))||'Drop on a day';
+      var hw=(tip.offsetWidth||120)/2+8; tip.style.left=Math.max(hw,Math.min(innerWidth-hw,cx))+'px'; tip.style.top=(chip||cy<170?cy+34:cy-44)+'px';   /* under the finger near the week strip, so the date stays visible */
+    }
+    function tm(e){ if(live&&e.cancelable) e.preventDefault(); }
+    function clean(){
+      window.removeEventListener('pointermove',onMove,true); window.removeEventListener('pointerup',up,true); window.removeEventListener('pointercancel',clean,true);
+      document.removeEventListener('touchmove',tm,true); if(timer){ clearTimeout(timer); timer=null; }
+      if(tip&&tip.parentNode) tip.parentNode.removeChild(tip); if(chip) chip.classList.remove('cd-drop');
+      host.classList.remove('cd-dragging'); if(box.isConnected){ box.classList.remove('cd-drag'); box.style.transform=''; box.style.opacity=''; }
+      gone=true;
+    }
+    function onMove(e){
+      if(!live){
+        var far=Math.abs(e.clientX-x0)>(touch?8:4)||Math.abs(e.clientY-y0)>(touch?8:4);
+        if(!far) return;
+        if(touch||!move){ clean(); return; }      /* a finger moving before the hold is a scroll, not a drag */
+        start();
+      }
+      if(e.cancelable) e.preventDefault();
+      paint(e.clientX,e.clientY);
+    }
+    function up(){
+      if(gone) return;
+      var was=live; clean();
+      if(!was){ bpWkRun(act); return; }
+      window._bpDayDragAt=Date.now();
+      if(tgt.day===day0&&tgt.from===from) return;
+      bpDayCommit(ref,tgt.day,tgt.from,dur,day0,move,from==null);
+    }
+    if(touch&&move) timer=setTimeout(function(){ timer=null; if(gone) return; start(); paint(x0,y0); },380);
+    window.addEventListener('pointermove',onMove,true); window.addEventListener('pointerup',up,true); window.addEventListener('pointercancel',clean,true);
+    document.addEventListener('touchmove',tm,{capture:true,passive:false});
+  }
+  function bpDayCommit(ref,day,mins,dur,wasDay,move,untimed){
+    var t=ref.split(':')[0], id=ref.slice(t.length+1);
+    if(t==='note'&&untimed){
+      var list=bpNotesGet(), n=list.filter(function(x){return x.id===id;})[0]; if(!n) return;
+      n.day=day; bpNotesCache(list); bpWkRedraw();
+      bpWkSay('Moved to '+new Date(day+'T12:00:00').toLocaleDateString('en-US',{weekday:'long'})+'.');
+      if(window.BP_LIVE&&window.BP_SB&&!/^n\d/.test(id)) Promise.resolve(BP_SB.from('calendar_notes').update({day:n.day,updated_at:new Date().toISOString()}).eq('id',id)).then(function(){},function(){});
+      return;
+    }
+    bpWkCommit(ref,day,mins,dur,wasDay,move);
+  }
+  function bpWkRedraw(){ if(q('bpx-dayview')) bpDrawDay(); else bpDrawWeek(); }
 
 /* ==== Week view: the whole week against the clock ==================
    The day view answers "what is Thursday like". This answers the
@@ -4410,7 +4500,7 @@ function bpCalUnsched(){
   /* a short line under the grid, so a drag says what it did */
   window.bpWkSay=function(t,bad){
     _bpWkPend=t?{t:t,bad:!!bad}:null;
-    var e=q('bpx-wk-say'); if(!e) return;
+    var e=q('bpx-wk-say'); if(!e){ if(t&&t!=='Moving\u2026'&&window.bpToast) bpToast(t,bad?'error':'success'); return; }
     e.textContent=t||''; e.className='cw-say'+(bad?' bad':'')+(t?' on':'');
     clearTimeout(window._bpWkSayT);
     if(t) window._bpWkSayT=setTimeout(function(){ _bpWkPend=null; var x=q('bpx-wk-say'); if(x){ x.textContent=''; x.className='cw-say'; } },bad?6000:3600);
@@ -4564,7 +4654,7 @@ function bpCalUnsched(){
     var lbl=new Date(day+'T12:00:00').toLocaleDateString('en-US',{weekday:'long'});
     if(t==='note'){
       var list=bpNotesGet(), n=list.filter(function(x){return x.id===id;})[0]; if(!n) return;
-      n.day=day; n.at=bpWkHHMM(mins); bpNotesCache(list); bpDrawWeek();
+      n.day=day; n.at=bpWkHHMM(mins); bpNotesCache(list); bpWkRedraw();
       bpWkSay('Moved to '+lbl+' at '+bpClock(mins)+'.');
       if(window.BP_LIVE&&window.BP_SB&&!/^n\d/.test(id)) Promise.resolve(BP_SB.from('calendar_notes').update({day:n.day,at:n.at,updated_at:new Date().toISOString()}).eq('id',id)).then(function(){},function(){});
       return;
@@ -4576,7 +4666,7 @@ function bpCalUnsched(){
       var at=ds.indexOf(wasDay); if(at<0) return;
       ds[at]=day; j.sched.dates=ds.sort();
       if(j.sched.slots&&j.sched.slots[wasDay]){ j.sched.slots[day]=j.sched.slots[wasDay]; delete j.sched.slots[wasDay]; }
-      bpJobsSet(jobs); bpDrawWeek();
+      bpJobsSet(jobs); bpWkRedraw();
       bpWkSay('Crew day moved to '+lbl+'. To change its hours, open the job under Jobs \u2192 Schedule & map.');
       return;
     }
@@ -4587,8 +4677,8 @@ function bpCalUnsched(){
       bpWkSay('Moving…');
       Promise.resolve(bpCalWrite({action:'update',id:id,startTime:startISO,endTime:endISO,cal:e.cal||'inspection'})).then(function(res){
         if(res&&res.ok){ bpWkSay('Moved to '+lbl+' at '+bpClock(mins)+'. The customer gets the update.'); bpLoadCalendar(); }
-        else { bpWkSay((res&&(res.message||res.error))||'That time would not take. Nothing was changed.',true); bpDrawWeek(); }
-      },function(){ bpWkSay('Could not reach the calendar. Nothing was changed.',true); bpDrawWeek(); });
+        else { bpWkSay((res&&(res.message||res.error))||'That time would not take. Nothing was changed.',true); bpWkRedraw(); }
+      },function(){ bpWkSay('Could not reach the calendar. Nothing was changed.',true); bpWkRedraw(); });
     }
   }
 
@@ -15041,10 +15131,10 @@ window.bpRepCopy=function(text,btn){
 <!--/app-only-->
 </body>
 <!--app-only-->
-<link rel="stylesheet" href="portal/app.css?v=9528628f10" data-bundle>
+<link rel="stylesheet" href="portal/app.css?v=693474ef8b" data-bundle>
 <script src="portal/team.js?v=20261115a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
-<script src="portal/crew.js?v=20261126mp"></script>
+<script src="portal/crew.js?v=20261126ck"></script>
 <script src="portal/charts.js?v=20261124ff"></script>
 <script src="portal/progress.js?v=20261110a"></script>
 <script src="portal/supply.js?v=20261124fb"></script>
@@ -15093,11 +15183,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261125ls"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261126-c3"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261126-c3"></script>
-<script src="site/vendor/SplitText.min.js?v=20261126-c3"></script>
-<script src="site/site.js?v=20261126-c3"></script>
-<script src="site/present.js?v=20261126-c3"></script>
+<script src="site/vendor/gsap.min.js?v=20261126-dr3"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261126-dr3"></script>
+<script src="site/vendor/SplitText.min.js?v=20261126-dr3"></script>
+<script src="site/site.js?v=20261126-dr3"></script>
+<script src="site/present.js?v=20261126-dr3"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>
@@ -15106,7 +15196,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/shell.js?v=20261126ck"></script>
 <script src="portal/mobile.js?v=20261126m7"></script>
 <script src="portal/appfeel.js?v=20261126m6"></script>
-<script src="portal/calday.js?v=20261126c2"></script>
+<script src="portal/calday.js?v=20261126c3"></script>
 <script src="portal/filming.js?v=20261101a"></script>
 <script src="portal/notify.js?v=20261124fh"></script>
 <script src="portal/contacts-import.js?v=20261118f"></script>
