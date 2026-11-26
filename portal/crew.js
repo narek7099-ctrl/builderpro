@@ -140,7 +140,8 @@
     }
 
     var tabs = [['people', 'People'], ['crews', 'Crews'], ['hours', 'Hours'], ['pay', 'Pay period']];
-    area.innerHTML = '<div class="bpx-panel">'
+    /* Hours and Crews draw their own cards (2026-11-26), so the page panel goes flat for them */
+    area.innerHTML = '<div class="bpx-panel' + (S.tab === 'hours' || S.tab === 'crews' ? ' emp-flat' : '') + '">'
       + '<div class="bpx-jobtabs bpx-mtabs">'
       + tabs.map(function (t) {
           return '<button class="bpx-jt' + (S.tab === t[0] ? ' on' : '') + '" onclick="bpCrewTab(\'' + t[0] + '\')">' + t[1] + '</button>';
@@ -439,63 +440,76 @@
   window.bpHoursAll = function () { S.hoursOnly = ''; render(); };
 
   /* ------------------------------------------------------------ hours --- */
+  /* 2026-11-26 redesign: four figures for the week up top, who carried the last 30 days,
+     then the log grouped by day (each day's total on its header), one row per person:
+     who, the job, the hours and what it cost. Remove is a small bin, not a button per row. */
+  window.bpHoursWho = function (v) { S.hoursWho = v || ''; S.hoursDays = 0; render(); };
+  window.bpHoursMore = function () { S.hoursDays = (S.hoursDays || 10) + 14; render(); };
   function hours(el) {
-    var head = '<div class="bpx-chead" style="margin-bottom:12px">'
-      + '<div class="bpx-ptitle" style="margin:0">Hours'
-      + '<span class="lg2" style="margin-left:8px">a day at a time, against the job they were on</span></div>'
-      + '<span style="display:flex;gap:8px">'
-      + (window.bpCsvBtn ? bpCsvBtn('bpCsvHours()', 'Export') : '')
-      + '<button class="bpx-btn" style="width:auto;margin:0;padding:9px 16px;font-size:13px" onclick="bpHoursOpen()">+ Log hours</button></span></div>';
+    var hrs = function (n) { n = Math.round(n * 10) / 10; return n + (n === 1 ? ' hr' : ' hrs'); };
+    var ini = function (n) { var p = String(n || '?').replace(/\([^)]*\)/g, ' ').trim().split(/\s+/).filter(Boolean); return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase(); };
+    var head = '<div class="hr6-bar"><div class="hr6-bt"><b>Hours</b><span>each day, against the job it was on</span></div><div class="hr6-ba">'
+      + (window.bpCsvBtn && S.entries.length ? bpCsvBtn('bpCsvHours()', 'Export') : '')
+      + '<button class="bpx-btn hr6-log" onclick="bpHoursOpen()"><span class="ms">add</span>Log hours</button></div></div>';
+    if (!S.emps.length) { el.innerHTML = head + '<div class="hr6-empty"><span class="ms">group_add</span><b>Add your people first</b><p>Put your crew in under People, then log their days here.</p><button class="bpx-btn" onclick="bpCrewTab(\'people\')">Go to People</button></div>'; return; }
+    if (!S.entries.length) { el.innerHTML = head + '<div class="hr6-empty"><span class="ms">schedule</span><b>No hours logged yet</b><p>Each day you log goes onto that job as labor cost, so you see the real profit while the job is still running.</p><button class="bpx-btn" onclick="bpHoursOpen()">Log the first day</button></div>'; return; }
 
-    if (!S.emps.length) {
-      el.innerHTML = head + '<div class="bpx-empty2">Add someone under <b>People</b> first.</div>'; return;
-    }
-    if (!S.entries.length) {
-      el.innerHTML = head + '<div class="bpx-empty2"><b>No hours logged yet.</b>'
-        + '<div class="bpx-mut" style="font-size:13px;margin-top:5px;line-height:1.6">Every day you log goes onto that job’s budget as '
-        + 'real labor cost, burden included — so the margin you see mid-job is the one you will actually get.</div></div>';
-      return;
-    }
+    /* this week and last week (weeks start Monday) */
+    var d0 = new Date(); d0.setHours(0, 0, 0, 0); var dow = (d0.getDay() + 6) % 7;
+    var wk = new Date(d0.getTime() - dow * 864e5), lw = new Date(wk.getTime() - 7 * 864e5);
+    var iso = function (d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); };
+    var wkS = iso(wk), lwS = iso(lw);
+    var sum = function (from, to) { var o = { h: 0, ot: 0, c: 0, ppl: {} }; S.entries.forEach(function (t) { var d = String(t.worked_on || ''); if (d < from || (to && d >= to)) return; o.h += +t.hours || 0; o.ot += +t.ot_hours || 0; o.c += +t.cost || 0; o.ppl[t.employee_id] = 1; }); return o; };
+    var tw = sum(wkS), pw = sum(lwS, wkS);
+    var tile = function (l, v, sub) { return '<div class="hr6-tile"><small>' + l + '</small><b>' + v + '</b><em>' + sub + '</em></div>'; };
+    var tiles = '<div class="hr6-tiles">'
+      + tile('This week', hrs(tw.h + tw.ot), Object.keys(tw.ppl).length + (Object.keys(tw.ppl).length === 1 ? ' person' : ' people') + ' worked')
+      + tile('Overtime', hrs(tw.ot), 'this week')
+      + tile('Labor cost', money(tw.c), 'this week, on your jobs')
+      + tile('Last week', hrs(pw.h + pw.ot), money(pw.c) + ' of labor') + '</div>';
 
     var nDisp = S.entries.filter(function (t) { return t.disputed_at; }).length;
-    var shown = S.hoursOnly === 'disputed' ? S.entries.filter(function (t) { return t.disputed_at; }) : S.entries;
-    if (S.hoursOnly === 'disputed' || nDisp) head += '<div class="pay-disp"><span class="ms">flag</span><span>' + (S.hoursOnly === 'disputed'
-        ? 'Showing the <b>' + nDisp + ' disputed ' + (nDisp === 1 ? 'entry' : 'entries') + '</b>. Check each one, edit or remove it if it’s wrong, then clear the flag.'
-        : '<b>' + nDisp + ' disputed ' + (nDisp === 1 ? 'entry' : 'entries') + '</b> — a crew member says a lead’s punch was wrong.') + '</span>'
-      + '<button type="button" onclick="' + (S.hoursOnly === 'disputed' ? 'bpHoursAll()">Show all' : 'bpHoursDisputed()">Review') + '</button></div>';
-    var rows = shown.slice(0, 120).map(function (t) {
-      var e = bpEmpById(t.employee_id);
-      return '<tr' + (t.disputed_at ? ' class="te-disp"' : '') + '><td>' + esc(dayLabel(t.worked_on)) + '</td>'
-        + '<td><b>' + esc(e ? e.name : 'Removed') + '</b>' + bpByLeadTag(t.clocked_by_name, t.clocked_lat, t.clocked_lng) + dispTag(t, true) + '</td>'
-        + '<td>' + esc(t.job_name || '—') + '</td>'
-        + '<td>' + (+t.hours || 0) + (t.ot_hours > 0 ? ' <span style="color:#0953b4">+' + t.ot_hours + ' OT</span>' : '') + '</td>'
-        + '<td>' + money(t.cost) + '</td>'
-        + '<td class="bpx-r">' + (t.disputed_at ? '<button class="bpx-rowbtn" onclick="bpHoursClear(\'' + t.id + '\')">Clear flag</button> ' : '')
-        + '<button class="bpx-rowbtn" onclick="bpHoursDel(\'' + t.id + '\')">Remove</button></td></tr>';
-    }).join('');
+    var disp = (S.hoursOnly === 'disputed' || nDisp) ? '<div class="pay-disp"><span class="ms">flag</span><span>' + (S.hoursOnly === 'disputed'
+        ? 'Showing the <b>' + nDisp + ' disputed ' + (nDisp === 1 ? 'entry' : 'entries') + '</b>. Fix or remove each one, then clear the flag.'
+        : '<b>' + nDisp + ' disputed ' + (nDisp === 1 ? 'entry' : 'entries') + '</b>: a crew member says a lead’s punch was wrong.') + '</span>'
+      + '<button type="button" onclick="' + (S.hoursOnly === 'disputed' ? 'bpHoursAll()">Show all' : 'bpHoursDisputed()">Review') + '</button></div>' : '';
 
-    /* who carried the last 30 days: people are names, so horizontal bars,
-       longest first, hours at the tip */
-    var cut = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10), per = {};
-    S.entries.forEach(function (t) {
-      if (String(t.worked_on || '') < cut) return;
-      var e = bpEmpById(t.employee_id), k = e ? e.name : 'Removed';
-      per[k] = (per[k] || 0) + (+t.hours || 0) + (+t.ot_hours || 0);
-    });
+    /* who carried the last 30 days */
+    var cut = iso(new Date(d0.getTime() - 30 * 864e5)), per = {};
+    S.entries.forEach(function (t) { if (String(t.worked_on || '') < cut) return; var e = bpEmpById(t.employee_id), k = e ? e.name : 'Removed'; per[k] = (per[k] || 0) + (+t.hours || 0) + (+t.ot_hours || 0); });
     var who = Object.keys(per).filter(function (k) { return per[k] > 0; });
-    var hrs = function (n) { n = Math.round(n * 10) / 10; return n + (n === 1 ? ' hr' : ' hrs'); };
-    var chart = (window.bpChart && who.length >= 2) ? '<div style="margin:4px 0 16px">' + bpChart.ranked({
-      title: 'Hours by person', lead: 'last 30 days, overtime included · '
-        + hrs(who.reduce(function (t, k) { return t + per[k]; }, 0)) + ' in all',
-      rows: who.map(function (k) { return { label: k, value: per[k] }; }),
-      fmt: hrs, axis: 'Person', valueHead: 'Hours',
-    }) + '</div>' : '';
+    var chart = (window.bpChart && who.length >= 2) ? '<section class="hr6-card">' + bpChart.ranked({
+      title: 'Hours by person', lead: 'last 30 days, overtime included', rows: who.map(function (k) { return { label: k, value: per[k] }; }), fmt: hrs, axis: 'Person', valueHead: 'Hours'
+    }) + '</section>' : '';
 
-    el.innerHTML = head + chart + '<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr>'
-      + '<th>Day</th><th>Who</th><th>Job</th><th>Hours</th><th>Cost to you</th><th></th>'
-      + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
-      + '<div class="bpx-mut" style="font-size:11.5px;margin-top:9px">Cost is the burdened rate at the time it was logged — '
-      + 'a rate change later does not rewrite what a finished job cost.</div>';
+    /* the log, a day at a time */
+    var list = S.hoursOnly === 'disputed' ? S.entries.filter(function (t) { return t.disputed_at; }) : S.entries;
+    if (S.hoursWho) list = list.filter(function (t) { return t.employee_id === S.hoursWho; });
+    var byDay = {}, order = [];
+    list.forEach(function (t) { var k = String(t.worked_on || ''); if (!byDay[k]) { byDay[k] = []; order.push(k); } byDay[k].push(t); });
+    order.sort().reverse();
+    var maxDays = S.hoursDays || 10, shownDays = order.slice(0, maxDays);
+    var used = {}; S.entries.forEach(function (t) { used[t.employee_id] = 1; });
+    var pick = '<select class="hr6-who" onchange="bpHoursWho(this.value)" aria-label="Show one person"><option value="">Everyone</option>'
+      + S.emps.filter(function (e) { return used[e.id]; }).map(function (e) { return '<option value="' + esc(e.id) + '"' + (S.hoursWho === e.id ? ' selected' : '') + '>' + esc(e.name) + '</option>'; }).join('') + '</select>';
+    var days = shownDays.map(function (k) {
+      var rows = byDay[k], dh = 0, dc = 0; rows.forEach(function (t) { dh += (+t.hours || 0) + (+t.ot_hours || 0); dc += +t.cost || 0; });
+      return '<div class="hr6-day"><div class="hr6-dh"><b>' + esc(dayLabel(k)) + '</b><span>' + hrs(dh) + ' · ' + money(dc) + '</span></div>'
+        + rows.map(function (t) {
+          var e = bpEmpById(t.employee_id), job = String(t.job_name || '').replace(/\s*\(sample\)/g, '');
+          return '<div class="hr6-row' + (t.disputed_at ? ' disp' : '') + '"><span class="hr6-av">' + esc(ini(e ? e.name : '?')) + '</span>'
+            + '<div class="hr6-rt"><b>' + esc(e ? e.name : 'Removed') + '</b><small>' + esc(job || 'No job') + '</small>'
+            + (t.clocked_by_name || t.disputed_at ? '<span class="hr6-tags">' + bpByLeadTag(t.clocked_by_name, t.clocked_lat, t.clocked_lng) + dispTag(t, true)
+              + (t.disputed_at ? '<button class="hr6-clear" onclick="bpHoursClear(\'' + t.id + '\')">Clear flag</button>' : '') + '</span>' : '') + '</div>'
+            + '<div class="hr6-rh"><b>' + (+t.hours || 0) + 'h' + (t.ot_hours > 0 ? '<i>+' + t.ot_hours + ' OT</i>' : '') + '</b><small>' + money(t.cost) + '</small></div>'
+            + '<button class="hr6-del" onclick="bpHoursDel(\'' + t.id + '\')" aria-label="Remove this day" title="Remove"><span class="ms">delete</span></button></div>';
+        }).join('') + '</div>';
+    }).join('');
+    el.innerHTML = head + tiles + disp + chart
+      + '<section class="hr6-card hr6-log"><div class="hr6-lh"><b>Every day</b>' + pick + '</div>'
+      + (days || '<div class="hr6-none">Nothing logged for this person.</div>')
+      + (order.length > maxDays ? '<button class="hr6-more" onclick="bpHoursMore()">Show older days</button>' : '')
+      + '<p class="hr6-foot">Cost is what each person cost you on the day it was logged; a pay change later doesn’t rewrite a finished job.</p></section>';
   }
 
   window.bpHoursOpen = function (jobId) {
