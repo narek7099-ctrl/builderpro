@@ -65,7 +65,7 @@
 @top.bp-m #bpxViewArea .h6-tile.alert .h6-ti{background:#fff1d6 !important;color:#b45309 !important}
 @top.bp-m.bpx-dark #bpxViewArea .h6-tile.alert .h6-ti{background:#3a2a0c !important;color:#fbbf24 !important}
 @top.bp-m #bpxViewArea .h6-tile.calm .h6-ti{background:rgba(22,199,154,.14) !important;color:#0d8f6e !important}
-@top.bp-m #bpxViewArea .h6-big{display:block !important;margin:auto 0 0 !important;padding-top:14px !important;font-size:40px !important;line-height:1 !important;font-weight:800 !important;letter-spacing:-.03em !important;color:var(--ink) !important}
+@top.bp-m #bpxViewArea .h6-big{display:block !important;margin:14px 0 0 !important;padding-top:0 !important;font-size:40px !important;line-height:1 !important;font-weight:800 !important;letter-spacing:-.03em !important;color:var(--ink) !important}
 @top.bp-m #bpxViewArea .h6-big .ms{font-size:36px !important;color:#16c79a !important}
 @top.bp-m #bpxViewArea .h6-tsub{display:-webkit-box !important;-webkit-line-clamp:2 !important;-webkit-box-orient:vertical !important;overflow:hidden !important;margin-top:6px !important;font-size:13.5px !important;line-height:1.35 !important;color:var(--grey) !important}
 @top.bp-m #bpxViewArea .h6-tb{display:flex !important;align-items:flex-end !important;justify-content:space-between !important;gap:12px !important}
@@ -104,3 +104,5 @@
 @top.bp-m #bpxViewArea .h6>section{padding-top:0 !important;padding-bottom:0 !important}
 @top.bp-m #bpxViewArea .h6>section.h6-week{padding:16px 14px 6px !important}
 @top.bp-m #bpxViewArea .h6>section.h6-acts{padding:2px 0 !important}
+/* the big numbers line up across tiles: each sits right under its title, and what is under it goes to the bottom */
+@top.bp-m #bpxViewArea .h6-tile>.h6-big+*{margin-top:auto !important;padding-top:10px !important}
