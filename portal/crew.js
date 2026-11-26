@@ -850,18 +850,26 @@
   function chkGet(k, d) { try { var v = JSON.parse(localStorage.getItem('bpChk') || '{}'); return v[k] == null ? d : v[k]; } catch (e) { return d; } }
   function chkSet(k, val) { try { var v = JSON.parse(localStorage.getItem('bpChk') || '{}'); v[k] = val; localStorage.setItem('bpChk', JSON.stringify(v)); } catch (e) {} }
   /* the check itself, 8.5 x 3.5 in; positions in % of the check, type in cqw so the preview and the paper match */
+  /* the logo on checks and stubs (2026-11-26): the business's own if one is uploaded in
+     Settings > Business, otherwise the BuilderPro logo */
+  function ckLogo(co) {
+    var u = co.logoUrl || co.logo || window.BPLOGO || '';
+    return u || (location.origin + '/assets/brand/logo-mark-128.png');
+  }
   function checkFace(d, o) {
     o = o || {}; var co = d.co, amt = d.r.paid ? +d.r.paid.amount || d.r.gross : d.r.gross;
+    var top = o.top != null ? !!o.top : !!chkGet('top', true);
     var adj = chkGet('adj', { x: 0, y: 0 }), dx = (+adj.x || 0) / 16 / 8.5 * 100, dy = (+adj.y || 0) / 16 / 3.5 * 100;
     var at2 = function (l, t) { return 'left:' + (l + dx).toFixed(2) + '%;top:' + (t + dy).toFixed(2) + '%'; };
     var amtTxt = (Math.round(amt * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     var addr = String(o.addr || '').split(/\n/).map(function (l) { return esc(l); }).join('<br>');
-    var bg = o.bg ? '<div class="ck-bg"><div class="ck-co"><b>' + esc(co.name || 'Your business') + '</b>' + (co.address ? '<span>' + esc(co.address) + '</span>' : '') + '</div>'
+    var bg = o.bg ? '<div class="ck-bg">' + (top ? '' : '<div class="ck-co"><b>' + esc(co.name || 'Your business') + '</b>' + (co.address ? '<span>' + esc(co.address) + '</span>' : '') + '</div>')
         + '<div class="ck-bank">Your bank</div><div class="ck-no">' + esc(o.no || '') + '</div><div class="ck-dl">Date</div><div class="ck-dline"></div>'
         + '<div class="ck-pay">Pay to the<br>order of</div><div class="ck-pline"></div><div class="ck-box">$</div><div class="ck-wline"></div><div class="ck-dol">Dollars</div>'
         + '<div class="ck-memo">Memo</div><div class="ck-mline"></div><div class="ck-sline"></div><div class="ck-sig">Signature</div>'
         + '<div class="ck-micr">⑆ 000000000 ⑆ 0000000000 ⑈ ' + esc(o.no || '') + '</div></div>' : '';
     return '<div class="ck' + (o.bg ? ' bg' : '') + '">' + bg
+      + (top ? '<div class="ck-f ck-top" style="' + at2(4, 6) + '"><img src="' + esc(ckLogo(co)) + '" alt=""><span><b>' + esc(co.name || 'Your business') + '</b>' + (co.address ? '<i>' + esc(co.address) + '</i>' : '') + (co.phone ? '<i>' + esc(co.phone) + '</i>' : '') + '</span></div>' : '')
       + '<span class="ck-f" style="' + at2(76.5, 19) + '">' + esc(o.date || '') + '</span>'
       + '<span class="ck-f ck-name" style="' + at2(14, 36.5) + '">' + esc(String(d.e.name || '').replace(/\s*\(sample\)/, '')) + '</span>'
       + '<span class="ck-f ck-amt" style="' + at2(80.5, 36.5) + '">**' + amtTxt + '</span>'
@@ -872,7 +880,7 @@
   }
   function voucher(d, o, keep) {
     var rt = +d.e.rate || 0;
-    return '<div class="ck-v"><div class="ck-vh"><b>' + esc(d.co.name || 'Your business') + '</b><span>Check ' + esc(o.no || '') + ' · ' + esc(o.date || '') + '</span></div>'
+    return '<div class="ck-v"><div class="ck-vh"><b><img src="' + esc(ckLogo(d.co)) + '" alt="">' + esc(d.co.name || 'Your business') + '</b><span>Check ' + esc(o.no || '') + ' · ' + esc(o.date || '') + '</span></div>'
       + '<div class="ck-vp"><b>Paid to ' + esc(d.e.name) + '</b><span>1099 contractor · no tax withheld</span></div>'
       + '<table><thead><tr><th>For</th><th class="n">Hours</th><th class="n">Rate</th><th class="n">Amount</th></tr></thead><tbody>'
       + d.lines.map(function (l) { return '<tr><td>' + esc(l[0]) + ', ' + esc(nice(d.from)) + ' – ' + esc(nice(d.to)) + '</td><td class="n">' + (d.e.pay_type === 'salary' ? '—' : l[1]) + '</td><td class="n">' + m2(l[2]) + '</td><td class="n">' + m2(l[3]) + '</td></tr>'; }).join('')
@@ -891,6 +899,7 @@
       + '<div class="ck-form"><div><label>Check number</label><input id="ckNo" inputmode="numeric" value="' + esc(no) + '"></div>'
       + '<div><label>Date</label><input id="ckDate" value="' + esc(today()) + '"></div>'
       + '<div class="w"><label>Memo</label><input id="ckMemo" value="' + esc(memo) + '"></div>'
+      + '<div class="w ck-chk"><label><input type="checkbox" id="ckTop"' + (chkGet('top', true) ? ' checked' : '') + '> Print my logo and business name in the top-left corner <small>Turn this off if your checks already have your name printed there.</small></label></div>'
       + '<div class="w"><label>Mailing address <small>for a window envelope, optional</small></label><textarea id="ckAddr" rows="2" placeholder="Street\nCity, State ZIP">' + esc(addrs[empId] || '') + '</textarea></div></div>'
       + '<p class="ck-note">Print onto pre-printed business checks with the check on top (from your bank or an office store). Your bank details and the magnetic number line are already on them, so BuilderPro never asks for them. Two stubs with the pay details print below the check. <b>Pay</b> signs it with your saved signature, prints it and marks it paid; paid another way? Close this and use Mark paid.</p>'
       + '<div class="row"><button class="bpx-btn ghost" onclick="bpCheckAdjOpen()">Line up</button><button class="bpx-btn ghost" onclick="bpCheckPrint(\'' + d.e.id + '\',\'' + d.from + '\',1)">Test on plain paper</button>'
@@ -898,9 +907,10 @@
       + (d.paid ? '' : '<button class="bpx-btn ck-paybtn" onclick="bpCheckPay(\'' + d.e.id + '\',\'' + d.from + '\')"><span class="ms" style="font-size:18px;vertical-align:-4px;margin-right:4px">draw</span>Pay ' + m2(d.r.gross) + '</button>') + '</div>');
     var cards = document.querySelectorAll('.bpx-modalcard'), mc = cards[cards.length - 1]; if (mc) { mc.style.maxWidth = '820px'; mc.style.width = '95vw'; mc.classList.add('ps-modal'); }
     var sig = null;
-    var draw = function () { var el = $('ckPrev'); if (el) el.innerHTML = checkFace(d, { bg: 1, sig: sig, no: ($('ckNo') || {}).value, date: ($('ckDate') || {}).value, memo: ($('ckMemo') || {}).value, addr: ($('ckAddr') || {}).value }); };
+    var draw = function () { var el = $('ckPrev'); if (el) el.innerHTML = checkFace(d, { bg: 1, sig: sig, no: ($('ckNo') || {}).value, date: ($('ckDate') || {}).value, memo: ($('ckMemo') || {}).value, addr: ($('ckAddr') || {}).value, top: ($('ckTop') || {}).checked }); };
     if (window.bpUsLoad) bpUsLoad().then(function (row) { sig = row && row.image; if (sig) draw(); }, function () {});
     ['ckNo', 'ckDate', 'ckMemo', 'ckAddr'].forEach(function (id) { var el = $(id); if (el) el.oninput = draw; });
+    if ($('ckTop')) $('ckTop').onchange = function () { chkSet('top', this.checked); draw(); };
     draw();
   };
   /* a sample check, so the owner can see what BuilderPro prints before anyone is set to 1099 */
@@ -914,7 +924,8 @@
     bpModal('<h3>A sample check</h3>'
       + '<div class="ck-wrap">' + checkFace(d, o) + '</div>'
       + '<div class="ck-legend"><span><i class="b"></i>BuilderPro prints this</span><span><i class="g"></i>Already on your checks</span></div>'
-      + '<p class="ck-note">This is what prints for a 1099 contractor: the date, who it\u2019s to, the amount in numbers and words, the address for a window envelope and the memo, onto pre-printed business checks from your bank or an office store. Two stubs print under it, one for them and one for you. With your saved e-signature it can print signed.</p>'
+      + '<p class="ck-note">This is what prints for a 1099 contractor: your logo and business name, the date, who it\u2019s to, the amount in numbers and words, the address for a window envelope and the memo, onto pre-printed business checks from your bank or an office store. Two stubs print under it, one for them and one for you. With your saved e-signature it can print signed.</p>'
+      + '<p class="ck-note">' + ((d.co.logoUrl || d.co.logo || window.BPLOGO) ? 'The logo is the one in Settings \u203a Business.' : 'That\u2019s the BuilderPro logo until you add your own in Settings \u203a Business.') + '</p>'
       + '<p class="ck-note">To use it, open someone in Employees and set Type to 1099 subcontractor. Their row in Pay period then gets a Pay by check button.</p>'
       + '<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button><button class="bpx-btn" onclick="bpCloseModal();bpCrewTab(\'people\')">Go to People</button></div>');
     var cards = document.querySelectorAll('.bpx-modalcard'), mc = cards[cards.length - 1]; if (mc) { mc.style.maxWidth = '820px'; mc.style.width = '95vw'; mc.classList.add('ps-modal'); }
@@ -959,7 +970,7 @@
     if (empId && $('ckAddr')) { var A = chkGet('addr', {}); A[empId] = $('ckAddr').value; chkSet('addr', A); }
     var addrs = chkGet('addr', {});
     var pages = ids.map(function (id, i) { var d = stubData(id, from); if (!d) return '';
-      return sheet(d, { bg: !!test, sig: opt.sig || null, no: String(first + i), date: date, memo: memoIn != null && empId ? memoIn : 'Pay ' + nice(d.from) + ' – ' + nice(d.to), addr: addrs[id] || '' }); }).join('');
+      return sheet(d, { bg: !!test, sig: opt.sig || null, no: String(first + i), date: date, memo: memoIn != null && empId ? memoIn : 'Pay ' + nice(d.from) + ' – ' + nice(d.to), addr: addrs[id] || '', top: !!chkGet('top', true) }); }).join('');
     if (!test) chkSet('next', first + ids.length);
     ckCss();
     var css = (document.getElementById('ck-css') || {}).textContent || '';
@@ -990,6 +1001,9 @@
       + '#bpx .ck-memo{left:4%;top:83%}#bpx .ck-mline{left:10%;top:89%;width:36%;border-top:1px solid #a9b6c6}'
       + '#bpx .ck-sline{left:58%;top:86%;width:37%;border-top:1px solid #a9b6c6}#bpx .ck-sig{left:58%;top:87.5%;font-size:1.1cqw}'
       + '#bpx .ck-sigimg{position:absolute;height:17%;max-width:34%;object-fit:contain;object-position:left bottom}'
+      + '#bpx .ck-top{display:flex;align-items:center;gap:1.3cqw;max-width:40%;white-space:normal;color:#000}#bpx .ck-top img{height:6.6cqw;max-width:14cqw;object-fit:contain;flex:none}#bpx .ck-top b{display:block;font-size:1.95cqw;font-weight:700;line-height:1.15}#bpx .ck-top i{display:block;font-style:normal;font-size:1.3cqw;line-height:1.35;color:#222}'
+      + '#bpx .ck-vh b{display:flex;align-items:center;gap:8px}#bpx .ck-vh img{height:22px;max-width:90px;object-fit:contain}'
+      + '#bpx .ck-chk label{display:flex !important;align-items:flex-start;gap:8px;font-size:13.5px !important;font-weight:600;color:var(--ink) !important;flex-wrap:wrap}#bpx .ck-chk input{width:18px;height:18px;margin:1px 0 0;flex:none;accent-color:var(--blue)}#bpx .ck-chk small{flex-basis:100%;margin-left:26px;font-weight:400;color:var(--grey)}'
       + '#bpx .ck-micr{left:22%;top:93%;font-family:"Courier New",monospace;font-size:1.7cqw;letter-spacing:.12em;text-transform:none}'
       + '#bpx .ck-v{box-sizing:border-box;height:3.75in;padding:.35in .5in 0;font-size:10pt;color:#000;border-top:1px dashed #bbb}#bpx .ck-vh,#bpx .ck-vp,#bpx .ck-vt{display:flex;justify-content:space-between;gap:12px}'
       + '#bpx .ck-vh b{font-size:11pt}#bpx .ck-vp{margin:8px 0}#bpx .ck-vp span,#bpx .ck-vh span{color:#444}'
