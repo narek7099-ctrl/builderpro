@@ -105,9 +105,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261126-sw3">
-<link rel="stylesheet" href="site/present.css?v=20261126-sw3">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261126-sw3"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261126-sw4">
+<link rel="stylesheet" href="site/present.css?v=20261126-sw4">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261126-sw4"}}</script>
 
 
 <style id="bpi-icons">
@@ -4192,7 +4192,7 @@ function bpCalUnsched(){
     var tab=function(id,ico,label){ return '<button class="bpx-jt'+(k===id?' on':'')+'" onclick="bpCalKind(\''+id+'\')"><span class=ms>'+ico+'</span> '+label+'</button>'; };
     q('bpxViewArea').innerHTML=
       '<div class="cal-top"><div class="cal-left"><div class="bpx-jobtabs cal-tabs">'+tab('all','calendar_month','Everything')+tab('inspection','roofing','Inspections')+tab('jobs','construction','Jobs')+'</div>'
-      +'<div class="bpx-jobtabs cal-view"><button class="bpx-jt'+(_bpCalView==='day'?' on':'')+'" onclick="bpCalView(\'day\')"><span class=ms>view_day</span> Day</button><button class="bpx-jt'+(_bpCalView==='week'?' on':'')+'" onclick="bpCalView(\'week\')"><span class=ms>view_week</span> Week</button><button class="bpx-jt'+(_bpCalView==='month'?' on':'')+'" onclick="bpCalView(\'month\')"><span class=ms>calendar_month</span> Month</button></div></div>'
+      +'</div>'   /* Day / Week / Month removed 2026-11-26: month only, a tapped day opens the day screen */
       +'<div class="cal-acts">'+((all||insp)?'<button class="bpx-btn ghost cal-connbtn" id="bpx-calconn" hidden onclick="bpCalConnToggle()" title="Connected calendars" aria-label="Connected calendars"><span class=ms>link</span></button>':'')+((all||jobs)?bpCalCrewPick():'')+'<button class="bpx-btn ghost cal-today" onclick="bpCalToday()">Today</button>'
         +(insp?'<button class="bpx-btn ghost cal-today" onclick="bpClosedOpen()"><span class=ms>event_busy</span> Closed days</button>':'')
         +(jobs?'<button class="bpx-btn ghost cal-today" onclick="bpCrewBookOpen()"><span class=ms>groups</span> Schedule a crew</button>':'')
@@ -15183,11 +15183,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261125ls"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261126-sw3"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261126-sw3"></script>
-<script src="site/vendor/SplitText.min.js?v=20261126-sw3"></script>
-<script src="site/site.js?v=20261126-sw3"></script>
-<script src="site/present.js?v=20261126-sw3"></script>
+<script src="site/vendor/gsap.min.js?v=20261126-sw4"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261126-sw4"></script>
+<script src="site/vendor/SplitText.min.js?v=20261126-sw4"></script>
+<script src="site/site.js?v=20261126-sw4"></script>
+<script src="site/present.js?v=20261126-sw4"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>
