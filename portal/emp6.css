@@ -123,3 +123,5 @@
 @top .ck-bg>*{margin:0 !important;padding:0 !important;min-height:0 !important;max-width:none !important}
 @top .ck-bg .ck-box{width:17% !important;height:12% !important;padding-left:.6% !important;border:1px solid #a9b6c6 !important;box-sizing:border-box !important;background:none !important;border-radius:0 !important}
 @top .ck-bg :is(.ck-dline,.ck-pline,.ck-wline,.ck-mline,.ck-sline){height:0 !important;border:0 !important;border-top:1px solid #a9b6c6 !important;background:none !important}
+@top .ck-bg .ck-box{display:block !important;text-align:left !important;line-height:1.5 !important}
+@top .ck{text-align:left !important}

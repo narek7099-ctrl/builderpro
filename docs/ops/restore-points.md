@@ -507,3 +507,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-26 before Employees Hours and Crews redesign: restore to ee07f70
 - 2026-11-26 before pay stubs: restore to e20f810
 - 2026-11-26 before 1099 contractor checks: restore to 0545caa
+- 2026-11-26 before Pay by check (signed) and double confirmation on money: restore to 3d43ec6
