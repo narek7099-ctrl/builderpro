@@ -524,3 +524,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-27 gusto application draft: restore to ce99286
 - 2026-11-27 settings regroup: restore to c9695f5
 - 2026-11-27 settings: no logo/brand: restore to 0f2454f
+- 2026-11-27 crew equipment locked to their jobs: restore to 3293a44
