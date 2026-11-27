@@ -105,9 +105,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261127-st4">
-<link rel="stylesheet" href="site/present.css?v=20261127-st4">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261127-st4"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261127-nl1">
+<link rel="stylesheet" href="site/present.css?v=20261127-nl1">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261127-nl1"}}</script>
 
 
 <style id="bpi-icons">
@@ -13049,7 +13049,7 @@ function bpSettings(){
   var logoInner=BPLOGO?('<img id="set-logoimg" src="'+BPLOGO+'">'):'<span id="set-logoimg">Logo</span>';
   var brandHex=bpBrandHex(c.brandColor), calcHex=bpBrandHex((bpCzThemeGet('calc')||{}).primary);
   var SECS=[
-    ['business','Business profile','storefront','Your name, logo and colors, and how customers reach you.'],
+    ['business','Business profile','storefront','Your business name and trade, and how customers reach you.'],
     ['listing','Find a Pro listing','travel_explore','How homeowners see you on BuilderPro\'s Find a Pro.'],
     ['licenses','Licenses & insurance','badge','Your license, insurance and bonds. We warn you 30 days before one expires.'],
     ['hours','Hours & replies','schedule','When you\'re open, and what a missed call gets back.'],
@@ -13066,7 +13066,7 @@ function bpSettings(){
     ['plan','Plan & billing','credit_card','Your BuilderPro membership.']].filter(function(t){ return !window.bpTeamIsOwner||bpTeamIsOwner()||(t[0]!=='team'&&t[0]!=='plan'); });
   /* the rail in groups, with a search (2026-11-27): thirteen items in one list was hard to scan */
   var SGROUPS=[['Your business',['business','hours','phone','listing','licenses']],[BP_AI_NAME+' & automations',['ridge','autos','calcs']],['You',['owner','signature','notify','appearance','security']],['Account',['team','plan']]];
-  var SKW={business:'logo brand color colour name trade license number phone email website address service area company',hours:'hours open closed schedule missed call auto reply text after hours',
+  var SKW={business:'name trade license number phone email website address service area company',hours:'hours open closed schedule missed call auto reply text after hours',
     phone:'business number phone number port texting text enable sms',listing:'find a pro listing services about photos yelp homeowners search',licenses:'license insurance bond policy expire permit',
     ridge:'lisa receptionist ai calls answer voice greeting knows prices faq questions',autos:'automations follow up texts reminders reviews workflows',calcs:'calculators instant quote website calculator widget',
     owner:'owner my name my phone my email profile',signature:'signature sign contract e-sign esign',notify:'notifications bell alerts push email sound',appearance:'theme dark mode light colors dashboard layout look',
@@ -13096,25 +13096,14 @@ function bpSettings(){
   q('bpxViewArea').innerHTML=
     '<div class="st">'
       +'<aside class="st-rail">'
-        +'<div class="st-id"><div class="st-logo">'+(BPLOGO?('<img src="'+BPLOGO+'" alt="">'):'<span class="ms">storefront</span>')+'</div>'
-          +'<div><b>'+bpEsc(c.name||'Your business')+'</b><span>'+bpEsc(c.trade||'Trade not set')+(c.serviceArea?' · '+bpEsc(c.serviceArea):'')+'</span></div></div>'
+        /* (2026-11-27) the business card at the top of the rail is gone: the owner asked for no logo or brand items here */
         +'<div class="st-navs" role="navigation" aria-label="Settings sections">'+rail+'</div>'
         +'<div class="st-plan"><span class="ms">verified</span>'+bpEsc(bpPlanInfo().name)+' · $'+bpPlanInfo().price+'/mo</div>'
       +'</aside>'
       +'<div class="st-body">'
       +sec('business',
-        grp('Identity')
-        +row('Logo','Shows on your customer portal, contracts, invoices, estimates and calculators. Until you add one, customers see your initials. A PNG with a clear background works best.',
-          '<div class="bpx-logo-row"><div class="bpx-logo-pv" id="set-logopv">'+logoInner+'</div>'
-          +'<div class="bpx-logo-btns"><button class="bpx-logo-up" onclick="q(\'set-logofile\').click()">'+(BPLOGO?'Replace':'Upload logo')+'</button><button class="bpx-logo-rm" id="set-logorm" onclick="bpLogoRemove()"'+(BPLOGO?'':' hidden')+'>Remove</button></div>'
-          +'<input type="file" id="set-logofile" accept="image/*" style="display:none" onchange="bpLogoPick(event)"></div>')
-        +row('Brand color','Buttons, links and highlights on your customer portal and signing page. Text on it turns white or dark automatically.',
-          '<div class="st-brand"><input type="color" id="set-cbrandpick" value="'+(brandHex||calcHex||'#2f6bff')+'" oninput="bpBrandPick(this.value)" aria-label="Pick brand color">'
-          +'<input type="text" id="set-cbrand" value="'+bpEsc(brandHex)+'" placeholder="#2f6bff" maxlength="7" oninput="bpBrandType(this.value)" aria-label="Brand color hex">'
-          +'<span class="st-brand-pv" id="set-cbrandpv"'+(brandHex?' style="'+bpEsc(bpBrandVars(brandHex))+'background:var(--hp-blue);color:var(--hp-on)"':'')+'>Your buttons look like this</span>'
-          +(calcHex&&calcHex!==brandHex?'<button type="button" class="st-brand-use" onclick="bpBrandPick(\''+calcHex+'\')">Use my calculator color ('+calcHex+')</button>':'')
-          +'</div>','set-cbrand')
-        +f('set-cname','Business name',c.name,'Acme Roofing')
+        /* (2026-11-27) logo and brand color are no longer set here; anything already saved stays as it is */
+        f('set-cname','Business name',c.name,'Acme Roofing')
         +f('set-ctrade','Trade',c.trade,'Roofing','text','Picks which calculator you get.')
         +'<datalist id="bpTradeList">'+BP_CALC_IDS.map(function(p){return '<option value="'+bpEsc(p[1])+'"></option>';}).join('')+'</datalist>'
         +f('set-clic','License number',c.license,'License / insurance #','text','Optional. Printed on contracts and door hangers.')
@@ -13362,11 +13351,9 @@ window.bpSettingsSave=function(){
   /* the business email goes on invoices and estimates, so a typo is worth catching */
   var em0=g('set-cemail');
   if(em0&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em0)){var mm=q('bpx-setmsg');if(mm){mm.style.color='#dc2626';mm.textContent='That email doesn\u2019t look right.';}var ei=q('set-cemail');if(ei)ei.focus();return;}
-  var br0=g('set-cbrand');if(br0&&/^[0-9a-f]{6}$/i.test(br0))br0='#'+br0;
-  if(br0&&!bpBrandHex(br0)){var mb=q('bpx-setmsg');if(mb){mb.style.color='#dc2626';mb.textContent='Brand color should look like #1f3a5f.';}var bi=q('set-cbrand');if(bi)bi.focus();return;}
   var hours={};BPDAYS.forEach(function(d){var ck=q('hrs-'+d[0]+'-o');var open=ck&&ck.checked;hours[d[0]]={open:!!open,from:open?g('hrs-'+d[0]+'-from')||'08:00':'08:00',to:open?g('hrs-'+d[0]+'-to')||'17:00':'17:00'};});
   /* keep what this form does not edit (licenses, crews, receptionist, phone…) */
-  var data=Object.assign({},bpSettingsGet(),{company:{name:g('set-cname'),trade:g('set-ctrade'),phone:g('set-cphone'),email:g('set-cemail'),website:g('set-cweb'),address:g('set-caddr'),serviceArea:g('set-carea'),license:g('set-clic'),services:g('set-csvc'),about:g('set-cabout'),listed:!(q('set-clisted')&&!q('set-clisted').checked),yelp:g('set-cyelp'),photos:(window.BPPHOTOS||[]).slice(0,10),logo:BPLOGO,brandColor:bpBrandHex(br0)},hours:hours,autoReply:g('set-autoreply'),owner:{name:g('set-oname'),email:g('set-oemail'),phone:g('set-ophone')}});
+  var data=Object.assign({},bpSettingsGet(),{company:{name:g('set-cname'),trade:g('set-ctrade'),phone:g('set-cphone'),email:g('set-cemail'),website:g('set-cweb'),address:g('set-caddr'),serviceArea:g('set-carea'),license:g('set-clic'),services:g('set-csvc'),about:g('set-cabout'),listed:!(q('set-clisted')&&!q('set-clisted').checked),yelp:g('set-cyelp'),photos:(window.BPPHOTOS||[]).slice(0,10),logo:BPLOGO,brandColor:((bpSettingsGet()||{}).company||{}).brandColor||''},hours:hours,autoReply:g('set-autoreply'),owner:{name:g('set-oname'),email:g('set-oemail'),phone:g('set-ophone')}});
   bpSettingsSet(data);
   var m=q('bpx-setmsg');if(m){m.style.color='#087F61';m.textContent='Saved ';}
   bpSettingsPush(data).then(function(ok){
@@ -15184,7 +15171,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/moneyok.js?v=20261126mo"></script>
 <script src="portal/quote.js?v=20261126mo"></script>
 <script src="portal/prices.js?v=20261118f"></script>
-<script src="portal/dash.js?v=20261124fj"></script>
+<script src="portal/dash.js?v=20261127nl"></script>
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261116a"></script>
 <script src="portal/permits.js?v=20261127st"></script>
@@ -15192,7 +15179,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/contact.js?v=20261124z"></script>
 <script src="portal/gcal.js?v=20261118f"></script>
 <script src="portal/inspect.js?v=20261024q36"></script>
-<script src="portal/custportal.js?v=20261025d2"></script>
+<script src="portal/custportal.js?v=20261127nl"></script>
 <script src="portal/payplan.js?v=20261126mo"></script>
 <script src="portal/bpedit.js?v=20261118f"></script>
 <script src="portal/crewapp.js?v=20261124b"></script>
@@ -15217,11 +15204,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261125ls"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261127-st4"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261127-st4"></script>
-<script src="site/vendor/SplitText.min.js?v=20261127-st4"></script>
-<script src="site/site.js?v=20261127-st4"></script>
-<script src="site/present.js?v=20261127-st4"></script>
+<script src="site/vendor/gsap.min.js?v=20261127-nl1"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261127-nl1"></script>
+<script src="site/vendor/SplitText.min.js?v=20261127-nl1"></script>
+<script src="site/site.js?v=20261127-nl1"></script>
+<script src="site/present.js?v=20261127-nl1"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>

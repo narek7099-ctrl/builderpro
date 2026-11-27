@@ -28,7 +28,6 @@
     var priced = sup.some(function (x) { return !isSample(x) && items.some(function (i) { return i.supplier_id === x.id; }); });
     return [
       { k: 'biz', t: 'Your business details', s: 'Name, trade, phone and address. Everything else is built from these.', done: !!(c.name && c.phone && c.address), go: 'settings' },
-      { k: 'logo', t: 'Your logo', s: 'On your estimates, contracts and calculator.', done: !!c.logo, go: 'settings' },
       { k: 'ai', t: 'Publish what ' + (window.BP_AI_NAME || 'Lisa') + ' knows', s: 'Your services, prices and rules, so the receptionist answers like you would.', done: D.brain === undefined ? null : !!(D.brain && D.brain.published_at), go: 'ai' },
       { k: 'calc', t: 'Set your calculator prices', s: 'The estimator on your website quotes from these.', done: D.calc === undefined ? null : !!D.calc, go: 'calculator' },
       { k: 'job', t: 'Add your first project', s: 'Photos, schedule and costs live on the project.', done: jobs.length > 0, go: 'activejobs' },

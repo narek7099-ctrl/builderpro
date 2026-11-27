@@ -205,6 +205,7 @@
   function hasLogo() { var c = ((window.bpSettingsGet ? bpSettingsGet() : {}) || {}).company || {}; return !!(c.logo || c.logoUrl); }
   function logoNudge() {
     var off = false; try { off = localStorage.getItem(NUDGE_KEY) === '1'; } catch (e) {}
+    return '';   /* (2026-11-27) logo and brand color were taken out of Settings, so no pointer to them */
     if (off || hasLogo()) return '';
     return '<div class="cp-nudge" id="cp-lognudge" role="note"><span class="ms">add_photo_alternate</span>'
       + '<div><b>Your logo isn’t set</b><span>The homeowner’s page, contracts and review page show your logo and brand color. </span>'
