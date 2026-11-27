@@ -105,9 +105,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261127-hplight">
-<link rel="stylesheet" href="site/present.css?v=20261127-hplight">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261127-hplight"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261127-port7c">
+<link rel="stylesheet" href="site/present.css?v=20261127-port7c">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261127-port7c"}}</script>
 
 
 <style id="bpi-icons">
@@ -9351,6 +9351,7 @@ function bpHpRender(){
       +'</header>'
       +'<div class="hp-content">'
         +(_bpHp.paid?'<div class="hp-note ok"><span class=ms>check_circle</span>Thanks, your payment went through. It can take a few minutes to show here.</div>':'')
+        +(_bpHp.tab!=='overview'&&_bpHp.tab!=='msgs'?'<h1 class="hp-lt">'+bpEsc(cur[1])+'</h1>':'')
         +'<main class="hp-pane'+(_bpHp.anim?' hp-in':'')+'" id="hpBody">'+bpHpPane(_bpHp.tab)+'</main>'
         +'<footer class="hp-powm">'+bpPoweredBy()+'</footer>'
       +'</div>'
@@ -9358,6 +9359,9 @@ function bpHpRender(){
     +'<nav class="hp-tabbar" aria-label="Project sections">'+phoneTabs.map(function(t){return navBtn(t,true);}).join('')+'</nav>'
     +(_bpHp.more?bpHpMoreSheet():'')
   +'</div>';
+  /* phone: the big page title says it; a card heading that only repeats it goes (Documents, Changes, Find a pro) */
+  var lt=h.querySelector('.hp-lt');
+  if(lt)Array.prototype.forEach.call(h.querySelectorAll('#hpBody .hp-card-h h2, #hpBody .hp-chg-h h1, #hpBody .pr-hero-t h1'),function(x){if(x.textContent.trim()===lt.textContent.trim())x.classList.add('hp-dup');});
   _bpHp.anim=false;
   setTimeout(function(){var a=h.querySelector('.hx-hero-ring .a');if(a)a.style.strokeDashoffset=a.getAttribute('data-off');},60);
   /* something finished since the homeowner last looked: celebrate it with them once */
@@ -15152,7 +15156,7 @@ window.bpRepCopy=function(text,btn){
 <!--/app-only-->
 </body>
 <!--app-only-->
-<link rel="stylesheet" href="portal/app.css?v=94c4d14ffb" data-bundle>
+<link rel="stylesheet" href="portal/app.css?v=f871b2d1f8" data-bundle>
 <script src="portal/team.js?v=20261115a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261127qb"></script>
@@ -15185,7 +15189,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/crewapp.js?v=20261124b"></script>
 <script src="portal/live.js?v=20261120c"></script>
 <script src="portal/teamchat.js?v=20261118f"></script>
-<script src="portal/subapp.js?v=20261126sw"></script>
+<script src="portal/subapp.js?v=20261127p7"></script>
 <script src="portal/subs.js?v=20261118f"></script>
 <script src="portal/aiteam.js?v=20261124fk"></script>
 <script src="portal/aiboard.js?v=20261114a"></script>
@@ -15204,18 +15208,18 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261125ls"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261127-hplight"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261127-hplight"></script>
-<script src="site/vendor/SplitText.min.js?v=20261127-hplight"></script>
-<script src="site/site.js?v=20261127-hplight"></script>
-<script src="site/present.js?v=20261127-hplight"></script>
+<script src="site/vendor/gsap.min.js?v=20261127-port7c"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261127-port7c"></script>
+<script src="site/vendor/SplitText.min.js?v=20261127-port7c"></script>
+<script src="site/site.js?v=20261127-port7c"></script>
+<script src="site/present.js?v=20261127-port7c"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>
 <script src="portal/slidetabs.js?v=20261117a"></script>
 <script src="portal/motion.js?v=20261118f"></script>
 <script src="portal/shell.js?v=20261126ck"></script>
-<script src="portal/mobile.js?v=20261126m7"></script>
+<script src="portal/mobile.js?v=20261127p7"></script>
 <script src="portal/appfeel.js?v=20261126m6"></script>
 <script src="portal/calday.js?v=20261126c3"></script>
 <script src="portal/filming.js?v=20261101a"></script>

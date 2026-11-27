@@ -133,7 +133,7 @@
       var tot = js.reduce(function (t, j) { t.c += contract(j); t.p += +j.paid || 0; t.o += owedNow(j); return t; }, { c: 0, p: 0, o: 0 });
       area().innerHTML = '<div class="ca-wrap sa">' + compBanner()
         + '<div class="sa-hello"><div><small>' + esc(b.name || 'Your contractor') + '</small><h2>' + esc(sub().company || 'Your jobs') + '</h2></div>'
-        + '<div class="sa-kpis"><div><small>Contract value</small><b>' + money0(tot.c) + '</b></div><div><small>Paid</small><b>' + money0(tot.p) + '</b></div><div><small>Owed to you</small><b>' + money0(tot.o) + '</b></div></div></div>'
+        + '<div class="sa-kpis"><div><small>Contract</small><b>' + money0(tot.c) + '</b></div><div><small>Paid</small><b>' + money0(tot.p) + '</b></div><div><small>Owed to you</small><b>' + money0(tot.o) + '</b></div></div></div>'
         + (js.length ? '<div class="sa-jobs">' + js.map(function (j) {
             var pct = contract(j) > 0 ? Math.min(100, Math.round((+j.paid || 0) / contract(j) * 100)) : 0;
             return '<button class="bpx-panel sa-job" onclick="bpSubJob(\'' + esc(j.id) + '\')">'
@@ -317,7 +317,7 @@
       /* the insurance reminder lives on Jobs and Compliance, not here too */
       area().innerHTML = '<div class="ca-wrap sa">'
         + '<div class="sa-kpis wide"><div><small>In review</small><b>' + money0(sum(['submitted'])) + '</b></div><div><small>Approved</small><b>' + money0(sum(['approved'])) + '</b></div><div><small>Paid</small><b>' + money0(sum(['paid'])) + '</b></div></div>'
-        + '<div class="bpx-panel"><div class="sa-ph"><h4>Invoices</h4>' + (jobs().length ? '<button class="pm-btn" onclick="bpSubInvForm()"><span class="ms">add</span>Submit invoice</button>' : '') + '</div>'
+        + '<div class="bpx-panel"><div class="sa-ph sa-pg"><h4>Invoices</h4>' + (jobs().length ? '<button class="pm-btn" onclick="bpSubInvForm()"><span class="ms">add</span>Submit invoice</button>' : '') + '</div>'
         + '<div id="sa-invform"></div><div class="ca-msg" id="sa-imsg"></div>'
         + (all.length ? '<div class="sa-list">' + all.map(function (x) { return invRow(x[0], x[1]); }).join('') + '</div>'
           : '<div class="bpx-mut" style="margin-top:6px">' + (jobs().length ? 'No invoices yet. Submit one when a stage of the work is done.' : 'You’ll be able to invoice once you’re on a job.') + '</div>')
@@ -406,7 +406,7 @@
       if (unlinked()) return;
       var all = []; jobs().forEach(function (j) { (j.changeOrders || []).forEach(function (c) { all.push([j, c]); }); });
       all.sort(function (a, b) { return (+b[1].at || 0) - (+a[1].at || 0); });
-      area().innerHTML = '<div class="ca-wrap sa"><div class="bpx-panel"><div class="sa-ph"><h4>Change orders</h4>' + (jobs().length ? '<button class="pm-btn" onclick="bpSubCoForm()"><span class="ms">add</span>Request change</button>' : '') + '</div>'
+      area().innerHTML = '<div class="ca-wrap sa"><div class="bpx-panel"><div class="sa-ph sa-pg"><h4>Change orders</h4>' + (jobs().length ? '<button class="pm-btn" onclick="bpSubCoForm()"><span class="ms">add</span>Request change</button>' : '') + '</div>'
         + '<p class="bpx-mut" style="margin:0 0 10px;font-size:13px">Extra work, or less, than the agreed scope. Once approved it’s added to your contract total and you can invoice it.</p>'
         + '<div id="sa-coform"></div><div class="ca-msg" id="sa-cmsg"></div>'
         + (all.length ? '<div class="sa-list">' + all.map(function (x) { return coRow(x[0], x[1]); }).join('') + '</div>' : '<div class="bpx-mut">No change orders yet.</div>')
