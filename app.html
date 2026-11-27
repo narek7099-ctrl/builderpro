@@ -105,9 +105,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261127-arch3">
-<link rel="stylesheet" href="site/present.css?v=20261127-arch3">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261127-arch3"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261127-hd4">
+<link rel="stylesheet" href="site/present.css?v=20261127-hd4">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261127-hd4"}}</script>
 
 
 <style id="bpi-icons">
@@ -9267,6 +9267,8 @@ function bpHpLoad(){
   return bpHpApi('get').then(function(d){
     if(!d||!d.ok){bpHpErr(d&&d.error==='not_found'?'This link isn\'t active. It may have been turned off or replaced. Ask your contractor for a new one.':(d&&d.error)||'We couldn\'t load your project.');return;}
     _bpHp.d=d; bpHpRender(); bpHpAcct();
+    var tm=/[#&]tab=(overview|sched|photos|docs|pay|msgs|changes)\b/.exec(location.hash||'');
+    if(tm){try{history.replaceState(null,'','#home='+_bpHp.token);}catch(e){} if(tm[1]!=='overview')bpHpTab(tm[1]);}
     if(/[#&]review=1/.test(location.hash||'')&&d.reviewable&&window.bpHpRevOpen){setTimeout(function(){bpHpRevOpen();},250);try{history.replaceState(null,'','#home='+_bpHp.token);}catch(e){}}
     if(window.bpCustLink)bpCustLink.seen('home',_bpHp.token,{title:(d.job||{}).title,biz:(d.business||{}).name,name:(d.customer||{}).name||''});
   }).catch(function(){bpHpErr('We couldn\'t load your project just now. Check your connection and reload the page.');});
@@ -10300,13 +10302,20 @@ function bpHoProj(x){
   var stat=function(ic,k,v){return '<div class="ho-stat"><span class=ms>'+ic+'</span><div><small>'+k+'</small><b>'+v+'</b></div></div>';};
   var stats=(done?'':stat('event','Next visit',nextVisit?bpEsc(bpHpDay(nextVisit)):'Not scheduled'))
     +(+m.contract?stat('account_balance_wallet','Paid',bpHoUsd(m.paid)+' <span>of '+bpHoUsd(m.contract)+'</span>'):'');
-  return '<button type="button" class="ho-proj" onclick="bpGo(\'#home='+bpHpEscA(x.token)+'\')">'
+  var cover=(d.photos||[]).length?d.photos[d.photos.length-1].url:'';
+  var open='bpGo(\'#home='+bpHpEscA(x.token)+'\')', tabGo=function(t){return 'event.stopPropagation();bpGo(\'#home='+bpHpEscA(x.token)+'&tab='+t+'\')';};
+  var due=((d.plan||{}).steps||[]).filter(function(s){return s.state==='due';})[0];
+  var acts='<div class="ho-proj-acts">'+(done?'':'<button type="button" onclick="'+tabGo('msgs')+'"><span class=ms>chat</span>Message</button>')
+    +'<button type="button" onclick="'+tabGo('photos')+'"><span class=ms>photo_library</span>Photos</button>'
+    +(done?'<button type="button" onclick="'+tabGo('docs')+'"><span class=ms>description</span>Documents</button>':'<button type="button" class="'+(due?'due':'')+'" onclick="'+tabGo('pay')+'"><span class=ms>payments</span>'+(due?'Pay '+bpHoUsd((+due.amount||0)-(+due.paid||0)):'Payments')+'</button>')+'</div>';
+  return '<div class="ho-proj'+(cover?' has-cover':'')+'" role="link" tabindex="0" onclick="'+open+'" onkeydown="if(event.key===\'Enter\')'+open+'">'
+    +(cover?'<div class="ho-proj-cover"><img src="'+bpHpEscA(cover)+'" alt="" loading="lazy"></div>':'')
     +'<div class="ho-proj-h">'+logo+'<div class="ho-proj-who"><span>'+bpEsc(b.name||'Your contractor')+'</span></div>'+pill+'</div>'
     +'<div class="ho-proj-t"><b>'+bpEsc(j.title||'Your project')+'</b>'+(j.addr?'<span><span class=ms>location_on</span>'+bpEsc(j.addr)+'</span>':'')+'</div>'
     +'<div class="ho-prog"><div class="ho-prog-l"><span>'+(done?'All done':now?'Now: <b>'+bpEsc(now.name)+'</b>':'In progress')+'</span><b>'+pct+'%</b></div><i class="ho-bar"><i style="width:'+pct+'%"></i></i></div>'
     +(stats?'<div class="ho-stats">'+stats+'</div>':'')
-    +'<span class="ho-proj-go">Open project<span class=ms>arrow_forward</span></span>'
-  +'</button>';
+    +acts
+  +'</div>';
 }
 /* payments due and unread updates, newest first */
 function bpHoAttention(projs,ups){
@@ -10332,8 +10341,8 @@ function bpMyEnter(s){
   document.title='Home · BuilderPro';
   var first=bpHoFirst(s);
   b.innerHTML='<div class="ho-hi"><span>'+bpEsc(bpHoGreet()+(first?', '+first:''))+'</span><h1 id="hoSum">Your home projects</h1></div>'
-    +'<div class="ho-grid"><div class="ho-col"><div id="hoAtt"></div>'+bpHoSec('Projects','<div id="myList" class="ho-projs"><div class="pr-card pr-skel"><i></i><i></i><i></i></div></div>')+'<div id="hoPast"></div><div id="hoPros"></div></div>'
-    +'<aside class="ho-col ho-side"><div id="hoCos"></div><div id="myDocs"></div><div id="myReqs"></div><div id="hoUpd"></div></aside></div>'
+    +'<div class="ho-grid"><div class="ho-col"><div id="hoGlance"></div><div id="hoActs"></div><div id="hoAtt"></div><div id="hoNext"></div>'+bpHoSec('Projects','<div id="myList" class="ho-projs"><div class="pr-card pr-skel"><i></i><i></i><i></i></div></div>')+'<div id="hoPhotos"></div><div id="hoPast"></div><div id="hoPros"></div></div>'
+    +'<aside class="ho-col ho-side"><div id="hoCos"></div><div id="hoCare"></div><div id="myDocs"></div><div id="myReqs"></div><div id="hoUpd"></div></aside></div>'
     +(bpIsHomeowner(s)?'':'<p class="my-note"><span class=ms>info</span>This is a contractor login. <a href="/app.html?portal=1">Open the BuilderPro app</a></p>');
   save.then(function(){
     return Promise.all([
@@ -10371,6 +10380,8 @@ function bpHoDraw(projs,reqs,docs,ups){
     :'<div class="ho-empty"><span class="pr-empty-ic"><span class=ms>add_home_work</span></span><b>No projects yet</b><p>When your contractor sends you a project link, open it while you’re signed in and it’s saved here.</p><button type="button" class="hx-btn pri" onclick="bpGo(\'#pros\')"><span class=ms>person_search</span>Find a pro</button></div>');
   bpHoCos(live);
   bpHoSide(reqs,docs,ups);
+  /* the at-a-glance tiles, quick buttons, up next, photos and seasonal tips (portal/hodash.js) */
+  ['bpHoGlance','bpHoActions','bpHoNext','bpHoPhotos','bpHoCare'].forEach(function(f){try{if(window[f])window[f](live);}catch(e){}});
   var G=document.querySelector('#myBody .ho-grid'); if(G)G.classList.toggle('ho-one',!live.length&&!reqs.length&&!docs.length&&!ups.some(function(n){return n.read_at;}));
   bpHoNear(live);
 }
@@ -15192,7 +15203,7 @@ window.bpRepCopy=function(text,btn){
 <!--/app-only-->
 </body>
 <!--app-only-->
-<link rel="stylesheet" href="portal/app.css?v=24e36c689a" data-bundle>
+<link rel="stylesheet" href="portal/app.css?v=888d41a1f1" data-bundle>
 <script src="portal/team.js?v=20261115a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261127qb"></script>
@@ -15237,6 +15248,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/custlink.js?v=20261118f"></script>
 <script src="portal/hreview.js?v=20261127rv"></script>
 <script src="portal/bizreviews.js?v=20261127rv"></script>
+<script src="portal/hodash.js?v=20261127hd"></script>
 <script src="portal/estpick.js?v=20261118f"></script>
 <script src="portal/reviews.js?v=20261004a"></script>
 <script src="portal/automations.js?v=20261126sw"></script>
@@ -15246,11 +15258,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261125ls"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261127-arch3"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261127-arch3"></script>
-<script src="site/vendor/SplitText.min.js?v=20261127-arch3"></script>
-<script src="site/site.js?v=20261127-arch3"></script>
-<script src="site/present.js?v=20261127-arch3"></script>
+<script src="site/vendor/gsap.min.js?v=20261127-hd4"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261127-hd4"></script>
+<script src="site/vendor/SplitText.min.js?v=20261127-hd4"></script>
+<script src="site/site.js?v=20261127-hd4"></script>
+<script src="site/present.js?v=20261127-hd4"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>

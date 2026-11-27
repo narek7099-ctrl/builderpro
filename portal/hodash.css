@@ -1,0 +1,93 @@
+/* ==================================================================
+   The homeowner's Home (portal/hodash.js), 2026-11-27: at a glance,
+   quick buttons, up next, project cards with a cover photo, latest
+   photos and seasonal home care. Same white cards as the contractor's
+   phone app; BuilderPro blue for actions, mint only for good news.
+   ================================================================== */
+/* at a glance: three tiles */
+#bpSign .hd-glance{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#bpSign .hd-g{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;padding:14px 14px 12px;border-radius:18px;background:var(--hp-card,#fff);box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(15,23,42,.07);border:1px solid var(--hp-line,#e6e9ef);transition:transform .12s ease}
+#bpSign .hd-g:active{transform:scale(.98)}
+#bpSign .hd-g:focus-visible{outline:2px solid #006fff;outline-offset:2px}
+#bpSign .hd-g[disabled]{cursor:default}
+#bpSign .hd-g-ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:#eef3ff;color:#1b56ee;margin-bottom:6px}
+#bpSign .hd-g-ic .ms{font-size:19px}
+#bpSign .hd-g small{font-size:12px;font-weight:600;color:var(--hp-grey,#6b7280)}
+#bpSign .hd-g b{font-size:19px;line-height:1.15;font-weight:800;letter-spacing:-.015em;color:var(--hp-ink,#0f1729);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#bpSign .hd-g>span:last-child:not(.hd-g-ic){font-size:12px;color:var(--hp-grey,#6b7280);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#bpSign .hd-g.due{background:#eef3ff;border-color:#cfe0ff}
+#bpSign .hd-g.due .hd-g-ic{background:#006fff;color:#fff}
+#bpSign .hd-g.due b{color:#0b4fd6}
+
+/* quick buttons: four round ones, like the contractor's Home */
+#bpSign .hd-acts{display:flex;justify-content:space-around;gap:6px;padding:4px 0 2px}
+#bpSign .hd-act{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:64px;-webkit-tap-highlight-color:transparent}
+#bpSign .hd-act-c{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:var(--hp-card,#fff);color:#1b56ee;box-shadow:0 1px 2px rgba(15,23,42,.08),0 0 0 1px var(--hp-line,#e6e9ef);transition:transform .12s ease}
+#bpSign .hd-act.pri .hd-act-c{background:#006fff;color:#fff;box-shadow:0 6px 16px -6px rgba(0,111,255,.6)}
+#bpSign .hd-act-c .ms{font-size:24px}
+#bpSign .hd-act:active .hd-act-c{transform:scale(.92)}
+#bpSign .hd-act:focus-visible .hd-act-c{outline:2px solid #006fff;outline-offset:2px}
+#bpSign .hd-act-l{font-size:13px;font-weight:600;color:var(--hp-ink,#0f1729)}
+
+/* the calm "all caught up" line: smaller than before, so it doesn't push the rest down */
+#bpSign .ho-calm:not(.ho-calm-btn){padding:10px 14px !important;border-radius:14px !important;gap:10px !important}
+#bpSign .ho-calm:not(.ho-calm-btn) b{font-size:14.5px !important}
+#bpSign .ho-calm:not(.ho-calm-btn) span:not(.ms){font-size:13px !important}
+
+/* up next */
+#bpSign .hd-next{display:flex;flex-direction:column}
+#bpSign .hd-up{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--hp-line2,#f0f2f5)}
+#bpSign .hd-up:last-of-type{border-bottom:0}
+#bpSign .hd-up>div{flex:1;min-width:0}
+#bpSign .hd-up b{display:block;font-size:15px;color:var(--hp-ink,#0f1729)}
+#bpSign .hd-up span:not(.ms):not(.hd-date){display:block;font-size:13px;color:var(--hp-grey,#6b7280);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpSign .hd-date{flex:none;width:46px;height:50px;border-radius:12px;background:#eef3ff;color:#1b56ee;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+#bpSign .hd-date small{font-size:10.5px;font-weight:800;letter-spacing:.06em}
+#bpSign .hd-date b{font-size:20px !important;color:#0b4fd6 !important;margin-top:2px}
+#bpSign .hd-date.ic .ms{font-size:22px}
+#bpSign .hd-chev{color:#b6bdc9;font-size:22px}
+#bpSign .hd-fine{margin:0;padding:10px 14px 12px;font-size:12.5px;line-height:1.45;color:var(--hp-grey,#6b7280);border-top:1px solid var(--hp-line2,#f0f2f5)}
+
+/* project card: cover photo on top, buttons at the bottom */
+#bpSign .ho-proj.has-cover{padding-top:0;overflow:hidden}
+#bpSign .ho-proj-cover{margin:0 -18px;height:150px;overflow:hidden;background:#eef1f5}
+#bpSign .ho-proj-cover img{width:100%;height:100%;object-fit:cover;display:block}
+#bpSign .ho-proj-acts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding-top:2px}
+#bpSign .ho-proj-acts:has(>button:nth-child(2):last-child){grid-template-columns:repeat(2,minmax(0,1fr))}
+#bpSign .ho-proj-acts button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;height:42px;border-radius:12px;background:var(--hp-soft,#f2f4f7);color:var(--hp-ink,#0f1729);font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden}
+#bpSign .ho-proj-acts button .ms{font-size:18px;color:#1b56ee}
+#bpSign .ho-proj-acts button.due{background:#006fff;color:#fff}
+#bpSign .ho-proj-acts button.due .ms{color:#fff}
+#bpSign .ho-proj-acts button:active{transform:scale(.97)}
+#bpSign .ho-proj-acts button:focus-visible{outline:2px solid #006fff;outline-offset:2px}
+
+/* latest photos */
+#bpSign .hd-photos{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding-bottom:2px}
+#bpSign .hd-photos::-webkit-scrollbar{display:none}
+#bpSign .hd-photos button{all:unset;cursor:pointer;flex:0 0 auto;width:132px;aspect-ratio:1;border-radius:16px;overflow:hidden;scroll-snap-align:start;background:#eef1f5}
+#bpSign .hd-photos img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* home care this season */
+#bpSign .hd-care{display:flex;flex-direction:column}
+#bpSign .hd-tip{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--hp-line2,#f0f2f5)}
+#bpSign .hd-tip:last-child{border-bottom:0}
+#bpSign .hd-tip>div{flex:1;min-width:0}
+#bpSign .hd-tip b{display:block;font-size:14.5px;color:var(--hp-ink,#0f1729)}
+#bpSign .hd-tip>div>span{display:block;font-size:13px;line-height:1.4;color:var(--hp-grey,#6b7280);margin-top:2px}
+#bpSign .hd-tip-ic{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:#e8f8f2;color:#08775d}
+#bpSign .hd-tip-ic .ms{font-size:20px}
+#bpSign .hd-tip-go{all:unset;cursor:pointer;flex:none;height:32px;padding:0 12px;border-radius:16px;background:#eef3ff;color:#1b56ee;font-size:13px;font-weight:700}
+#bpSign .hd-tip-go:focus-visible{outline:2px solid #006fff;outline-offset:2px}
+
+/* spacing in the main column */
+#bpSign .ho-col>#hoGlance:not(:empty),#bpSign .ho-col>#hoActs:not(:empty){margin-bottom:2px}
+@media (max-width:899px){
+  #bpSign .hd-glance{gap:8px}
+  #bpSign .hd-g{padding:12px 11px 10px}
+  #bpSign .hd-g b{font-size:17px}
+  #bpSign .ho-proj-cover{height:140px}
+}
+@media (min-width:900px){
+  #bpSign .hd-acts{justify-content:flex-start;gap:26px;padding-left:4px}
+  #bpSign .hd-photos button{width:150px}
+}

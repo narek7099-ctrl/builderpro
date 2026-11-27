@@ -530,3 +530,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-27 auto homeowner link on new projects (db trigger bp_portal_auto_link) + HighLevel reminders: restore to 807986e
 - 2026-11-27 homeowner reviews (detail stars, replies, report), contractor Reviews page, Past projects: restore to 10624f8
 - 2026-11-27 past projects stay for homeowners after the link is turned off (read-only archive): restore to 3e15a08
+- 2026-11-27 homeowner Home dashboard: glance tiles, quick buttons, up next, photo cards, home care: restore to 7ec1eed
