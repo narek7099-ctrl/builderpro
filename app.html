@@ -105,9 +105,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261127-eq1">
-<link rel="stylesheet" href="site/present.css?v=20261127-eq1">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261127-eq1"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261127-hplight">
+<link rel="stylesheet" href="site/present.css?v=20261127-hplight">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261127-hplight"}}</script>
 
 
 <style id="bpi-icons">
@@ -9347,7 +9347,7 @@ function bpHpRender(){
         +'<div class="hp-proj"><div class="hp-proj-t"><b>'+bpEsc(j.title||'Your project')+'</b><span class="hp-desk">'+stPill+'</span></div>'
           +'<span class="hp-proj-s">'+(j.addr?'<span class=ms>location_on</span>'+bpEsc(j.addr):bpEsc(b.name||''))+'</span></div>'
         +'<div class="hp-bar-r">'+(b.phone?'<a class="hp-iconbtn" href="'+bpHpTel(b)+'" aria-label="Call '+bpHpEscA(b.name||'your contractor')+'"><span class=ms>call</span></a>':'')
-          +'<span class="hp-crumb hp-desk">'+bpEsc(cur[1])+'</span></div>'
+          +'</div>'
       +'</header>'
       +'<div class="hp-content">'
         +(_bpHp.paid?'<div class="hp-note ok"><span class=ms>check_circle</span>Thanks, your payment went through. It can take a few minutes to show here.</div>':'')
@@ -15152,7 +15152,7 @@ window.bpRepCopy=function(text,btn){
 <!--/app-only-->
 </body>
 <!--app-only-->
-<link rel="stylesheet" href="portal/app.css?v=10c0f222f1" data-bundle>
+<link rel="stylesheet" href="portal/app.css?v=94c4d14ffb" data-bundle>
 <script src="portal/team.js?v=20261115a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261127qb"></script>
@@ -15204,11 +15204,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261125ls"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261127-eq1"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261127-eq1"></script>
-<script src="site/vendor/SplitText.min.js?v=20261127-eq1"></script>
-<script src="site/site.js?v=20261127-eq1"></script>
-<script src="site/present.js?v=20261127-eq1"></script>
+<script src="site/vendor/gsap.min.js?v=20261127-hplight"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261127-hplight"></script>
+<script src="site/vendor/SplitText.min.js?v=20261127-hplight"></script>
+<script src="site/site.js?v=20261127-hplight"></script>
+<script src="site/present.js?v=20261127-hplight"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>
