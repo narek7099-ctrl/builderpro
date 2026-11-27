@@ -528,3 +528,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-27 client portal always light: restore to 024e9d9
 - 2026-11-27 crew/sub/customer portals match contractor phone app: restore to 3985ce5
 - 2026-11-27 auto homeowner link on new projects (db trigger bp_portal_auto_link) + HighLevel reminders: restore to 807986e
+- 2026-11-27 homeowner reviews (detail stars, replies, report), contractor Reviews page, Past projects: restore to 10624f8

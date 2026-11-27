@@ -105,9 +105,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261127-port7c">
-<link rel="stylesheet" href="site/present.css?v=20261127-port7c">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261127-port7c"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261127-reviews">
+<link rel="stylesheet" href="site/present.css?v=20261127-reviews">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261127-reviews"}}</script>
 
 
 <style id="bpi-icons">
@@ -2611,7 +2611,7 @@ var BP_PLANS={foundation:{name:'Foundation',price:99,min:150},os:{name:'BuilderP
 /* What each plan leaves out. Locked pages stay in the sidebar with a lock and
    open an upgrade card, so the contractor sees what the next plan gives them.
    No accounts row (demo, older clients) means nothing is locked. */
-var BP_LOCK={foundation:['activejobs','routing','installations','assets','employees','subs','supply','supplyorders','suppliers','receipts','matlists','prices','mattemplates','finarchive','quickbooks','connections','leadsources','marketing','website','social','competitors','checks','calculator','customize','reputation','aiteam'],
+var BP_LOCK={foundation:['reviews','activejobs','routing','installations','assets','employees','subs','supply','supplyorders','suppliers','receipts','matlists','prices','mattemplates','finarchive','quickbooks','connections','leadsources','marketing','website','social','competitors','checks','calculator','customize','reputation','aiteam'],
   /* the AI Team is an Enterprise feature, not an add-on */
   os:['aiteam']};
 /* which plan opens a page: Enterprise for what even OS leaves out, OS otherwise */
@@ -2800,7 +2800,7 @@ function bpLogout(force){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={assets:{t:'Equipment',s:''},connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewdash:{t:'Home',s:''},crewclock:{t:'Time clock',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Jobs',s:''},crewid:{t:'My ID',s:''},crewmsgs:{t:'Messages',s:''},subjobs:{t:'Jobs',s:''},subinvoices:{t:'Invoices',s:''},subchanges:{t:'Change orders',s:''},subcomply:{t:'Compliance',s:''},subcompany:{t:'My company',s:''},subs:{t:'Subcontractors',s:''},routing:{t:'Driving routes',s:''},quote:{t:'Estimate',s:''},invoicebuilder:{t:'Invoice',s:''},teamchat:{t:'Team chat',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active jobs',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finincome:{t:'Income',s:''},finexpenses:{t:'Expenses',s:''},finarchive:{t:'Tax years',s:''},payouts:{t:'Card payments',s:''},quickbooks:{t:'QuickBooks',s:''},checks:{t:'Lead stats',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Order lists',s:''},receipts:{t:'Receipts',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
+var BPVIEWS={reviews:{t:'Reviews',s:'What your customers said about your work, and your replies.'},assets:{t:'Equipment',s:''},connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewdash:{t:'Home',s:''},crewclock:{t:'Time clock',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Jobs',s:''},crewid:{t:'My ID',s:''},crewmsgs:{t:'Messages',s:''},subjobs:{t:'Jobs',s:''},subinvoices:{t:'Invoices',s:''},subchanges:{t:'Change orders',s:''},subcomply:{t:'Compliance',s:''},subcompany:{t:'My company',s:''},subs:{t:'Subcontractors',s:''},routing:{t:'Driving routes',s:''},quote:{t:'Estimate',s:''},invoicebuilder:{t:'Invoice',s:''},teamchat:{t:'Team chat',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active jobs',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finincome:{t:'Income',s:''},finexpenses:{t:'Expenses',s:''},finarchive:{t:'Tax years',s:''},payouts:{t:'Card payments',s:''},quickbooks:{t:'QuickBooks',s:''},checks:{t:'Lead stats',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Order lists',s:''},receipts:{t:'Receipts',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -2818,7 +2818,7 @@ var BP_NAV=[
   {id:'dashboard',l:'Dashboard',ico:'dashboard'},
   {id:'convos',l:'Conversations',ico:'convos',kids:[['messaging','Texts'],['email','Email'],['teamchat','Team chat']]},
   {id:'calendar',l:'Calendar',ico:'calendar'},
-  {id:'leads',l:'Leads',ico:'leads',kids:[['contacts','Contacts'],['checks','Lead stats']] /* 2026-11-25: Calculators and Automations live in Settings now */ /* 'leadsources' still opens if called, just out of the menu */},
+  {id:'leads',l:'Leads',ico:'leads',kids:[['contacts','Contacts'],['checks','Lead stats'],['reviews','Reviews']] /* 2026-11-25: Calculators and Automations live in Settings now */ /* 'leadsources' still opens if called, just out of the menu */},
   {id:'projects',l:'Jobs',ico:'projects',kids:[['activejobs','Active'],['assets','Equipment'],['routing','Driving routes']]},
   {id:'people',l:'Employees',ico:'hardhat',kids:[['employees','Employees'],['subs','Subcontractors']]} /* its own branch since 2026-11-20 (was under Jobs) */,
   {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['finincome','Income'],['finexpenses','Expenses'],['invoices','Invoices'],['estimates','Estimates'],['finarchive','Tax years'],['payouts','Card payments'],['quickbooks','QuickBooks']]},
@@ -2838,7 +2838,7 @@ function bpNavGroupOf(v){
     if(g.kids)for(var j=0;j<g.kids.length;j++)if(g.kids[j][0]===v)return g.id;}
   return null;
 }
-var BP_MS={crewdash:'home',crewclock:'schedule',crewhome:'groups',crewprojects:'construction',crewid:'badge',dashboard:'grid_view',projects:'construction',supply:'inventory_2',finances:'payments',leads:'person_search',marketing:'campaign',ai:'smart_toy',aiteam:'diversity_3',settings:'tune'};
+var BP_MS={reviews:'reviews',crewdash:'home',crewclock:'schedule',crewhome:'groups',crewprojects:'construction',crewid:'badge',dashboard:'grid_view',projects:'construction',supply:'inventory_2',finances:'payments',leads:'person_search',marketing:'campaign',ai:'smart_toy',aiteam:'diversity_3',settings:'tune'};
 function bpBuildNav(){ if(window.bpShell)bpShell.buildNav(); }
 /* A branch header opens or closes its own branch and nothing else: tapping
    "Projects" must not yank you off the page you are reading, and it must not
@@ -2877,7 +2877,7 @@ function bpNav(v){
   else document.getElementById('bpxVtitle').textContent=BPVIEWS[v].t;
   if(!again){ bpSpin(true); area.classList.remove('bpx-in');void area.offsetWidth; }
   if(bpLocked(v)){ area.innerHTML=bpUpgradeCard(v); bpSpin(false); area.classList.add('bpx-in'); if(!again)bpScrollTop(); return; }
-  ({assets:function(){window.bpAssetsPage?bpAssetsPage():bpSpin(false);},crewdash:function(){window.bpCrewDash?bpCrewDash():bpSpin(false);},crewclock:window.bpCrewClock,crewhome:window.bpCrewHome,crewprojects:window.bpCrewProjects,crewid:window.bpCrewId,crewmsgs:function(){window.bpCrewMsgs?bpCrewMsgs():bpSpin(false);},subjobs:function(){window.bpSubJobs?bpSubJobs():bpSpin(false);},subinvoices:function(){window.bpSubInvoices?bpSubInvoices():bpSpin(false);},subchanges:function(){window.bpSubChanges?bpSubChanges():bpSpin(false);},subcomply:function(){window.bpSubComply?bpSubComply():bpSpin(false);},subcompany:function(){window.bpSubCompany?bpSubCompany():bpSpin(false);},subs:function(){window.bpSubsPage?bpSubsPage():bpSpin(false);},quote:function(){window.bpQuotePage?bpQuotePage():bpSpin(false);},invoicebuilder:function(){window.bpInvoicePage?bpInvoicePage():bpSpin(false);},routing:function(){var j=bpJobsGet();bpJobMapView(j.filter(function(x){return x.status==='active';}),j.filter(function(x){return x.status==='done';}));},teamchat:function(){window.bpTeamChat?bpTeamChat():bpSpin(false);},dashboard:bpDashboard,messaging:bpMessaging,email:bpEmailPage,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,employees:bpEmployees,installations:function(){window.bpInstalls?bpInstalls():bpSpin(false);},finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,finincome:bpFinIncome,finexpenses:bpFinExpenses,finarchive:function(){window.bpFinArchive?bpFinArchive():bpSpin(false);},payouts:bpPayouts,quickbooks:function(){window.bpQuickBooks?bpQuickBooks():bpSpin(false);},checks:function(){window.bpChecks?bpChecks():bpSpin(false);},website:function(){window.bpWebsite?bpWebsite():bpSpin(false);},connections:function(){window.bpWebConnections?bpWebConnections():bpSpin(false);},leadsources:bpLeadSources,automations:function(){window.bpAutomations?bpAutomations():bpSpin(false);},marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,matlists:function(){window.bpMatLists?bpMatLists():bpSpin(false);},receipts:function(){window.bpReceiptsPage?bpReceiptsPage():bpSpin(false);},prices:function(){window.bpPrices?bpPrices():bpSpin(false);},mattemplates:function(){window.bpMatTemplates?bpMatTemplates():bpSpin(false);},reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings,aiteam:function(){window.bpAiTeam?bpAiTeam():bpSpin(false);}}[v])();
+  ({assets:function(){window.bpAssetsPage?bpAssetsPage():bpSpin(false);},crewdash:function(){window.bpCrewDash?bpCrewDash():bpSpin(false);},crewclock:window.bpCrewClock,crewhome:window.bpCrewHome,crewprojects:window.bpCrewProjects,crewid:window.bpCrewId,crewmsgs:function(){window.bpCrewMsgs?bpCrewMsgs():bpSpin(false);},subjobs:function(){window.bpSubJobs?bpSubJobs():bpSpin(false);},subinvoices:function(){window.bpSubInvoices?bpSubInvoices():bpSpin(false);},subchanges:function(){window.bpSubChanges?bpSubChanges():bpSpin(false);},subcomply:function(){window.bpSubComply?bpSubComply():bpSpin(false);},subcompany:function(){window.bpSubCompany?bpSubCompany():bpSpin(false);},subs:function(){window.bpSubsPage?bpSubsPage():bpSpin(false);},quote:function(){window.bpQuotePage?bpQuotePage():bpSpin(false);},invoicebuilder:function(){window.bpInvoicePage?bpInvoicePage():bpSpin(false);},routing:function(){var j=bpJobsGet();bpJobMapView(j.filter(function(x){return x.status==='active';}),j.filter(function(x){return x.status==='done';}));},teamchat:function(){window.bpTeamChat?bpTeamChat():bpSpin(false);},dashboard:bpDashboard,messaging:bpMessaging,email:bpEmailPage,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,employees:bpEmployees,installations:function(){window.bpInstalls?bpInstalls():bpSpin(false);},finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,finincome:bpFinIncome,finexpenses:bpFinExpenses,finarchive:function(){window.bpFinArchive?bpFinArchive():bpSpin(false);},payouts:bpPayouts,quickbooks:function(){window.bpQuickBooks?bpQuickBooks():bpSpin(false);},checks:function(){window.bpChecks?bpChecks():bpSpin(false);},reviews:function(){window.bpReviewsPage?bpReviewsPage():bpSpin(false);},website:function(){window.bpWebsite?bpWebsite():bpSpin(false);},connections:function(){window.bpWebConnections?bpWebConnections():bpSpin(false);},leadsources:bpLeadSources,automations:function(){window.bpAutomations?bpAutomations():bpSpin(false);},marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,matlists:function(){window.bpMatLists?bpMatLists():bpSpin(false);},receipts:function(){window.bpReceiptsPage?bpReceiptsPage():bpSpin(false);},prices:function(){window.bpPrices?bpPrices():bpSpin(false);},mattemplates:function(){window.bpMatTemplates?bpMatTemplates():bpSpin(false);},reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings,aiteam:function(){window.bpAiTeam?bpAiTeam():bpSpin(false);}}[v])();
   area.classList.add('bpx-in');
   if(!again)bpScrollTop();
 }
@@ -9259,6 +9259,7 @@ function bpHpLoad(){
   return bpHpApi('get').then(function(d){
     if(!d||!d.ok){bpHpErr(d&&d.error==='not_found'?'This link isn\'t active. It may have been turned off or replaced. Ask your contractor for a new one.':(d&&d.error)||'We couldn\'t load your project.');return;}
     _bpHp.d=d; bpHpRender(); bpHpAcct();
+    if(/[#&]review=1/.test(location.hash||'')&&d.reviewable&&window.bpHpRevOpen){setTimeout(function(){bpHpRevOpen();},250);try{history.replaceState(null,'','#home='+_bpHp.token);}catch(e){}}
     if(window.bpCustLink)bpCustLink.seen('home',_bpHp.token,{title:(d.job||{}).title,biz:(d.business||{}).name,name:(d.customer||{}).name||''});
   }).catch(function(){bpHpErr('We couldn\'t load your project just now. Check your connection and reload the page.');});
 }
@@ -9530,7 +9531,7 @@ function bpHpPane(t){
     return (pend?'<button type="button" class="hp-note warn" onclick="bpHpTab(\'changes\')"><span class=ms>edit_document</span><span>Your contractor sent '+(pend===1?'a change':pend+' changes')+' for you to review</span><span class="ms hp-go">chevron_right</span></button>':'')
       +bpHxHero(d,pct,done,cur,later,fin)
       +bpHxStrip(d)
-      +'<div class="hx-cols"><div class="hx-col">'+hero+visit+bpHxCrew(d,done)+tiles+'</div><div class="hx-col">'+money+latest+bpHpAcctCard()+'</div></div>';
+      +'<div class="hx-cols"><div class="hx-col">'+(window.bpHpRevCard?bpHpRevCard(d):'')+hero+visit+bpHxCrew(d,done)+tiles+'</div><div class="hx-col">'+money+latest+bpHpAcctCard()+'</div></div>';
   }
   if(t==='sched')return bpHpSched();
   if(t==='photos'){
@@ -9790,10 +9791,11 @@ function bpPrDetHtml(D){
   if(bp)rate+=p.sample?'<div class="pr-score"><div class="pr-score-n">'+bp.rating.toFixed(1)+'</div><div>'+bpPrStars(bp.rating,'lg')+'<span>'+bpPrNum(bp.count)+' sample '+(bp.count===1?'review':'reviews')+'</span></div><em class="pr-badge smp">Sample</em></div>'
     :'<div class="pr-score"><div class="pr-score-n">'+bp.rating.toFixed(1)+'</div><div>'+bpPrStars(bp.rating,'lg')+'<span>'+bpPrNum(bp.count)+' verified BuilderPro '+(bp.count===1?'job':'jobs')+'</span></div><em class="pr-badge"><span class=ms>verified</span>Verified</em></div>';
   if(yp)rate+='<a class="pr-score yelp" href="'+bpHpEscA(yp.url)+'" target="_blank" rel="noopener"><div class="pr-score-n">'+yp.rating.toFixed(1)+'</div><div>'+bpPrStars(yp.rating,'lg y')+'<span>'+bpPrNum(yp.count)+' reviews on <b class="yelp-w">Yelp</b></span></div><span class="ms pr-out">open_in_new</span></a>';
+  if(bp&&full&&window.bpPrRevDetail)rate+=bpPrRevDetail(bp);
   if(!rate)rate='<div class="pr-score none"><span class=ms>reviews</span><div><b>New on BuilderPro</b><span>No reviews here yet. Ratings from finished jobs show up as homeowners leave them.</span></div></div>';
   /* reviews */
   var rv='';
-  ((bp&&bp.reviews)||[]).forEach(function(r){rv+='<div class="pr-rv"><div class="pr-rv-h">'+bpPrStars(r.rating)+'<b>'+bpEsc(r.name||'Homeowner')+'</b><span>'+bpEsc([r.job,bpPrWhen(r.at)].filter(Boolean).join(' · '))+'</span></div><p>'+bpEsc(r.text)+'</p>'+(r.sample||p.sample?'<em class="pr-badge sm smp">Sample review</em>':'<em class="pr-badge sm"><span class=ms>verified</span>Verified BuilderPro job</em>')+'</div>';});
+  ((bp&&bp.reviews)||[]).forEach(function(r){rv+='<div class="pr-rv"><div class="pr-rv-h">'+bpPrStars(r.rating)+'<b>'+bpEsc(r.name||'Homeowner')+'</b><span>'+bpEsc([r.job,bpPrWhen(r.at)].filter(Boolean).join(' · '))+'</span></div><p>'+bpEsc(r.text)+'</p>'+(window.bpPrRevExtra?bpPrRevExtra(r,p.name):'')+(r.sample||p.sample?'<em class="pr-badge sm smp">Sample review</em>':'<em class="pr-badge sm"><span class=ms>verified</span>Verified BuilderPro job</em>')+'</div>';});
   ((yp&&yp.reviews)||[]).forEach(function(r){rv+='<div class="pr-rv"><div class="pr-rv-h">'+bpPrStars(r.rating,'y')+'<b>'+bpEsc(r.name||'Yelp user')+'</b><span>'+bpEsc(bpPrWhen(r.at))+'</span></div><p>'+bpEsc(r.text)+(r.url?' <a href="'+bpHpEscA(r.url)+'" target="_blank" rel="noopener">Read more on Yelp</a>':'')+'</p></div>';});
   var svcs=(p.services||[]).map(function(s){return '<span>'+bpEsc(s)+'</span>';}).join('');
   var sent=_bpPr.sent[D.id];
@@ -10321,7 +10323,7 @@ function bpMyEnter(s){
   document.title='Home · BuilderPro';
   var first=bpHoFirst(s);
   b.innerHTML='<div class="ho-hi"><span>'+bpEsc(bpHoGreet()+(first?', '+first:''))+'</span><h1 id="hoSum">Your home projects</h1></div>'
-    +'<div class="ho-grid"><div class="ho-col"><div id="hoAtt"></div>'+bpHoSec('Projects','<div id="myList" class="ho-projs"><div class="pr-card pr-skel"><i></i><i></i><i></i></div></div>')+'<div id="hoPros"></div></div>'
+    +'<div class="ho-grid"><div class="ho-col"><div id="hoAtt"></div>'+bpHoSec('Projects','<div id="myList" class="ho-projs"><div class="pr-card pr-skel"><i></i><i></i><i></i></div></div>')+'<div id="hoPast"></div><div id="hoPros"></div></div>'
     +'<aside class="ho-col ho-side"><div id="hoCos"></div><div id="myDocs"></div><div id="myReqs"></div><div id="hoUpd"></div></aside></div>'
     +(bpIsHomeowner(s)?'':'<p class="my-note"><span class=ms>info</span>This is a contractor login. <a href="/app.html?portal=1">Open the BuilderPro app</a></p>');
   save.then(function(){
@@ -10350,13 +10352,38 @@ function bpHoDraw(projs,reqs,docs,ups){
   var A=document.getElementById('hoAtt');
   if(A)A.innerHTML=att.length?bpHoSec('Needs your attention','<div class="ho-card ho-atts">'+att.join('')+'</div>')
     :(live.length?'<div class="ho-calm"><span class=ms>task_alt</span><div><b>You’re all caught up</b><span>Nothing due and no new updates. We’ll tell you when something changes.</span></div></div>':'');
-  L.innerHTML=projs.length?projs.map(bpHoProj).join('')
+  /* finished projects move to "Past projects" (bpHoPast); the list above is what's still going */
+  var isDone=function(x){return x.d&&x.d.ok&&(x.d.job||{}).status==='done';};
+  var past=projs.filter(isDone), cur=projs.filter(function(x){return !isDone(x);});
+  bpHoPast(past);
+  L.innerHTML=cur.length?cur.map(bpHoProj).join('')
+    :past.length?'<div class="ho-empty sm"><span class=ms>task_alt</span><div><b>Nothing in progress</b><span>Your finished projects are under Past projects.</span></div></div>'
     :(docs.length?'<div class="ho-empty sm"><span class=ms>home_work</span><div><b>No project pages yet</b><span>Your estimates and agreements are listed '+(window.innerWidth>=980?'on the right':'below')+'. When a job starts, its project page shows up here.</span></div></div>'
     :'<div class="ho-empty"><span class="pr-empty-ic"><span class=ms>add_home_work</span></span><b>No projects yet</b><p>When your contractor sends you a project link, open it while you’re signed in and it’s saved here.</p><button type="button" class="hx-btn pri" onclick="bpGo(\'#pros\')"><span class=ms>person_search</span>Find a pro</button></div>');
   bpHoCos(live);
   bpHoSide(reqs,docs,ups);
   var G=document.querySelector('#myBody .ho-grid'); if(G)G.classList.toggle('ho-one',!live.length&&!reqs.length&&!docs.length&&!ups.some(function(n){return n.read_at;}));
   bpHoNear(live);
+}
+/* Past projects: every finished job, newest first, with its review (or a nudge to leave one) */
+var _bpHoPastAll=false;
+function bpHoPast(past){
+  var el=document.getElementById('hoPast'); if(!el)return;
+  if(!past.length){el.innerHTML='';return;}
+  var when=function(x){var j=x.d.job||{};return String(j.done_at||j.finish||'');};
+  past.sort(function(a,z){return when(z).localeCompare(when(a));});
+  var show=_bpHoPastAll?past:past.slice(0,4);
+  var rows=show.map(function(x){
+    var d=x.d,j=d.job||{},b=d.business||{},r=d.review,w=when(x);
+    var fin=w?'Finished '+bpHpDay(w.slice(0,10),{month:'short',year:'numeric'}):'Finished';
+    var side=r?'<span class="ho-past-r" aria-label="You rated it '+r.rating+' out of 5">'+bpPrStars(r.rating)+'</span>'
+      :'<span class="ho-past-ask" role="button" tabindex="0" onclick="event.stopPropagation();bpGo(\'#home='+bpHpEscA(x.token)+'&review=1\')">Rate it</span>';
+    return '<button type="button" class="ho-row ho-past" onclick="bpGo(\'#home='+bpHpEscA(x.token)+'\')"><span class="ho-row-ic ok"><span class=ms>task_alt</span></span>'
+      +'<div><b>'+bpEsc(j.title||'Project')+'</b><span>'+bpEsc([b.name,fin].filter(Boolean).join(' · '))+'</span></div>'+side+'</button>';
+  }).join('');
+  var more=past.length>4?'<button type="button" class="ho-more ho-past-more" onclick="_bpHoPastAll=!_bpHoPastAll;bpHoPast(window._bpHoPastList||[])">'+(_bpHoPastAll?'Show fewer':'Show all '+past.length)+'<span class=ms>'+(_bpHoPastAll?'expand_less':'expand_more')+'</span></button>':'';
+  window._bpHoPastList=past;
+  el.innerHTML=bpHoSec('Past projects'+' <span class="ho-count">'+past.length+'</span>','<div class="ho-card">'+rows+'</div>'+more);
 }
 /* one card per contractor they work with: call, email, open the project */
 function bpHoCos(live){
@@ -15156,7 +15183,7 @@ window.bpRepCopy=function(text,btn){
 <!--/app-only-->
 </body>
 <!--app-only-->
-<link rel="stylesheet" href="portal/app.css?v=f871b2d1f8" data-bundle>
+<link rel="stylesheet" href="portal/app.css?v=8e120030ae" data-bundle>
 <script src="portal/team.js?v=20261115a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261127qb"></script>
@@ -15199,6 +15226,8 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/installs.js?v=20261118f"></script>
 <script src="portal/assets.js?v=20261127cj"></script>
 <script src="portal/custlink.js?v=20261118f"></script>
+<script src="portal/hreview.js?v=20261127rv"></script>
+<script src="portal/bizreviews.js?v=20261127rv"></script>
 <script src="portal/estpick.js?v=20261118f"></script>
 <script src="portal/reviews.js?v=20261004a"></script>
 <script src="portal/automations.js?v=20261126sw"></script>
@@ -15208,11 +15237,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261125ls"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261127-port7c"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261127-port7c"></script>
-<script src="site/vendor/SplitText.min.js?v=20261127-port7c"></script>
-<script src="site/site.js?v=20261127-port7c"></script>
-<script src="site/present.js?v=20261127-port7c"></script>
+<script src="site/vendor/gsap.min.js?v=20261127-reviews"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261127-reviews"></script>
+<script src="site/vendor/SplitText.min.js?v=20261127-reviews"></script>
+<script src="site/site.js?v=20261127-reviews"></script>
+<script src="site/present.js?v=20261127-reviews"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>

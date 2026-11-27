@@ -125,7 +125,7 @@ function place(p: Pro, loc: string): "area" | "nearby" | "" {
   if (String(p.city || "").toLowerCase().includes(l)) return "nearby";
   return "";
 }
-const COLS = "id,name,trade,services,about,city,state,zips,area,phone,website,logo,color,yelp_id,yelp,yelp_at,photos,bp_rating,bp_count,bp_reviews,sample";
+const COLS = "id,name,trade,services,about,city,state,zips,area,phone,website,logo,color,yelp_id,yelp,yelp_at,photos,bp_rating,bp_count,bp_reviews,bp_cats,bp_hire,sample";
 const pub = (p: Pro, m: string) => ({
   id: p.id, name: p.name, trade: p.trade, services: services(p.services), about: p.about,
   city: p.city, state: p.state, area: p.area, phone: p.phone,
@@ -172,9 +172,32 @@ function summary(p: Pro) {
   const photos: string[] = [...(Array.isArray(p.photos) ? p.photos : []), ...(Array.isArray(y.photos) ? y.photos : [])];
   return {
     cover: photos[0] || "", photoCount: photos.length,
-    builderpro: p.bp_count > 0 ? { rating: half(p.bp_rating), count: p.bp_count } : null,
+    builderpro: p.bp_count > 0 ? { rating: half(p.bp_rating), count: p.bp_count, hire: Number.isFinite(p.bp_hire) ? p.bp_hire : null } : null,
     yelp: y.count > 0 ? { rating: half(y.rating), count: y.count, url: y.url } : null,
   };
+}
+
+/* review photos are the job's own photos (private bucket): signed for an hour when a listing opens */
+async function signRef(ref: unknown): Promise<string> {
+  const s = String(ref ?? "");
+  if (/^https:\/\//i.test(s)) return s;
+  if (!s.startsWith("sb:")) return "";
+  const path = s.slice(3).split("#")[0];
+  if (!path || path.includes("..")) return "";
+  try {
+    const r = await fetch(`${SB_URL}/storage/v1/object/sign/project-files/${path.split("/").map(encodeURIComponent).join("/")}`, {
+      method: "POST", headers: sbH, body: JSON.stringify({ expiresIn: 3600 }), signal: AbortSignal.timeout(5000),
+    });
+    const d = await r.json();
+    const u = d?.signedURL || d?.signedUrl || "";
+    return u ? (u.startsWith("http") ? u : `${SB_URL}/storage/v1${u}`) : "";
+  } catch { return ""; }
+}
+async function bpReviews(list: unknown) {
+  const rs = Array.isArray(list) ? list.slice(0, 12) : [];
+  return await Promise.all(rs.map(async (r: Pro) => ({
+    ...r, photos: (await Promise.all((Array.isArray(r?.photos) ? r.photos : []).slice(0, 6).map(signRef))).filter(Boolean),
+  })));
 }
 
 /* ------------------------------------------- calculator, booking, HighLevel */
@@ -330,7 +353,10 @@ async function one(b: Pro, req: Request) {
     pro: {
       ...pub(p, ""), photos,
       zips: p.zips ?? [], calc, book: ex.book, chat: ex.chat, assistant: ex.assistant,
-      builderpro: p.bp_count > 0 ? { rating: half(p.bp_rating), count: p.bp_count, reviews: Array.isArray(p.bp_reviews) ? p.bp_reviews : [] } : null,
+      builderpro: p.bp_count > 0 ? {
+        rating: half(p.bp_rating), count: p.bp_count, reviews: await bpReviews(p.bp_reviews),
+        cats: p.bp_cats && typeof p.bp_cats === "object" ? p.bp_cats : {}, hire: Number.isFinite(p.bp_hire) ? p.bp_hire : null,
+      } : null,
       yelp: y.count > 0 ? { rating: half(y.rating), count: y.count, url: y.url, reviews: y.reviews ?? [] } : null,
     },
   });
