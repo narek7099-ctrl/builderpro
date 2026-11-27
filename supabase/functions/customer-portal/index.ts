@@ -22,6 +22,9 @@
 //          hire?:bool, photos?:[k of photos[]], share?:bool }  (once the job is done; posting
 //          again edits it). "get" also returns review (theirs, with the contractor's
 //          reply), reviewable and reviewUrl (the business's Google link).
+//   A link the owner turned off still opens a finished job for a signed-in homeowner
+//   who saved it (Authorization: their session): read-only, archived:true; only
+//   "get" and "review" work then.
 //   POST { op:"pay", token } -> { ok, url } a BuilderPro pay link for the
 //          homeowner's newest open invoice: card checkout on the contractor's
 //          own Stripe (stripe-pay), which then marks the invoice paid
@@ -191,16 +194,36 @@ async function signed(ref: unknown): Promise<string> {
   } catch { return ""; }
 }
 
-type Ctx = { link: Row; job: Row; jobs: Row[] };
-async function byToken(token: unknown): Promise<Ctx | null> {
+type Ctx = { link: Row; job: Row; jobs: Row[]; archived?: boolean };
+/* the signed-in homeowner behind the request, or "" (the page sends their session when they have one) */
+async function homeownerOf(req: Request): Promise<string> {
+  const jwt = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+  if (!jwt || jwt.split(".").length !== 3) return "";
+  try {
+    const r = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${jwt}` }, signal: AbortSignal.timeout(5000) });
+    if (!r.ok) return "";
+    const u = await r.json();
+    return UUID.test(String(u?.id ?? "")) ? String(u.id) : "";
+  } catch { return ""; }
+}
+/* An enabled link opens for anyone holding it. A link the owner turned off still
+   opens a FINISHED job, read-only, for a signed-in homeowner who saved it to their
+   account (homeowner_projects): their past projects stay theirs. */
+async function byToken(token: unknown, req: Request): Promise<Ctx | null> {
   const t = String(token ?? "");
   if (!/^[a-f0-9]{40,64}$/i.test(t)) return null;
-  const l = rows(await rest(`customer_portal_links?token=eq.${t.toLowerCase()}&enabled=is.true&select=*&limit=1`))[0];
+  const l = rows(await rest(`customer_portal_links?token=eq.${t.toLowerCase()}&select=*&limit=1`))[0];
   if (!l) return null;
   const pf = rows(await rest(`portal_finance?owner=eq.${l.owner}&select=jobs&limit=1`))[0];
   const jobs = arr(pf?.jobs);
   const job = jobs.find((j) => String(j?.id ?? "") === l.job_id);
-  return job ? { link: l, job, jobs } : null;
+  if (!job) return null;
+  if (l.enabled) return { link: l, job, jobs };
+  if (job.status !== "done") return null;
+  const uid = await homeownerOf(req);
+  if (!uid) return null;
+  const saved = rows(await rest(`homeowner_projects?user_id=eq.${uid}&token=eq.${t.toLowerCase()}&select=token&limit=1`))[0];
+  return saved ? { link: l, job, jobs, archived: true } : null;
 }
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);
@@ -362,6 +385,7 @@ async function view(c: Ctx) {
 
   return {
     ok: true,
+    archived: !!c.archived,
     business: {
       name: clean(co.name, 120), logo: /^https:\/\//i.test(String(co.logoUrl ?? "")) ? co.logoUrl : "",
       color: /^#[0-9a-f]{6}$/i.test(String(co.brandColor ?? "")) ? String(co.brandColor) : "",
@@ -412,11 +436,14 @@ Deno.serve(async (req) => {
   try {
     // twenty wrong tokens from one address and it waits, right or wrong
     if (recent("miss:" + ip) >= 20) return json({ ok: false, error: "Too many requests. Try again in a few minutes." }, 429);
-    const c = await byToken(b.token);
+    const c = await byToken(b.token, req);
     if (!c) { limited("miss:" + ip, 20); return json({ ok: false, error: "not_found" }, 404); }
     const { link: l } = c;
     const owner = l.owner, jid = encodeURIComponent(l.job_id);
+    // an archived project (link turned off, job finished) is read-only, except the homeowner's own review
+    if (c.archived && b.op !== "get" && b.op !== "review") return json({ ok: false, error: "This project is archived, so messages and payments are closed. Call or text your contractor directly." });
 
+    if (b.op === "get" && c.archived) return json(await view(c));
     if (b.op === "get") {
       const now = new Date().toISOString();
       // seen: the link (owner sees "last viewed"), and the business's messages

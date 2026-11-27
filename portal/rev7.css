@@ -211,3 +211,7 @@ html.hrv-lock,html.hrv-lock body{overflow:hidden}
 /* the project page hides everything else on body (app.html, body.bp-signing>*); the sheet is let through, like the photo viewer */
 body>.hrv:not(#bpSign):not(#x1):not(#x2){display:flex !important;visibility:visible !important}
 #bpSign .ho-past>div>span{white-space:normal !important;overflow:visible !important;text-overflow:clip !important}
+/* an archived project (link turned off, job finished): read-only for the homeowner */
+#bpSign .hp-note.arch{background:#f2f4f7 !important;color:#344054 !important;border-color:transparent !important}
+#bpSign .hp-app.is-arch :is(.hp-compose,.hp-chg-h .hx-btn,.hp-chg-h .hp-btn,.hx-tile[onclick*="changes"],.hx-tile[onclick*="msgs"]){display:none !important}
+#bpSign .hp-app.is-arch :is(.hp-mob-b.pri,.hp-who-acts button,.hp-chat-empty p){display:none !important}
