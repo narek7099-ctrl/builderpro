@@ -72,3 +72,79 @@
   #bpSign .hp-tabbar .hp-svg{display:grid;place-items:center;line-height:0}
   #bpSign .hp-tabbar .hp-svg .hl-i{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 }
+
+/* ==================== computers: the contractor desktop ====================
+   sidebar   232px, navy (#0b2246 > #031127 with a blue glow top left),
+             40px nav rows, 10px corners, white text, a light row when active
+   top bar   52px, white 96%, a 1px #e9edf3 line
+   page      white fading to #f7f9fc
+   cards     14px corners, a 1px #e3e8ef outline, a 1px soft shadow
+   The project page (#home) uses its own sidebar in that style; the signed-in
+   homeowner pages (Home, Find a pro, Account) turn their top bar into it. */
+@media (min-width:900px){
+  body.bp-home,#bpSign.hp{--hp-bg:#f7f9fc !important}
+  body.bp-home{background:linear-gradient(180deg,#fff 0%,#f7f9fc 100%) fixed !important}
+  #bpSign.hp .hp-app,#bpSign.hp .hp-main,#bpSign.hp .hp-content,#bpSign.hp .pr-page{background:transparent !important}
+
+  /* ---- the project page's sidebar ---- */
+  #bpSign .hp-side{width:232px !important;padding:14px 8px 14px !important;border-right:0 !important;color:#fff;
+    background:radial-gradient(420px 260px at 0% 0%,rgba(0,111,255,.28),transparent 70%),linear-gradient(180deg,#0b2246 0%,#061a37 45%,#031127 100%) !important}
+  #bpSign .hp-brand{border-bottom-color:rgba(255,255,255,.08) !important;padding:6px 10px 16px !important}
+  #bpSign .hp-brand b{color:#fff !important}
+  #bpSign .hp-brand span{color:#98a4b3 !important}
+  #bpSign .hp-nav{gap:2px !important}
+  #bpSign .hp-nav button{height:40px !important;padding:0 10px !important;border-radius:10px !important;font-size:14px !important;font-weight:600 !important;color:#e6ebf2 !important}
+  #bpSign .hp-nav button .ms{color:#98a4b3 !important}
+  #bpSign .hp-nav button:hover{background:rgba(255,255,255,.06) !important;color:#fff !important}
+  #bpSign .hp-nav button.on{background:rgba(255,255,255,.11) !important;color:#fff !important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06) !important}
+  #bpSign .hp-nav button.on .ms{color:#fff !important}
+  #bpSign .hp-side-foot{border-top-color:rgba(255,255,255,.08) !important}
+  #bpSign .hp-who b{color:#fff !important}
+  #bpSign .hp-who span{color:#98a4b3 !important}
+  #bpSign .hp-who-acts .hp-btn{background:rgba(255,255,255,.08) !important;border-color:transparent !important;color:#fff !important}
+  #bpSign .hp-who-acts .hp-btn .ms{color:#c5cdd8 !important}
+  #bpSign .hp-who-acts .hp-btn:hover{background:rgba(255,255,255,.14) !important}
+  #bpSign .hp-priv{color:#8d99a8 !important}
+  #bpSign .hp-side .bp-pow{color:#8d99a8 !important}
+  #bpSign .hp-side .bp-pow b{color:#c5cdd8 !important}
+  #bpSign .hp-home-link{color:#c5cdd8 !important}
+  #bpSign .hp-home-link:hover{background:rgba(255,255,255,.06) !important;color:#fff !important}
+
+  /* ---- top bars ---- */
+  #bpSign .hp-bar{min-height:52px !important;height:52px !important;padding:0 24px !important;background:rgba(255,255,255,.96) !important;border-bottom:1px solid #e9edf3 !important}
+  #bpSign .hp-proj-t b{font-size:17px !important;font-weight:700 !important}
+
+  /* ---- cards ---- */
+  #bpSign :is(.ho-card,.ho-proj,.hx-card,.hp-card,.pr-card,.my-auth,.hd-next,.hrv-mine,.hrv-ask){border-radius:14px !important;border:1px solid #e3e8ef !important;box-shadow:0 1px 2px rgba(16,24,40,.05) !important}
+  #bpSign .hd-hero:not(.has-ph),#bpSign .hx-hero:not(.has-ph){border-radius:14px !important;border:1px solid #e3e8ef !important;box-shadow:0 1px 2px rgba(16,24,40,.05) !important}
+  #bpSign .hd-hero.has-ph,#bpSign .hx-hero.has-ph{border-radius:14px !important;box-shadow:0 1px 2px rgba(16,24,40,.1) !important}
+  #bpSign :is(.hx-btn,.hp-btn:not(.sm)){min-height:38px !important;border-radius:10px !important;font-weight:600 !important}
+  #bpSign .ho-proj-acts button{height:38px !important;border-radius:10px !important;font-weight:600 !important}
+
+  /* ---- the signed-in homeowner pages: their top bar becomes the same navy sidebar ---- */
+  body.ho-has-tabs #bpSign .pr-page{padding-left:232px !important}
+  body.ho-has-tabs #bpSign .pr-pbar{position:fixed !important;left:0;top:0;bottom:0;z-index:30;width:232px !important;height:auto !important;min-height:100vh !important;
+    flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;gap:14px !important;padding:16px 8px 14px !important;border:0 !important;box-shadow:none !important;
+    background:radial-gradient(420px 260px at 0% 0%,rgba(0,111,255,.28),transparent 70%),linear-gradient(180deg,#0b2246 0%,#061a37 45%,#031127 100%) !important;
+    -webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+  body.ho-has-tabs #bpSign .pr-pbar .pr-brand{justify-content:center;padding:4px 0 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+  body.ho-has-tabs #bpSign .pr-pbar .pr-brand img{width:40px;height:40px}
+  body.ho-has-tabs #bpSign .pr-pbar .pr-brand b{display:none !important}
+  body.ho-has-tabs #bpSign .ho-bar-r{flex:1;display:flex !important;flex-direction:column !important;align-items:stretch !important;gap:2px}
+  body.ho-has-tabs #bpSign .ho-nav{display:flex !important;flex-direction:column !important;gap:2px !important;margin:0 !important}
+  body.ho-has-tabs #bpSign .ho-nav-a{height:40px !important;padding:0 10px !important;border-radius:10px !important;justify-content:flex-start;gap:11px !important;font-size:14px !important;font-weight:600 !important;color:#e6ebf2 !important;background:none !important}
+  body.ho-has-tabs #bpSign .ho-nav-a .ms{color:#98a4b3 !important}
+  body.ho-has-tabs #bpSign .ho-nav-a:hover{background:rgba(255,255,255,.06) !important;color:#fff !important}
+  body.ho-has-tabs #bpSign .ho-nav-a.on{background:rgba(255,255,255,.11) !important;color:#fff !important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06) !important}
+  body.ho-has-tabs #bpSign .ho-nav-a.on .ms{color:#fff !important}
+  body.ho-has-tabs #bpSign .ho-me{margin-top:auto !important;display:flex !important;align-items:center;gap:10px;width:100%;height:48px;padding:0 8px !important;border-radius:10px !important;background:none !important;border:0 !important;color:#fff !important;cursor:pointer;border-top:1px solid rgba(255,255,255,.08) !important;border-radius:0 !important;padding-top:12px !important;height:auto;box-shadow:none !important}
+  body.ho-has-tabs #bpSign .ho-me::after{content:"Account";font-size:14px;font-weight:600;color:#e6ebf2}
+  body.ho-has-tabs #bpSign .ho-me.on::after{color:#fff}
+  body.ho-has-tabs #bpSign .ho-me .ho-av{width:32px !important;height:32px !important;font-size:12px !important}
+  body.ho-has-tabs #bpSign .hp-powm{margin-left:0}
+}
+@media (min-width:900px){
+  /* the BuilderPro mark on navy: brightened, like the contractor sidebar's */
+  body.ho-has-tabs #bpSign .pr-pbar .pr-brand img,#bpSign .hp-side .hp-brand .bp-mark,#bpSign .hp-side .hp-avi img[src*="logo-mark"],#bpSign .hp-side img[src*="assets/brand/logo-mark"]{filter:brightness(2.1) saturate(1.15) drop-shadow(0 0 6px rgba(120,170,255,.35))}
+  body.ho-has-tabs #bpSign .pr-pbar .pr-brand img{width:44px !important;height:44px !important}
+}
