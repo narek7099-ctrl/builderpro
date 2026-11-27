@@ -526,3 +526,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-27 settings: no logo/brand: restore to 0f2454f
 - 2026-11-27 crew equipment locked to their jobs: restore to 3293a44
 - 2026-11-27 client portal always light: restore to 024e9d9
+- 2026-11-27 crew/sub/customer portals match contractor phone app: restore to 3985ce5

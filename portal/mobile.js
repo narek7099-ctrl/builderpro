@@ -117,7 +117,7 @@
     chip.innerHTML = '<span class="bp-mlogo"><img src="assets/brand/logo-mark-64.png" alt="BuilderPro" width="34" height="34"></span>';
     chip.setAttribute('aria-label', 'BuilderPro: account menu');
     var xx = $('bpx'); if (xx) xx.classList.toggle('bp-look-sb', look() === 'sidebar');
-    var x = $('bpx'); if (x) x.classList.toggle('bp-m-home', homeView(v || window._bpCurView));
+    var x = $('bpx'); if (x) x.classList.toggle('bp-m-home', homeView(v || window._bpCurView)); if (x) x.classList.toggle('bp-m-crewhome', role() === 'crew' && (v || window._bpCurView) === 'crewdash');
     /* the bottom tab says Jobs, so the page does too */
     /* (only the heading's text: replacing the whole box removed the h1 the shell retitles on every page) */
     var tt = top.querySelector('.hl-ttl h1') || top.querySelector('.hl-ttl'); if (tt && M.on() && role() === 'owner' && (v || window._bpCurView) === 'activejobs' && /^Projects$/.test(tt.textContent.trim())) tt.textContent = 'Jobs';
@@ -181,9 +181,9 @@
       more = '<button type="button" class="bp-sheet-row" onclick="bpMobile.appsClose();bpShell.ai()">' + ico('spark') + '<span>Ask ' + esc(window.BP_AI_NAME || 'Lisa') + ', your assistant</span></button>'
         + '<button type="button" class="bp-sheet-row" onclick="bpMobile.appsClose();bpShell.palette()">' + ico('search') + '<span>Search everything</span></button>';
     } else if (r === 'crew') {
-      grid = tile('crew', 'My crew', "bpMobile.nav('crewhome')") + tile('badge', 'My ID', "bpMobile.nav('crewid')") + tile('clock', 'Time clock', "bpMobile.nav('crewclock')") + tile('projects', 'Jobs', "bpMobile.nav('crewprojects')") + tile('tool', 'Equipment', "bpMobile.nav('assets')");
+      grid = tile('crew', 'My crew', "bpMobile.nav('crewhome')") + tile('badge', 'My ID', "bpMobile.nav('crewid')") + tile('clock', 'Time clock', "bpMobile.nav('crewclock')") + tile('tool', 'Equipment', "bpMobile.nav('assets')");
     } else {
-      grid = tile('badge', 'Compliance', "bpMobile.nav('subcomply')") + tile('crew', 'My company', "bpMobile.nav('subcompany')") + tile('page', 'Change orders', "bpMobile.nav('subchanges')") + tile('inv', 'Invoices', "bpMobile.nav('subinvoices')");
+      grid = tile('badge', 'Compliance', "bpMobile.nav('subcomply')") + tile('crew', 'My company', "bpMobile.nav('subcompany')");
     }
     var dark = !!($('bpx') && $('bpx').classList.contains('bpx-dark'));
     var el = document.createElement('div'); el.id = 'bpApps'; el.className = 'bp-sheet'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', r === 'owner' ? 'Apps' : 'More');

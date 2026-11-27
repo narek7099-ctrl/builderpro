@@ -1,0 +1,46 @@
+/* ==================================================================
+   Crew and sub apps on a phone, 2026-11-27: the same look as the
+   contractor's phone app. Logo top left on Today, the big greeting,
+   jobs as one grouped list, a white summary card for subs, and no
+   card titles that only repeat the page title.
+   Phones only (.bp-m). "@top" is expanded in site/assemble.py.
+   ================================================================== */
+
+/* crew Today: logo top left (no "Today" in the bar), a large greeting like the owner's Home */
+@top.bp-m.bp-m-crewhome .hl-top .hl-ttl{display:none !important}
+@top.bp-m.bp-m-crewhome .hl-top .bp-macct{display:flex !important;flex:0 0 auto !important}
+@top.bp-m .chm-hero{align-items:flex-end !important;margin:2px 0 14px !important}
+@top.bp-m .chm-hero .chm-av{display:none !important}
+@top.bp-m .chm-hero small{display:block !important;font-size:15px !important;font-weight:600 !important;color:var(--grey) !important;letter-spacing:0 !important;text-transform:none !important}
+@top.bp-m .chm-hero h2{margin:2px 0 2px !important;font-size:34px !important;line-height:1.1 !important;font-weight:800 !important;letter-spacing:-.025em !important;color:var(--ink) !important}
+@top.bp-m .chm-hero span{font-size:15px !important;color:var(--grey) !important}
+
+/* crew Jobs: one grouped list, like the owner's Jobs */
+@top.bp-m .ca-wrap:has(>.ca-proj){gap:0 !important;filter:drop-shadow(0 1px 1px rgba(15,23,42,.06)) !important}
+@top.bp-m .ca-wrap>.ca-proj{margin:0 !important;border-radius:0 !important;box-shadow:none !important;border:0 !important;border-bottom:.5px solid var(--line) !important;background:var(--card) !important}
+@top.bp-m .ca-wrap>.ca-proj:first-of-type{border-radius:18px 18px 0 0 !important}
+@top.bp-m .ca-wrap>.ca-proj:last-of-type{border-radius:0 0 18px 18px !important;border-bottom:0 !important}
+@top.bp-m .ca-wrap>.ca-proj:only-of-type{border-radius:18px !important}
+
+/* team chat: the big title already says Messages */
+@top.bp-m .tc-sh:not(:has(button)){display:none !important}
+
+/* sub Jobs: a white summary card instead of the dark navy block */
+@top.bp-m .sa-hello{background:var(--card) !important;color:var(--ink) !important;margin:0 0 12px !important;padding:16px !important;border-radius:18px !important;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(15,23,42,.07) !important}
+@top.bp-m .sa-hello :is(h1,h2,h3,b,strong){color:var(--ink) !important}
+@top.bp-m .sa-hello h2{font-size:20px !important;font-weight:700 !important}
+@top.bp-m .sa-hello :is(small,span,p,label){color:var(--grey) !important}
+@top.bp-m .sa-hello .sa-kpis>div{background:var(--bg) !important;border:0 !important;box-shadow:none !important;border-radius:12px !important}
+@top.bp-m .sa-hello .sa-kpis small{text-transform:none !important;letter-spacing:0 !important;font-size:12px !important}
+@top.bp-m .sa-hello .sa-kpis b{color:var(--ink) !important}
+@top.bp-m .sa-hello .sa-kpis>div:last-child b{color:var(--blue) !important}
+
+/* sub Invoices and Change orders: no repeated title; the add button runs full width like "+ Book" */
+@top.bp-m .sa-ph.sa-pg>h4{display:none !important}
+@top.bp-m .sa-ph.sa-pg{margin-bottom:12px !important}
+@top.bp-m .sa-ph.sa-pg .pm-btn{flex:1 1 auto !important;width:100% !important;justify-content:center !important;height:44px !important;border-radius:14px !important;border:0 !important;background:var(--blue-l) !important;color:var(--blue) !important;font-weight:700 !important;box-shadow:none !important}
+@top.bp-m .sa-ph.sa-pg .pm-btn .ms{color:var(--blue) !important}
+
+/* crew and sub cards are white like the owner's (they were a grey tint) */
+@top.bp-m .ca-wrap .bpx-panel{background:var(--card) !important}
+@top.bp-m .sa-hello>div>small{text-transform:none !important;letter-spacing:0 !important;font-size:13px !important;font-weight:600 !important}

@@ -114,3 +114,26 @@ body>.hp-view.on:not(#bpSign):not(#x1):not(#x2){display:flex !important;visibili
 #bpSign.hp .hx-hero:not(.has-ph) .hx-hchip:nth-child(2){color:#08775d;background:#e8f8f2}
 #bpSign.hp section.hx-hero:not(.has-ph){min-height:0 !important}
 #bpSign.hp .hx-hero:not(.has-ph) .hx-hero-in{padding-top:24px}
+
+/* =====================================================================
+   2026-11-27: the client pages follow the contractor's phone app: the
+   phone's own font, a large page title, bold card headings in sentence
+   case, round header buttons and soft cards without outlines.
+   ===================================================================== */
+#bpSign .hp-lt{display:none}
+#bpSign.hp .hx-h small{font-size:17px;font-weight:700;letter-spacing:-.01em;text-transform:none;color:var(--hp-ink,#0f1729)}
+#bpSign.hp .hp-card h2{font-size:17px;font-weight:700;letter-spacing:-.01em}
+@media (max-width:899px){
+  #bpSign,#bpSign :is(button,input,textarea,select,a,h1,h2,h3,b,p,span,small,label):not(.ms){font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+  #bpSign .hp-lt{display:block;margin:2px 4px 14px;font-size:34px;line-height:1.12;font-weight:800;letter-spacing:-.025em;color:var(--hp-ink,#0f1729)}
+  #bpSign .hp-card-h:has(>h2.hp-dup:only-child){display:none}
+  #bpSign .hp-card-h>h2.hp-dup,#bpSign :is(.hp-chg-h,.pr-hero-t) h1.hp-dup{display:none}
+  #bpSign.hp :is(.hx-card,.hp-card,.hx-tile,.pr-card,.my-auth){border-color:transparent;border-radius:18px;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(15,23,42,.07)}
+  #bpSign.hp .hx-hero:not(.has-ph){border-color:transparent}
+  #bpSign .hp-mob-b{width:40px;height:40px;flex:0 0 40px;border-radius:50%;border:0;background:var(--hp-soft,#f2f4f7)}
+  #bpSign .hp-mob-b.pri{background:var(--hp-blue,#006fff)}
+  #bpSign .hp-mob-b .ms{font-size:20px}
+  #bpSign .ho-hi span{font-size:15px}
+  #bpSign .ho-hi h1{font-size:34px;line-height:1.12}
+  #bpSign .ho-sec-h h2{font-size:20px;font-weight:700;letter-spacing:-.015em;text-transform:none;color:var(--hp-ink,#0f1729)}
+}
