@@ -531,3 +531,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-27 homeowner reviews (detail stars, replies, report), contractor Reviews page, Past projects: restore to 10624f8
 - 2026-11-27 past projects stay for homeowners after the link is turned off (read-only archive): restore to 3e15a08
 - 2026-11-27 homeowner Home dashboard: glance tiles, quick buttons, up next, photo cards, home care: restore to 7ec1eed
+- 2026-11-27 homeowner Home: one big project card instead of three tiles: restore to fd8f7e2

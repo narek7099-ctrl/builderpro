@@ -38,22 +38,34 @@
   function t12(t) { var m = /^(\d{1,2}):(\d{2})/.exec(t || ''); if (!m) return t || ''; var h = +m[1]; return ((h % 12) || 12) + (m[2] !== '00' ? ':' + m[2] : '') + (h < 12 ? ' AM' : ' PM'); }
   function dueOf(d) { var s = ((d.plan || {}).steps || []).filter(function (x) { return x.state === 'due'; })[0]; return s ? Math.max(0, (+s.amount || 0) - (+s.paid || 0)) : 0; }
 
-  /* ------------------------------------------------- at a glance --- */
+  /* ------------------------------------- the big project card --- */
+  /* the project they're in the middle of, front and centre: its latest photo,
+     what's being worked on, how far along, the next visit and what's owed */
   window.bpHoGlance = function (live) {
     var el = $('hoGlance'); if (!el) return;
-    var act = active(live);
-    if (!live.length) { el.innerHTML = ''; return; }
-    var v = visits(act)[0];
-    var left = act.reduce(function (t, x) { return t + Math.max(0, +((x.d.money || {}).due) || 0); }, 0);
-    var due = act.reduce(function (t, x) { return t + dueOf(x.d); }, 0);
-    var tile = function (ic, k, val, sub, on, cls) {
-      return '<button type="button" class="hd-g' + (cls ? ' ' + cls : '') + '"' + (on ? ' onclick="' + on + '"' : ' disabled') + '><span class="hd-g-ic"><span class=ms>' + ic + '</span></span>'
-        + '<small>' + k + '</small><b>' + val + '</b>' + (sub ? '<span>' + sub + '</span>' : '') + '</button>';
-    };
-    el.innerHTML = '<div class="hd-glance">'
-      + tile('construction', 'In progress', String(act.length), act.length === 1 ? esc((act[0].d.job || {}).title || 'Project') : act.length ? 'projects' : 'All done', act.length ? go(act[0].token) : '')
-      + tile('event', 'Next visit', v ? esc(day(v.date, { month: 'short', day: 'numeric' })) : 'None yet', v ? esc(day(v.date, { weekday: 'long' })) + (v.time ? ' · ' + t12(v.time) : '') : 'Not booked', v ? go(v.x.token, 'sched') : (act[0] ? go(act[0].token, 'sched') : ''))
-      + tile('account_balance_wallet', due > 0 ? 'Due now' : 'Left to pay', due > 0 ? usd(due) : left > 0 ? usd(left) : 'Paid up', due > 0 ? 'Tap to pay' : left > 0 ? 'over the project' : 'Nothing owed', act[0] ? go((act.filter(function (x) { return dueOf(x.d) > 0; })[0] || act[0]).token, 'pay') : '', due > 0 ? 'due' : '')
+    var x = window._bpHoHero;
+    if (!x || !x.d || !x.d.ok) { el.innerHTML = ''; return; }
+    var d = x.d, j = d.job || {}, b = d.business || {}, m = d.money || {};
+    var pct = Math.max(0, Math.min(100, Math.round(+j.progress || 0)));
+    var now = (j.phases || []).filter(function (p) { return !p.done; })[0];
+    var v = visits([x])[0], due = dueOf(d), left = Math.max(0, +m.due || 0);
+    var cover = (d.photos || []).length ? d.photos[d.photos.length - 1].url : '';
+    var logo = b.logo ? '<span class="hd-h-logo has"><img src="' + escA(b.logo) + '" alt=""></span>' : '<span class="hd-h-logo">' + esc((window.bpHpInitials ? bpHpInitials(b.name || '?') : (b.name || '?')[0])) + '</span>';
+    var late = now && now.due && now.due < today();
+    var fact = function (ic, k, val, cls) { return '<div class="hd-h-fact' + (cls ? ' ' + cls : '') + '"><span class=ms>' + ic + '</span><div><small>' + k + '</small><b>' + val + '</b></div></div>'; };
+    el.innerHTML = '<div class="hd-hero' + (cover ? ' has-ph' : '') + '" role="link" tabindex="0" onclick="' + go(x.token) + '" onkeydown="if(event.key===\'Enter\')' + go(x.token) + '">'
+      + (cover ? '<img class="hd-hero-img" src="' + escA(cover) + '" alt="" loading="eager">' : '')
+      + '<div class="hd-hero-top">' + logo + '<span class="hd-h-biz">' + esc(b.name || 'Your contractor') + '</span><span class="hd-h-pill"><i></i>In progress</span></div>'
+      + '<div class="hd-hero-body">'
+        + '<h2>' + esc(j.title || 'Your project') + '</h2>'
+        + (j.addr ? '<span class="hd-h-addr"><span class=ms>location_on</span>' + esc(j.addr) + '</span>' : '')
+        + '<div class="hd-h-prog"><div><span>' + (now ? 'Now: <b>' + esc(now.name) + '</b>' + (late ? ' · running behind' : '') : 'Getting started') + '</span><b>' + pct + '%</b></div><i><i style="width:' + pct + '%"></i></i></div>'
+      + '</div>'
+      + '<div class="hd-hero-facts">'
+        + fact('event', 'Next visit', v ? esc(day(v.date, { month: 'short', day: 'numeric' })) + (v.time ? ' · ' + t12(v.time) : '') : 'Not booked')
+        + fact('account_balance_wallet', due > 0 ? 'Due now' : 'Left to pay', due > 0 ? usd(due) : left > 0 ? usd(left) : 'Paid up', due > 0 ? 'due' : '')
+      + '</div>'
+      + '<span class="hd-hero-go">Open project<span class=ms>arrow_forward</span></span>'
       + '</div>';
   };
 
