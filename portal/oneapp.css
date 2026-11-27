@@ -1,0 +1,74 @@
+/* ==================================================================
+   One app, 2026-11-27. The homeowner pages (#my Home/Find a pro/Account,
+   the #home project page) and the crew app take the contractor phone
+   app's own measurements, so all three read as the same app:
+     page        #e3e8ef behind white cards (the contractor phone page)
+     top bar     56px, white 78% with blur, a 1px #e9edf3 line, logo only
+     tab bar     white 92% with blur, a hairline on top, 58x30 icon pill
+                 in #e6f0ff, 11px labels, grey #475467 / blue #006fff
+     cards       18px corners, no outline, a 1px soft shadow
+     buttons     40px tall, 12px corners
+     motion      content eases in on every page and tab change
+   Phones only (the computer layouts are their own). "@top" = #bpx.
+   ================================================================== */
+@keyframes oneIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+@media (max-width:899px){
+  /* ---- page ---- */
+  body.bp-home,#bpSign.hp{--hp-bg:#e3e8ef !important}
+  body.bp-home{background:#e3e8ef !important}
+  #bpSign.hp .pr-page,#bpSign.hp .hp-app,#bpSign.hp .hp-main,#bpSign.hp .hp-content{background:transparent !important}
+  #bpSign .my-main.ho-main{gap:16px}
+
+  /* ---- top bar: the contractor's ---- */
+  #bpSign .pr-pbar,#bpSign .hp-bar{height:56px !important;min-height:56px !important;background:rgba(255,255,255,.78) !important;
+    -webkit-backdrop-filter:saturate(1.8) blur(20px) !important;backdrop-filter:saturate(1.8) blur(20px) !important;border-bottom:1px solid #e9edf3 !important;box-shadow:none !important}
+  #bpSign .pr-pbar .pr-brand b{display:none !important}
+  #bpSign .pr-pbar .pr-brand img{width:30px;height:30px}
+  #bpSign .ho-me .ho-av{width:34px !important;height:34px !important;font-size:13px !important}
+  #bpSign .hp-mob-b{width:38px !important;height:38px !important;flex-basis:38px !important}
+
+  /* ---- tab bar: the contractor's ---- */
+  #bpSign .hp-tabbar{background:color-mix(in srgb,#fff 92%,transparent) !important;-webkit-backdrop-filter:saturate(1.8) blur(20px) !important;backdrop-filter:saturate(1.8) blur(20px) !important;
+    border-top:.5px solid #e6e9ef !important;box-shadow:none !important;padding:6px 4px calc(4px + env(safe-area-inset-bottom)) !important}
+  #bpSign .hp-tabbar>button,#bpSign .hp-tabbar>span{gap:3px !important;font-size:11px !important;font-weight:600 !important;color:#475467 !important;padding:2px 0 0 !important;min-height:50px}
+  #bpSign .hp-tabbar .hp-ico{width:58px !important;height:30px !important;border-radius:15px !important}
+  #bpSign .hp-tabbar .hp-ico .ms{font-size:24px !important;font-variation-settings:'FILL' 0,'wght' 400 !important}
+  #bpSign .hp-tabbar button.on{color:#006fff !important}
+  #bpSign .hp-tabbar button.on .hp-ico{background:#e6f0ff !important}
+
+  /* ---- cards: no outlines, a soft 1px shadow ---- */
+  #bpSign :is(.ho-card,.ho-proj,.ho-calm,.ho-empty,.hx-card,.hp-card,.hx-tile,.pr-card,.my-auth,.hd-g,.ho-co,.pr-hero,.hrv-mine,.hrv-ask){border-color:transparent !important;border-radius:18px !important;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(15,23,42,.07) !important}
+  #bpSign .ho-calm{box-shadow:none !important}
+  #bpSign .hd-hero{border-radius:18px !important;border-color:transparent !important;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(15,23,42,.07) !important;min-height:300px !important}
+  #bpSign .hd-hero.has-ph{box-shadow:0 1px 2px rgba(15,23,42,.12) !important}
+  #bpSign .hx-hero:not(.has-ph){border-radius:18px !important;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(15,23,42,.07) !important}
+  #bpSign .hx-hero.has-ph{border-radius:18px !important;box-shadow:0 1px 2px rgba(15,23,42,.12) !important}
+
+  /* ---- buttons: 40px, 12px corners, no heavy borders ---- */
+  #bpSign :is(.hx-btn,.hp-btn:not(.sm)){min-height:40px !important;height:auto;border-radius:12px !important;font-size:14.5px !important;font-weight:600 !important}
+  #bpSign .hx-btn:not(.pri),#bpSign .hp-btn.ghost{border-color:transparent !important;background:#f2f4f7 !important}
+  #bpSign .ho-proj-acts button{height:40px !important;font-weight:600 !important}
+  #bpSign .hd-act-c{width:58px !important;height:58px !important;box-shadow:0 1px 2px rgba(15,23,42,.08) !important}
+  #bpSign :is(.hx-btn,.hp-btn,.ho-proj-acts button,.hd-act,.ho-row,.hd-up,.hd-g):active{transform:scale(.97)}
+
+  /* ---- motion: content eases in, like the contractor app's page changes ---- */
+  #bpSign .my-main.ho-main>*{animation:oneIn .32s cubic-bezier(.2,.8,.2,1) both}
+  #bpSign .my-main.ho-main>*:nth-child(2){animation-delay:.03s}
+  #bpSign .my-main.ho-main>*:nth-child(3){animation-delay:.06s}
+  #bpSign .hp-pane{animation:oneIn .3s cubic-bezier(.2,.8,.2,1) both}
+  #bpSign .hp-lt{animation:oneIn .28s cubic-bezier(.2,.8,.2,1) both}
+}
+@media (max-width:899px) and (prefers-reduced-motion:reduce){
+  #bpSign .my-main.ho-main>*,#bpSign .hp-pane,#bpSign .hp-lt{animation:none !important}
+}
+
+/* ---- crew Today: the clock card lighter, the button smaller ---- */
+@top.bp-m .chm-status{padding:18px 16px 20px !important}
+@top.bp-m .chm-go{width:156px !important;height:156px !important;margin:10px auto 2px !important;font-size:20px !important;box-shadow:0 0 0 8px rgba(0,111,255,.12) !important}
+@top.bp-m .chm-go .ms{font-size:32px !important}
+@top.bp-m .chm-go.alt{box-shadow:0 0 0 2px var(--bl) inset,0 0 0 8px rgba(0,111,255,.10) !important}
+@media (max-width:899px){
+  #bpSign .hp-tabbar .hp-svg{display:grid;place-items:center;line-height:0}
+  #bpSign .hp-tabbar .hp-svg .hl-i{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+}

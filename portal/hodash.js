@@ -42,6 +42,7 @@
   /* the project they're in the middle of, front and centre: its latest photo,
      what's being worked on, how far along, the next visit and what's owed */
   window.bpHoGlance = function (live) {
+    if (window.bpOneIcons) bpOneIcons();
     var el = $('hoGlance'); if (!el) return;
     var x = window._bpHoHero;
     if (!x || !x.d || !x.d.ok) { el.innerHTML = ''; return; }
@@ -141,4 +142,17 @@
         + '<button type="button" class="hd-tip-go" onclick="bpGo(\'#pros?q=' + encodeURIComponent(t[3]) + (loc ? '&loc=' + encodeURIComponent(loc) : '') + '\')">Find a pro</button></div>';
     }).join('') + '</div>');
   };
+
+  /* the tab bars on the homeowner pages draw the contractor app's own line icons (portal/shell.js) */
+  var TAB_ICO = { home: 'home', person_search: 'search', account_circle: 'user', space_dashboard: 'home', calendar_month: 'calendar', photo_library: 'photo',
+    folder_open: 'page', account_balance_wallet: 'wallet', forum: 'convos', edit_document: 'est', menu: 'menu' };
+  window.bpOneIcons = function () {
+    if (!window.bpShell || !bpShell.ico) return;
+    document.querySelectorAll('#bpSign .hp-tabbar .hp-ico > .ms').forEach(function (m) {
+      var k = TAB_ICO[(m.textContent || '').trim()]; if (!k) return;
+      var w = document.createElement('span'); w.className = 'hp-svg'; w.innerHTML = bpShell.ico(k); m.replaceWith(w);
+    });
+  };
+  /* the tab bar may be drawn before this file loads */
+  bpOneIcons(); if (document.readyState !== 'complete') window.addEventListener('load', function () { bpOneIcons(); });
 })();

@@ -105,9 +105,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261127-hero3">
-<link rel="stylesheet" href="site/present.css?v=20261127-hero3">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261127-hero3"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261127-one4">
+<link rel="stylesheet" href="site/present.css?v=20261127-one4">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261127-one4"}}</script>
 
 
 <style id="bpi-icons">
@@ -9372,6 +9372,7 @@ function bpHpRender(){
     +(_bpHp.more?bpHpMoreSheet():'')
   +'</div>';
   /* phone: the big page title says it; a card heading that only repeats it goes (Documents, Changes, Find a pro) */
+  if(window.bpOneIcons)bpOneIcons();
   var lt=h.querySelector('.hp-lt');
   if(lt)Array.prototype.forEach.call(h.querySelectorAll('#hpBody .hp-card-h h2, #hpBody .hp-chg-h h1, #hpBody .pr-hero-t h1'),function(x){if(x.textContent.trim()===lt.textContent.trim())x.classList.add('hp-dup');});
   _bpHp.anim=false;
@@ -10277,7 +10278,7 @@ function bpHoChrome(active,s){
   var tb=document.createElement('nav'); tb.className='hp-tabbar ho-tabbar'; tb.setAttribute('aria-label','Main');
   var t=function(k,ic,txt,go){return '<button type="button" class="'+(active===k?'on':'')+'"'+(active===k?' aria-current="page"':'')+' onclick="'+go+'"><span class="hp-ico"><span class=ms>'+ic+'</span></span>'+txt+'</button>';};
   tb.innerHTML=t('home','home','Home',"bpHoTab('home')")+t('pros','person_search','Find a pro',"bpGo('#pros')")+t('account','account_circle','Account',"bpHoTab('account')");
-  page.appendChild(tb); document.body.classList.add('ho-has-tabs');
+  page.appendChild(tb); document.body.classList.add('ho-has-tabs'); if(window.bpOneIcons)bpOneIcons();
 }
 /* Home and Account switch in place on #my; from Find a pro they load #my */
 window.bpHoTab=function(k){
@@ -15209,7 +15210,7 @@ window.bpRepCopy=function(text,btn){
 <!--/app-only-->
 </body>
 <!--app-only-->
-<link rel="stylesheet" href="portal/app.css?v=61aa83be4f" data-bundle>
+<link rel="stylesheet" href="portal/app.css?v=e1d8d07373" data-bundle>
 <script src="portal/team.js?v=20261115a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261127qb"></script>
@@ -15254,7 +15255,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/custlink.js?v=20261118f"></script>
 <script src="portal/hreview.js?v=20261127rv"></script>
 <script src="portal/bizreviews.js?v=20261127rv"></script>
-<script src="portal/hodash.js?v=20261127h2"></script>
+<script src="portal/hodash.js?v=20261127h4"></script>
 <script src="portal/estpick.js?v=20261118f"></script>
 <script src="portal/reviews.js?v=20261004a"></script>
 <script src="portal/automations.js?v=20261126sw"></script>
@@ -15264,17 +15265,17 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261125ls"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261127-hero3"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261127-hero3"></script>
-<script src="site/vendor/SplitText.min.js?v=20261127-hero3"></script>
-<script src="site/site.js?v=20261127-hero3"></script>
-<script src="site/present.js?v=20261127-hero3"></script>
+<script src="site/vendor/gsap.min.js?v=20261127-one4"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261127-one4"></script>
+<script src="site/vendor/SplitText.min.js?v=20261127-one4"></script>
+<script src="site/site.js?v=20261127-one4"></script>
+<script src="site/present.js?v=20261127-one4"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>
 <script src="portal/slidetabs.js?v=20261117a"></script>
 <script src="portal/motion.js?v=20261118f"></script>
-<script src="portal/shell.js?v=20261126ck"></script>
+<script src="portal/shell.js?v=20261127oa"></script>
 <script src="portal/mobile.js?v=20261127p7"></script>
 <script src="portal/appfeel.js?v=20261126m6"></script>
 <script src="portal/calday.js?v=20261126c3"></script>
