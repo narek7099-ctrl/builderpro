@@ -137,3 +137,11 @@
 @top .bpx-ctable td:last-child:has(.ps-btn){vertical-align:middle !important}
 @top .bpx-ctable td:last-child .ps-btn,@top .bpx-ctable td:last-child .bpx-donebtn{display:inline-flex !important;align-items:center !important;justify-content:center !important;gap:5px !important;height:36px !important;min-height:36px !important;margin:0 0 0 6px !important;padding:0 14px !important;font-size:13px !important;font-weight:600 !important;line-height:1 !important;vertical-align:middle !important}
 @top .bpx-ctable td:last-child .ps-btn .ms{font-size:17px !important}
+
+/* QuickBooks Payroll on Pay period (2026-11-27) */
+@top .qbp-line{display:flex !important;align-items:center !important;gap:10px !important;flex-wrap:wrap !important;margin:0 0 14px !important;padding:10px 12px !important;border:1px solid var(--line) !important;border-radius:12px !important;background:var(--soft) !important;font-size:13px !important;line-height:1.45 !important;color:var(--ink) !important}
+@top .qbp-line>span:nth-child(2){flex:1 1 260px !important;min-width:0 !important}
+@top .qbp-dot{flex:none !important;width:10px !important;height:10px !important;border-radius:50% !important;background:#2CA01C !important;box-shadow:0 0 0 3px rgba(44,160,28,.18) !important}
+@top .qbp-line .bpx-btn{display:inline-flex !important;align-items:center !important;gap:6px !important;width:auto !important;margin:0 !important;padding:7px 12px !important;font-size:13px !important}
+@top .qbp-line .bpx-btn .ms{font-size:17px !important}
+@top .qbp-tag{display:inline-block !important;margin-left:6px !important;padding:2px 8px !important;border-radius:999px !important;background:#e7f6e4 !important;color:#1d6b13 !important;font-size:11px !important;font-weight:650 !important;vertical-align:1px !important}

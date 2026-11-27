@@ -666,6 +666,62 @@
       .sort(function (a, b) { return a.e.name.localeCompare(b.e.name); });
   }
 
+  /* ---------------------------------------------- QuickBooks Payroll --- */
+  /* 2026-11-27: for owners who pay W-2 people through QuickBooks Payroll. The hours
+     logged here go to QuickBooks as timesheets (Send hours), and when QuickBooks pays
+     someone, their row here is marked paid by itself: the paychecks come back from the
+     books (quickbooks-sync op "paychecks") and are matched by person and date. Only
+     bookkeeping changes here; no money moves. Undo is the usual "✓ Paid" button. */
+  var qbApi = function (p) { return window.bpAuthApi && window.BP_URL ? bpAuthApi(window.BP_URL + '/functions/v1/quickbooks-sync', p) : Promise.resolve(null); };
+  var qbNorm = function (x) { return String(x || '').toLowerCase().replace(/\(sample\)/g, '').replace(/[^a-z0-9]+/g, ' ').trim(); };
+  var addDays = function (iso, n) { var d = new Date(at(iso)); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  function qbAuto(f, t) {
+    S.qb = S.qb || { on: false, off: false, seen: {}, used: {} };
+    if (S.qb.off || S.sample || !(window.BP_LIVE && window.BP_SB)) return;
+    var k = f + '|' + t; if (S.qb.seen[k] && Date.now() - S.qb.seen[k] < 10 * 60e3) return;
+    S.qb.seen[k] = Date.now();
+    var to = addDays(t, 21), today = new Date().toISOString().slice(0, 10);
+    qbApi({ op: 'paychecks', from: addDays(t, -3), to: to < today ? to : today }).then(function (d) {
+      if (!d || !d.ok) { if (d && /not connected|not set up/i.test(d.error || '') || (d && d.configured === false)) S.qb.off = true; return; }
+      var wasOn = S.qb.on; S.qb.on = true; S.qb.at = Date.now();
+      var people = d.people || {}, checks = d.paychecks || [], marked = [];
+      dueFor(f, t).forEach(function (r) {
+        if (r.paid || r.e.kind === '1099' || !(r.gross > 0)) return;
+        var hit = checks.filter(function (p) {
+          if (S.qb.used[p.date + '|' + p.qb_id + '|' + p.no + '|' + p.amount]) return false;
+          var who = (people[r.e.id] && p.qb_id && p.qb_id === people[r.e.id]) || qbNorm(p.name) === qbNorm(r.e.name);
+          return who && p.date >= addDays(t, -3) && p.date <= addDays(t, 21);
+        })[0];
+        if (!hit) return;
+        S.qb.used[hit.date + '|' + hit.qb_id + '|' + hit.no + '|' + hit.amount] = 1;
+        book(r, f, { date: hit.date, no: hit.no, net: hit.amount });
+        marked.push(r.e.name);
+      });
+      if (marked.length && window.bpToast) bpToast('Paid in QuickBooks Payroll, marked paid here: ' + marked.join(', ') + '.', 'success');
+      if (marked.length || !wasOn) pane();
+    }, function () {});
+  }
+  window.bpQbHours = function () {
+    if (!S.qb || S.qb.busy) return;
+    S.qb.busy = true; pane();
+    qbApi({ op: 'hours' }).then(function (d) {
+      S.qb.busy = false; pane();
+      if (!d || !d.ok) { if (window.bpToast) bpToast((d && d.error) || 'Could not reach QuickBooks.', 'error'); return; }
+      var bits = [];
+      bits.push(d.sent ? d.sent + ' day' + (d.sent === 1 ? '' : 's') + ' of hours sent to QuickBooks.' : 'No new hours to send.');
+      if (d.failed) bits.push(d.failed + ' refused (see Finances \u203a QuickBooks).');
+      if (d.waiting) bits.push(d.waiting + ' disputed ' + (d.waiting === 1 ? 'day waits' : 'days wait') + ' until it\u2019s sorted out.');
+      if (d.more) bits.push('There\u2019s more: press Send hours again.');
+      if (window.bpToast) bpToast(bits.join(' '), d.failed ? 'warning' : 'success');
+      if (d.missing && d.missing.length) setTimeout(function () {
+        bpModal('<h3>Not found in QuickBooks</h3><p class="ck-note" style="font-size:14px">These people\u2019s hours didn\u2019t go across because QuickBooks has nobody by the same name:</p>'
+          + '<ul style="margin:8px 0 14px;padding-left:20px;font-size:14px;line-height:1.7">' + d.missing.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul>'
+          + '<p class="ck-note" style="font-size:14px">Add them in QuickBooks Payroll (W-2) or as a vendor (1099) with the same name as here, then press Send hours again.</p>'
+          + '<div class="row"><button class="bpx-btn" onclick="bpCloseModal()">OK</button></div>');
+      }, 400);
+    }, function () { S.qb.busy = false; pane(); if (window.bpToast) bpToast('Could not reach QuickBooks.', 'error'); });
+  };
+
   function payPeriod(el) {
     stubCss();
     var cur = periodOf(Date.now());
@@ -694,7 +750,11 @@
         + '<select onchange="bpPayFreq(this.value)">' + [['weekly', 'Weekly'], ['biweekly', 'Every 2 weeks'], ['monthly', 'Monthly']].map(function (o) {
           return '<option value="' + o[0] + '"' + (freq() === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>'
       + (freq() === 'monthly' ? '' : '<div><label class="st-lab" style="display:block;font-size:12px;font-weight:600">Periods start on</label>'
-        + '<input type="date" value="' + anchor() + '" onchange="bpPayAnchor(this.value)"></div>') + '</div>';
+        + '<input type="date" value="' + anchor() + '" onchange="bpPayAnchor(this.value)"></div>') + '</div>'
+      + (S.qb && S.qb.on ? '<div class="qbp-line"><span class="qbp-dot" aria-hidden="true"></span><span><b>QuickBooks is connected.</b> Anyone QuickBooks Payroll pays for this period is marked paid here on its own'
+          + (S.qb.at ? ' (checked ' + new Date(S.qb.at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) + ')' : '') + '.</span>'
+          + '<button type="button" class="bpx-btn ghost hl-keep" onclick="bpQbHours()"' + (S.qb.busy ? ' disabled' : '') + '><span class="ms">upload</span>' + (S.qb.busy ? 'Sending\u2026' : 'Send hours to QuickBooks') + '</button></div>' : '');
+    qbAuto(f, t);
 
     var note = '<div class="bg-warn" style="margin-top:14px"><span class="ms">info</span><span>'
       + '<b>Mark paid once the money has gone out.</b> That books it in Finances as an expense — W-2 wages as Labor / crew, 1099 as Subcontractor. '
@@ -721,7 +781,7 @@
       /* on a phone (2026-11-26): one card per person instead of a seven-column table */
       + ((window.innerWidth || 1000) <= 760 ? '<div class="pp6-list">' + list.map(function (r) {
           var amt = r.paid ? +r.paid.amount || 0 : r.gross;
-          return '<div class="pp6' + (r.disp.length ? ' disp' : '') + '"><div class="pp6-h"><div class="pp6-t"><b>' + esc(r.e.name) + '</b><small>' + (r.e.kind === '1099' ? '1099' : 'W-2')
+          return '<div class="pp6' + (r.disp.length ? ' disp' : '') + '"><div class="pp6-h"><div class="pp6-t"><b>' + esc(r.e.name) + (r.paid && r.paid.qb ? ' <span class="qbp-tag">QuickBooks</span>' : '') + '</b><small>' + (r.e.kind === '1099' ? '1099' : 'W-2')
             + ' \u00b7 ' + (r.e.pay_type === 'salary' && !r.h ? 'salary' : r.h + ' hrs' + (r.ot ? ' + ' + r.ot + ' OT' : '')) + '</small></div><div class="pp6-amt"><b>' + money(amt) + '</b><small>' + (r.paid ? 'paid' : 'due') + '</small></div></div>'
             + (Object.keys(r.jobs).length ? '<div class="pp6-jobs">' + esc(Object.keys(r.jobs).join(', ').replace(/\s*\(sample\)/g, '')) + '</div>' : '')
             + (r.disp.length ? '<div class="pp6-flag"><span class="ms">flag</span>' + r.disp.length + ' disputed ' + (r.disp.length === 1 ? 'day' : 'days') + '</div>' : '')
@@ -735,7 +795,7 @@
       + list.map(function (r) {
           var amt = r.paid ? +r.paid.amount || 0 : r.gross;
           var leads = Object.keys(r.lead);
-          return '<tr' + (r.disp.length ? ' class="te-disp"' : '') + '><td><b>' + esc(r.e.name) + '</b>'
+          return '<tr' + (r.disp.length ? ' class="te-disp"' : '') + '><td><b>' + esc(r.e.name) + '</b>' + (r.paid && r.paid.qb ? '<span class="qbp-tag" title="Paid in QuickBooks Payroll' + (r.paid.qb.date ? ', paycheck ' + esc(nice(r.paid.qb.date)) : '') + '">Paid in QuickBooks</span>' : '')
             + leads.map(function (k) { var x = r.lead[k]; return bpByLeadTag(k, x.clocked_lat, x.clocked_lng); }).join('')
             + (r.disp.length ? '<span class="bpdisp" title="' + esc(r.disp.map(function (x) { return x.dispute_note || 'Reported'; }).join(' · ')) + '"><span class="ms">flag</span>Disputed' + (r.disp.length > 1 ? ' ×' + r.disp.length : '') + '</span>' : '') + '</td>'
             + '<td><span class="bpx-badge' + (r.e.kind === '1099' ? '' : ' ok') + '">' + (r.e.kind === '1099' ? '1099' : 'W-2') + '</span></td>'
@@ -1104,11 +1164,12 @@
     document.head.appendChild(c);
   }
 
-  function book(r, from) {
+  function book(r, from, qbPaid) {
     var to = periodEnd(from), fin = bpFinGet();
     fin.unshift({ id: 'f' + Date.now() + Math.floor(Math.random() * 1000), kind: 'expense', amount: r.gross,
       category: r.e.kind === '1099' ? 'Subcontractor' : 'Labor / crew',
-      note: 'Pay — ' + r.e.name + ', ' + nice(from) + '–' + nice(to), when: Date.now(), payKey: r.key });
+      note: 'Pay — ' + r.e.name + ', ' + nice(from) + '–' + nice(to) + (qbPaid ? ' · paid in QuickBooks Payroll' + (qbPaid.date ? ', paycheck ' + nice(qbPaid.date) : '') : ''),
+      when: Date.now(), payKey: r.key, qb: qbPaid || undefined });
     bpFinSet(fin);
   }
   /* double confirmation for money (2026-11-26): every Mark paid, undo and Pay asks once more */

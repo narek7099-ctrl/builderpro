@@ -6,6 +6,20 @@
 //   POST { op:"accounts" }               -> the company's chart of accounts
 //   POST { op:"save_map", map }          -> which account each thing goes to
 //   POST { op:"sync" }                   -> send whatever has not been sent yet
+//   POST { op:"hours" }                  -> crew hours -> TimeActivity (2026-11-27)
+//   POST { op:"paychecks", from, to }    -> paychecks QuickBooks Payroll posted, read
+//                                           from the Transaction List report (2026-11-27)
+//
+// Crew hours: each time entry from the last 60 days goes once as a TimeActivity
+// (overtime as its own line), for the QuickBooks Employee (W-2) or Vendor (1099)
+// with the same name, tagged to the job when the job was already sent. Nobody is
+// created on the QuickBooks side: payroll people are set up in QuickBooks Payroll,
+// so anyone not found is listed back to fix. Disputed days and sample people wait.
+//
+// Paychecks: there is no paycheck entity in the accounting API, but QuickBooks
+// Payroll posts every paycheck to the books, so the Transaction List report shows
+// them. Only date, name and amount are read; BuilderPro matches them to its own
+// pay periods in the browser (portal/crew.js) and marks those people paid.
 //
 // What goes across (each item once; qb_sync_log remembers what was sent):
 //   - every real project's customer   -> Customer (matched by name if it exists)
@@ -15,7 +29,7 @@
 //                                        becomes the Vendor
 //   - money collected on a project    -> Sales Receipt for whatever was collected
 //                                        since the last send, into the deposit account
-// Nothing is ever read back into BuilderPro, and nothing in QuickBooks is
+// The only thing read back is the paycheck list above. Nothing in QuickBooks is
 // changed or removed: a sent item is left alone even if edited here later.
 //
 // Only the owner or office may use it (qb_whoami). Tokens never leave the server.
@@ -183,6 +197,98 @@ async function sync(c: Conn) {
   return { sent: done, failed, more: left > 0 };
 }
 
+/* ---------- crew hours -> QuickBooks time ---------- */
+const norm = (s: string) => String(s || "").toLowerCase().replace(/\(sample\)/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+async function hours(c: Conn) {
+  const since = new Date(Date.now() - 60 * 864e5).toISOString().slice(0, 10);
+  const emps: any[] = (await rest(`employees?owner=eq.${c.owner}&select=id,name,kind`)) || [];
+  const ents: any[] = (await rest(`time_entries?owner=eq.${c.owner}&worked_on=gte.${since}&select=id,employee_id,job_id,job_name,worked_on,hours,ot_hours,disputed_at&order=worked_on.asc&limit=2000`)) || [];
+  const sent: Record<string, string> = {};
+  for (const r of (await rest(`qb_sync_log?owner=eq.${c.owner}&ok=is.true&kind=in.(time,job,person)&select=kind,ref,qb_id`)) || []) sent[`${r.kind}|${r.ref}`] = r.qb_id;
+  const byId: Record<string, any> = {}; for (const e of emps) byId[e.id] = e;
+  let qEmp: any[] | null = null, qVen: Record<string, string> = {};
+  let writes = 0, done = 0, failed = 0, left = 0, waiting = 0; const missing = new Set<string>();
+  const log = async (kind: string, ref: string, label: string, qb_id: string | null, err: string | null) => {
+    if (qb_id) { sent[`${kind}|${ref}`] = qb_id; if (kind === "time") done++; } else failed++;
+    await rest("qb_sync_log", { method: "POST", body: JSON.stringify({ owner: c.owner, kind, ref, label, amount: null, qb_id, ok: !!qb_id, error: err }) }).catch(() => {});
+  };
+  /* the QuickBooks person for a BuilderPro person: remembered once found */
+  const person = async (e: any): Promise<{ id: string; type: string } | null> => {
+    const is1099 = e.kind === "1099", key = `person|${e.id}`;
+    if (sent[key]) return { id: sent[key], type: is1099 ? "Vendor" : "Employee" };
+    const want = norm(e.name);
+    if (!is1099) {
+      if (!qEmp) qEmp = (await q(c, "select Id, DisplayName, GivenName, FamilyName, Active from Employee maxresults 1000")).Employee || [];
+      const hit = qEmp.find((x: any) => x.Active !== false && (norm(x.DisplayName) === want || norm(`${x.GivenName || ""} ${x.FamilyName || ""}`) === want));
+      if (!hit) return null;
+      await rest("qb_sync_log", { method: "POST", body: JSON.stringify({ owner: c.owner, kind: "person", ref: e.id, label: e.name, qb_id: String(hit.Id), ok: true }) }).catch(() => {});
+      sent[key] = String(hit.Id); return { id: String(hit.Id), type: "Employee" };
+    }
+    if (!(want in qVen)) {
+      const v = (await q(c, `select Id, DisplayName from Vendor where DisplayName = ${lit(name100(String(e.name).replace(/\s*\(sample\)/i, "")))}`)).Vendor || [];
+      qVen[want] = v[0] ? String(v[0].Id) : "";
+    }
+    if (!qVen[want]) return null;
+    await rest("qb_sync_log", { method: "POST", body: JSON.stringify({ owner: c.owner, kind: "person", ref: e.id, label: e.name, qb_id: qVen[want], ok: true }) }).catch(() => {});
+    sent[key] = qVen[want]; return { id: qVen[want], type: "Vendor" };
+  };
+  const hm = (h: number) => { const m = Math.round(h * 60); return { Hours: Math.floor(m / 60), Minutes: m % 60 }; };
+  for (const x of ents) {
+    const e = byId[x.employee_id]; if (!e || /\(sample\)/i.test(e.name || "")) continue;
+    const parts: [string, number, string][] = [];
+    if (+x.hours > 0) parts.push([x.id, +x.hours, ""]);
+    if (+x.ot_hours > 0) parts.push([`${x.id}:ot`, +x.ot_hours, "Overtime (time and a half). "]);
+    const todo = parts.filter((p) => !sent[`time|${p[0]}`]); if (!todo.length) continue;
+    if (x.disputed_at) { waiting++; continue; }
+    let who: { id: string; type: string } | null = null;
+    try { who = await person(e); } catch (err) { failed++; continue; }
+    if (!who) { missing.add(String(e.name || "Someone")); continue; }
+    const job = x.job_id ? sent[`job|${x.job_id}`] : null;
+    for (const [ref, h, pre] of todo) {
+      if (writes >= MAX_WRITES) { left++; continue; }
+      const label = `${e.name} · ${x.worked_on} · ${r2(h)}h${pre ? " OT" : ""}`;
+      try {
+        writes++;
+        const t = await qb(c, "POST", "timeactivity", {
+          TxnDate: x.worked_on, NameOf: who.type, ...(who.type === "Vendor" ? { VendorRef: { value: who.id } } : { EmployeeRef: { value: who.id } }),
+          ...(job ? { CustomerRef: { value: job } } : {}), ...hm(h), BillableStatus: "NotBillable",
+          Description: `${pre}BuilderPro: ${String(x.job_name || "Hours").replace(/\s*\(sample\)/g, "")}`.slice(0, 4000),
+        });
+        await log("time", ref, label, String(t.TimeActivity.Id), null);
+      } catch (err) { await log("time", ref, label, null, (err as Error).message); }
+    }
+  }
+  return { sent: done, failed, waiting, missing: [...missing], more: left > 0 };
+}
+
+/* ---------- paychecks QuickBooks Payroll posted (Transaction List report) ---------- */
+async function paychecks(c: Conn, from: string, to: string) {
+  const d = /^\d{4}-\d{2}-\d{2}$/;
+  if (!d.test(from)) from = new Date(Date.now() - 90 * 864e5).toISOString().slice(0, 10);
+  if (!d.test(to)) to = new Date().toISOString().slice(0, 10);
+  const rep = await qb(c, "GET", `reports/TransactionList?start_date=${from}&end_date=${to}`);
+  const cols: any[] = rep?.Columns?.Column || [];
+  const key = (col: any) => String(((col.MetaData || []).find((m: any) => m.Name === "ColKey") || {}).Value || col.ColTitle || "").toLowerCase();
+  const at = (re: RegExp) => cols.findIndex((col) => re.test(key(col)) || re.test(String(col.ColTitle || "").toLowerCase()));
+  const iDate = at(/tx_date|^date$/), iType = at(/txn_type|transaction type/), iName = at(/^name$/), iAmt = at(/subt_nat_amount|nat_amount|^amount$/), iNo = at(/doc_num|num/);
+  const out: any[] = [];
+  const walk = (rows: any[]) => {
+    for (const r of rows || []) {
+      if (r?.Rows?.Row) walk(r.Rows.Row);
+      const cd = r?.ColData; if (!cd || iType < 0) continue;
+      const type = String(cd[iType]?.value || "");
+      if (!/pay ?check|payroll/i.test(type)) continue;
+      const nm = iName >= 0 ? cd[iName] : null;
+      out.push({ date: iDate >= 0 ? String(cd[iDate]?.value || "") : "", type, name: String(nm?.value || ""), qb_id: String(nm?.id || ""),
+        amount: iAmt >= 0 ? Math.abs(+String(cd[iAmt]?.value || "0").replace(/[^0-9.-]/g, "") || 0) : 0, no: iNo >= 0 ? String(cd[iNo]?.value || "") : "" });
+    }
+  };
+  walk(rep?.Rows?.Row || []);
+  const people: Record<string, string> = {};
+  for (const r of (await rest(`qb_sync_log?owner=eq.${c.owner}&ok=is.true&kind=eq.person&select=ref,qb_id`)) || []) people[r.ref] = r.qb_id;
+  return { paychecks: out.slice(0, 500), people, columns_found: iType >= 0 };
+}
+
 /* ---------- handler ---------- */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
@@ -230,6 +336,8 @@ Deno.serve(async (req) => {
       return json({ ok: true, map: clean });
     }
     if (op === "sync") return json({ ok: true, ...(await sync(c)) });
+    if (op === "hours") return json({ ok: true, ...(await hours(c)) });
+    if (op === "paychecks") return json({ ok: true, ...(await paychecks(c, String(body.from || ""), String(body.to || ""))) });
     return json({ ok: false, error: "unknown op" }, 400);
   } catch (e) {
     console.error("qb", op, (e as Error).message);
