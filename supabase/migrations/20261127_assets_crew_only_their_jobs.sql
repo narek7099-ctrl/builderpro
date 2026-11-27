@@ -29,3 +29,4 @@ alter policy asset_services_read on public.asset_services
 alter policy asset_services_add on public.asset_services
   with check ((owner = bp_owner()) and (bp_role() <> 'sub') and (bp_team_role() <> 'crew' or exists (
     select 1 from public.assets a where a.id = asset_services.asset_id and bp_crew_sees_asset(a.job_id, a.contact_id, a.created_by))));
+revoke execute on function public.bp_crew_sees_asset(text, text, uuid) from anon;
