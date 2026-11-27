@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Ridgeline Roofing">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#17476f"/><stop offset="1" stop-color="#0c2b47"/></linearGradient></defs>
+  <rect width="256" height="256" rx="58" fill="url(#g)"/>
+  <circle cx="178" cy="78" r="20" fill="#f6a623"/>
+  <path d="M38 158 L128 76 L218 158" fill="none" stroke="#ffffff" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M74 186 L128 137 L182 186" fill="none" stroke="#f6a623" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
