@@ -76,7 +76,22 @@
       + '</select>';
   }
   function ago(t) { if (!t) return 'never'; var m = Math.round((Date.now() - Date.parse(t)) / 60000); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
-  var KIND = { customer: 'Customer', job: 'Job', vendor: 'Vendor', expense: 'Expense', payment: 'Payment', item: 'Setup' };
+  var KIND = { customer: 'Customer', job: 'Job', vendor: 'Vendor', expense: 'Expense', payment: 'Payment', item: 'Setup', time: 'Hours', person: 'Person' };
+  /* crew hours -> QuickBooks timesheets (2026-11-27); the same button sits on Pay period */
+  QB.hours = function () {
+    QB.busy = 'hours'; QB.err = ''; render();
+    api({ op: 'hours' }).then(function (d) {
+      QB.busy = '';
+      if (d && d.ok) {
+        var t = d.sent ? d.sent + ' day' + (d.sent === 1 ? '' : 's') + ' of hours sent.' : 'No new hours to send.';
+        if (d.waiting) t += ' ' + d.waiting + ' disputed ' + (d.waiting === 1 ? 'day waits' : 'days wait') + '.';
+        if (d.more) t += ' There\u2019s more: press Send hours again.';
+        window.bpToast && bpToast(t, d.failed ? 'warning' : undefined);
+        QB.missing = d.missing || [];
+      } else QB.err = (d && d.error) || 'Could not send hours.';
+      load();
+    }, function () { QB.busy = ''; QB.err = 'Could not send hours.'; render(); });
+  };
 
   function render() {
     var a = $('bpxViewArea'); if (!a || window._bpCurView !== 'quickbooks') return;
@@ -120,6 +135,11 @@
 
     h += '<div class="bpx-panel qb-send"><div class="qb-h"><b>2. Send to QuickBooks</b><span>' + (saved ? 'New customers, jobs, expenses and payments since the last send.' : 'Save your accounts first.') + '</span></div>'
       + '<button class="bpx-addbtn" onclick="QB.sync()"' + (!saved || QB.busy ? ' disabled' : '') + '>' + (QB.busy === 'sync' ? 'Sending…' : 'Send now') + '</button></div>';
+
+    h += '<div class="bpx-panel qb-send"><div class="qb-h"><b>3. Crew hours and payroll</b><span>For QuickBooks Payroll: the hours your crew logs here go across as timesheets, tagged to the job, so payroll is ready to run. '
+      + 'When QuickBooks Payroll pays someone, Employees \u203a Pay period marks them paid by itself. People are matched by name, so use the same name in both.</span>'
+      + (QB.missing && QB.missing.length ? '<span class="qb-why">Not found in QuickBooks: ' + QB.missing.map(esc).join(', ') + '. Add them in QuickBooks Payroll (or as a vendor for 1099) with the same name, then send again.</span>' : '') + '</div>'
+      + '<button class="bpx-addbtn" onclick="QB.hours()"' + (QB.busy ? ' disabled' : '') + '>' + (QB.busy === 'hours' ? 'Sending\u2026' : 'Send hours') + '</button></div>';
 
     var log = s.log || [];
     h += '<div class="bpx-chead" style="margin:18px 0 8px"><div class="bpx-ptitle" style="margin:0">Sync log<span class="lg2">the last 40 things sent</span></div></div>'
