@@ -148,3 +148,31 @@
   body.ho-has-tabs #bpSign .pr-pbar .pr-brand img,#bpSign .hp-side .hp-brand .bp-mark,#bpSign .hp-side .hp-avi img[src*="logo-mark"],#bpSign .hp-side img[src*="assets/brand/logo-mark"]{filter:brightness(2.1) saturate(1.15) drop-shadow(0 0 6px rgba(120,170,255,.35))}
   body.ho-has-tabs #bpSign .pr-pbar .pr-brand img{width:44px !important;height:44px !important}
 }
+
+/* screen changes on the homeowner side (portal/hnav.js): the contractor app's push and pop */
+@keyframes hoNavFwd{from{transform:translateX(34%);opacity:.4}to{transform:none;opacity:1}}
+@keyframes hoNavBack{from{transform:translateX(-26%);opacity:.4}to{transform:none;opacity:1}}
+@keyframes hoNavFade{from{opacity:0}to{opacity:1}}
+#bpSign.nav-fwd :is(.hp-main,.pr-main){animation:hoNavFwd .3s cubic-bezier(.2,.8,.2,1) both}
+#bpSign.nav-back :is(.hp-main,.pr-main){animation:hoNavBack .28s cubic-bezier(.2,.8,.2,1) both}
+#bpSign.nav-fade :is(.hp-main,.pr-main){animation:hoNavFade .22s ease-out both}
+@media (prefers-reduced-motion:reduce){#bpSign:is(.nav-fwd,.nav-back,.nav-fade) :is(.hp-main,.pr-main){animation:none}}
+#bpSign.hp,#bpSign .pr-page{overflow-x:clip}
+
+/* pull to refresh on the homeowner screens: the contractor app's spinner */
+#hoPtr{position:fixed;left:50%;top:calc(56px + env(safe-area-inset-top));z-index:60;width:40px;height:40px;margin-top:0;border-radius:50%;display:grid;place-items:center;
+  background:#fff;color:#98a2b3;box-shadow:0 2px 10px rgba(15,23,42,.14);opacity:0;transform:translate(-50%,-40px);pointer-events:none;transition:opacity .15s}
+#hoPtr.show{opacity:1}
+#hoPtr.ready{color:#006fff}
+#hoPtr.spin{color:#006fff;transition:transform .2s}
+#hoPtr.spin svg{animation:hoSpin .7s linear infinite}
+@keyframes hoSpin{to{transform:rotate(360deg)}}
+
+@media (max-width:899px){
+  /* the small title in the top bar once the big title scrolls away, like the contractor app */
+  #bpSign .pr-pbar{position:sticky}
+  #bpSign .pr-pbar::after{content:attr(data-t);position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) translateY(6px);font-size:17px;font-weight:700;color:#0f1729;opacity:0;transition:opacity .18s ease,transform .18s ease;pointer-events:none}
+  body.ho-up #bpSign .pr-pbar::after{opacity:1;transform:translate(-50%,-50%)}
+  /* no explanation lines under titles on a phone, as in the contractor app */
+  #bpSign .ho-sub,#bpSign .pr-hero-t p{display:none !important}
+}
