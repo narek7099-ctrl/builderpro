@@ -132,7 +132,7 @@
     if (window.bpCloseModal) bpCloseModal();
     try { window._bpSetSec = 'business'; } catch (e) {}
     if (window.bpNav) bpNav('settings');
-    setTimeout(function () { if (window.bpSetTab) bpSetTab('business'); var c = document.getElementById('lic-card'); if (c) c.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 120);
+    setTimeout(function () { if (window.bpSetTab) bpSetTab('licenses'); var c = document.getElementById('lic-card'); if (c) c.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 120);
   };
 
   /* ------------------------------------------------------------- the pane --- */

@@ -1,0 +1,42 @@
+/* Settings in groups, with a search (2026-11-27, app.html bpSettings).
+   Computer: the rail lists four headed groups under a search box.
+   Phone: the same groups as separate cards, iPhone-Settings style. */
+@top .st-navs{gap:0 !important}
+@top .st-find{position:relative !important;display:block !important;margin:0 0 6px !important}
+@top .st-find .ms{position:absolute !important;left:11px !important;top:50% !important;transform:translateY(-50%) !important;font-size:18px !important;color:var(--grey-l,#9aa3b1) !important;pointer-events:none !important}
+@top .st-find input{width:100% !important;height:38px !important;min-height:38px !important;margin:0 !important;padding:0 12px 0 36px !important;border:1px solid var(--line) !important;border-radius:10px !important;background:var(--card,#fff) !important;font-size:13.5px !important;box-shadow:none !important}
+@top .st-find input::-webkit-search-cancel-button{cursor:pointer}
+@top .st-gh{margin:12px 0 4px !important;padding:0 13px !important;font-size:11px !important;font-weight:700 !important;letter-spacing:.07em !important;text-transform:uppercase !important;color:var(--grey-l,#9aa3b1) !important}
+@top .st-find+.st-gh{margin-top:8px !important}
+@top .st-navg{display:flex !important;flex-direction:column !important;gap:2px !important}
+@top .st-nav[hidden],@top .st-navg[hidden],@top .st-gh[hidden],@top .st-none[hidden]{display:none !important}
+@top .st-none{padding:10px 13px !important;font-size:13px !important;line-height:1.45 !important;color:var(--grey) !important}
+/* the license card's own title repeats the page title */
+@top #lic-host>.st-grp:first-child,@top #lic-host .lic-card>p.st-hint:first-child{display:none !important}
+/* tablets: the rail is one row under the search */
+@media (min-width:761px) and (max-width:900px){
+  @top .st-navs{flex-direction:row !important;flex-wrap:nowrap !important;overflow-x:auto !important;gap:4px !important}
+  @top .st-find{flex:0 0 200px !important;margin:0 !important}
+  @top .st-gh{display:none !important}
+  @top .st-navg{display:contents !important}
+}
+/* phone: grouped cards */
+@media (max-width:760px){
+  @top.bp-m .st.st-menu .st-navs{background:none !important;border:0 !important;border-radius:0 !important;padding:0 !important;margin:0 !important;box-shadow:none !important}
+  @top.bp-m .st.st-menu .st-find{margin:4px 0 2px !important}
+  @top.bp-m .st.st-menu .st-find input{height:46px !important;min-height:46px !important;padding-left:40px !important;border-radius:12px !important;font-size:16px !important}
+  @top.bp-m .st.st-menu .st-find .ms{left:13px !important;font-size:21px !important}
+  @top.bp-m .st.st-menu .st-gh{margin:20px 0 8px !important;padding:0 6px !important;font-size:12.5px !important;letter-spacing:.06em !important}
+  @top.bp-m .st.st-menu .st-navg{gap:0 !important;background:var(--card,#fff) !important;border:1px solid var(--line) !important;border-radius:16px !important;overflow:hidden !important}
+  @top.bp-m .st.st-menu .st-navg .st-nav{border-bottom:1px solid var(--line) !important}
+  @top.bp-m .st.st-menu .st-navg .st-nav:last-child{border-bottom:0 !important}
+  @top.bp-m .st.st-menu .st-none{padding:16px 6px !important;font-size:15px !important}
+}
+/* Lisa's page: Setup | Knowledge & rules */
+@top .st-sub{display:inline-flex !important;margin:0 0 16px !important}
+@top .st-sub .bpx-jt{display:inline-flex !important;align-items:center !important;gap:6px !important}
+@top .st-sub .ms{font-size:18px !important}
+@top .st-subp[hidden]{display:none !important}
+@top .st-subd{margin:0 0 14px !important;font-size:13.5px !important;line-height:1.5 !important;color:var(--grey) !important}
+/* the save bar stays away on pages that save themselves (a phone style was forcing it back) */
+@top #bpx-setfoot[hidden]{display:none !important}
