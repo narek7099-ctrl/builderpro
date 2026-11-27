@@ -91,3 +91,51 @@
   #bpSign .hd-acts{justify-content:flex-start;gap:26px;padding-left:4px}
   #bpSign .hd-photos button{width:150px}
 }
+
+/* ---- the big project card at the top (2026-11-27, replaces the three tiles) ---- */
+#bpSign .ho-sec[hidden]{display:none !important}
+#bpSign .hd-hero{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;gap:14px;min-height:330px;padding:16px 16px 14px;border-radius:24px;cursor:pointer;
+  color:var(--hp-ink,#0f1729);background:radial-gradient(110% 80% at 100% 0%,rgba(0,111,255,.10),transparent 60%),radial-gradient(90% 70% at 0% 100%,rgba(22,199,154,.08),transparent 60%),#fff;
+  border:1px solid var(--hp-line,#e6e9ef);box-shadow:0 1px 2px rgba(15,23,42,.06),0 18px 40px -28px rgba(0,21,48,.35);transition:transform .15s ease}
+#bpSign .hd-hero:active{transform:scale(.99)}
+#bpSign .hd-hero:focus-visible{outline:2px solid #006fff;outline-offset:3px}
+#bpSign .hd-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2}
+#bpSign .hd-hero.has-ph{color:#fff;border-color:transparent}
+#bpSign .hd-hero.has-ph::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(0,21,48,.35) 0%,rgba(0,21,48,.05) 28%,rgba(0,21,48,.45) 55%,rgba(0,21,48,.9) 100%)}
+#bpSign .hd-hero-top{display:flex;align-items:center;gap:9px;min-width:0}
+#bpSign .hd-h-logo{flex:none;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:#006fff;color:#fff;font-size:12px;font-weight:800;overflow:hidden}
+#bpSign .hd-h-logo.has{background:#fff}
+#bpSign .hd-h-logo img{width:100%;height:100%;object-fit:contain}
+#bpSign .hd-h-biz{flex:1;min-width:0;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpSign .hd-h-pill{flex:none;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 11px;border-radius:14px;font-size:12.5px;font-weight:700;background:#eef3ff;color:#1b56ee}
+#bpSign .hd-h-pill i{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px rgba(27,86,238,.18)}
+#bpSign .hd-hero.has-ph .hd-h-pill{background:rgba(255,255,255,.18);color:#fff;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+#bpSign .hd-hero.has-ph .hd-h-pill i{box-shadow:0 0 0 3px rgba(255,255,255,.22)}
+#bpSign .hd-hero-body{margin-top:auto;display:flex;flex-direction:column;gap:6px}
+#bpSign .hd-hero-body h2{margin:0;font-size:32px;line-height:1.08;font-weight:800;letter-spacing:-.025em;color:inherit}
+#bpSign .hd-hero.has-ph .hd-hero-body h2{text-shadow:0 2px 16px rgba(0,0,0,.25)}
+#bpSign .hd-h-addr{display:flex;align-items:center;gap:4px;font-size:14px;opacity:.85}
+#bpSign .hd-h-addr .ms{font-size:17px}
+#bpSign .hd-h-prog{margin-top:8px}
+#bpSign .hd-h-prog>div{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:14px;margin-bottom:7px}
+#bpSign .hd-h-prog>div>b{font-size:15px}
+#bpSign .hd-h-prog>i{display:block;height:8px;border-radius:4px;background:rgba(15,23,41,.08);overflow:hidden}
+#bpSign .hd-h-prog>i>i{display:block;height:100%;border-radius:4px;background:#16c79a}
+#bpSign .hd-hero.has-ph .hd-h-prog>i{background:rgba(255,255,255,.25)}
+#bpSign .hd-hero-facts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#bpSign .hd-h-fact{display:flex;align-items:center;gap:9px;min-width:0;padding:10px 11px;border-radius:14px;background:var(--hp-soft,#f2f4f7)}
+#bpSign .hd-hero.has-ph .hd-h-fact{background:rgba(255,255,255,.14);-webkit-backdrop-filter:blur(12px) saturate(1.3);backdrop-filter:blur(12px) saturate(1.3);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.25)}
+#bpSign .hd-h-fact>.ms{flex:none;font-size:20px;color:#1b56ee}
+#bpSign .hd-hero.has-ph .hd-h-fact>.ms{color:#fff}
+#bpSign .hd-h-fact>div{min-width:0}
+#bpSign .hd-h-fact small{display:block;font-size:11.5px;font-weight:600;opacity:.75}
+#bpSign .hd-h-fact b{display:block;font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpSign .hd-h-fact.due{background:#006fff !important;color:#fff}
+#bpSign .hd-h-fact.due>.ms{color:#fff}
+#bpSign .hd-hero-go{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:700;color:#1b56ee}
+#bpSign .hd-hero.has-ph .hd-hero-go{color:#fff}
+#bpSign .hd-hero-go .ms{font-size:18px}
+@media (min-width:900px){
+  #bpSign .hd-hero{min-height:360px;padding:22px 22px 18px}
+  #bpSign .hd-hero-body h2{font-size:38px}
+}
