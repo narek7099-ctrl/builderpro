@@ -18,6 +18,10 @@
 //   POST { op:"message", token, body }
 //   POST { op:"change_order_decide", token, id, decision:"approve"|"decline",
 //          signer_name, signature (data:image/png), consent:true, note? }
+//   POST { op:"review", token, rating:1-5, text?, cats?:{quality,communication,schedule,cleanup,value},
+//          hire?:bool, photos?:[k of photos[]], share?:bool }  (once the job is done; posting
+//          again edits it). "get" also returns review (theirs, with the contractor's
+//          reply), reviewable and reviewUrl (the business's Google link).
 //   POST { op:"pay", token } -> { ok, url } a BuilderPro pay link for the
 //          homeowner's newest open invoice: card checkout on the contractor's
 //          own Stripe (stripe-pay), which then marks the invoice paid
@@ -276,16 +280,37 @@ function planOf(j: Row, C: number, fin: Row) {
   return out;
 }
 
+/* the job's photos the owner shared, in order (a review's photos point into this list) */
+function sharedPhotos(j: Row, l: Row): string[] {
+  const sp = new Set(arr(l.share_photos).map(String));
+  return arr(j.photos).map(String).filter((p) => sp.has(p)).slice(0, 60);
+}
+const REV_CATS = ["quality", "communication", "schedule", "cleanup", "value"];
+/* the homeowner's own review as their page shows it, with the contractor's reply */
+async function reviewOf(r: Row | undefined) {
+  if (!r) return null;
+  const cats: Row = {};
+  REV_CATS.forEach((k) => { const v = Math.round(num(r.cats?.[k])); if (v >= 1 && v <= 5) cats[k] = v; });
+  return {
+    rating: num(r.overall), text: String(r.overall_comment ?? ""), cats, hire: typeof r.would_hire === "boolean" ? r.would_hire : null,
+    share: !!r.share, at: r.used_at, edited: !!r.edited_at,
+    photos: (await Promise.all(arr(r.photos).slice(0, 6).map((p) => signed(String(p))))).filter(Boolean),
+    refs: arr(r.photos).map(String),
+    reply: r.reply ? String(r.reply) : "", reply_at: r.reply_at || null,
+  };
+}
+
 async function view(c: Ctx) {
   const { link: l, job: j } = c;
   const owner = l.owner, jid = encodeURIComponent(l.job_id);
-  const [cs, msgs, cos, cts, pays, loc] = await Promise.all([
+  const [cs, msgs, cos, cts, pays, loc, rvw] = await Promise.all([
     rest(`client_settings?user_id=eq.${owner}&select=data&limit=1`),
     rest(`customer_messages?owner=eq.${owner}&job_id=eq.${jid}&select=id,from_customer,author,body,created_at,read_at&order=created_at.asc&limit=300`),
     rest(`customer_change_orders?owner=eq.${owner}&job_id=eq.${jid}&status=neq.void&select=id,title,description,amount,status,signer_name,signed_at,signature,created_at&order=created_at.desc`),
     rest(`contracts?owner=eq.${owner}&job_id=eq.${jid}&status=in.(sent,viewed,signed)&select=title,status,token,amount,signed_at,sent_at&order=created_at.desc`),
     rest(`stripe_payments?owner=eq.${owner}&invoice_ref=eq.${encodeURIComponent("portal:" + l.job_id)}&status=eq.succeeded&select=amount,paid_at,currency&order=paid_at.desc&limit=50`),
     ghlLocation(owner),
+    rest(`review_requests?owner=eq.${owner}&job_id=eq.${jid}&used_at=not.is.null&sample=is.false&select=overall,overall_comment,cats,would_hire,photos,share,used_at,edited_at,reply,reply_at&order=used_at.desc&limit=1`),
   ]);
   const data = rows(cs)[0]?.data ?? {};
   const co = data.company ?? {};
@@ -303,8 +328,10 @@ async function view(c: Ctx) {
   const emps = ids.size ? rows(await rest(`employees?owner=eq.${owner}&active=is.true&id=in.(${[...ids].join(",")})&select=name,trade,photo_url&order=name.asc`)) : [];
   const crew = await Promise.all(emps.map(async (e: Row) => ({ name: first(e.name), trade: clean(e.trade, 60), photo: await signed(e.photo_url) })));
 
-  const sp = new Set(arr(l.share_photos).map(String)), sd = new Set(arr(l.share_docs).map(String));
-  const photos = (await Promise.all(arr(j.photos).filter((p) => sp.has(String(p))).slice(0, 60).map((p) => signed(p)))).filter(Boolean).map((url) => ({ url }));
+  const sd = new Set(arr(l.share_docs).map(String));
+  // k: the photo's place in the shared list, so a review can point at it
+  const shared = sharedPhotos(j, l);
+  const photos = (await Promise.all(shared.map(async (p, k) => ({ url: await signed(p), k })))).filter((x) => x.url);
   const docs = (await Promise.all(arr(j.docs).filter((d) => d && sd.has(String(d.d))).slice(0, 60).map(async (d) => ({
     name: clean(d.n, 120) || "Document", type: /pdf/i.test(String(d.t ?? "")) ? "pdf" : "image", url: await signed(d.d),
   })))).filter((d) => d.url);
@@ -343,6 +370,7 @@ async function view(c: Ctx) {
     job: {
       title: clean(j.title, 160), customer: first(j.name), addr: clean(j.addr, 200),
       status: j.status === "done" ? "done" : "active",
+      done_at: j.status === "done" && Number.isFinite(Number(j.doneAt)) && Number(j.doneAt) > 0 ? new Date(Number(j.doneAt)).toISOString() : (j.status === "done" ? isoDay(j.doneAt) : ""),
       progress: tot ? Math.round(done / tot * 100) : (j.status === "done" ? 100 : null),
       phases, next_visit: dates.find((d) => d >= today) || "", time: clean(j.sched?.time, 40),
       visits: dates.filter((d) => d >= today).slice(0, 10),
@@ -351,6 +379,9 @@ async function view(c: Ctx) {
       schedule,
     },
     money: moneyOf(j, changes, payments),
+    review: await reviewOf(rows(rvw)[0]),
+    reviewable: j.status === "done",
+    reviewUrl: /^https:\/\//i.test(String(co.reviewUrl ?? "")) && String(co.reviewUrl).length < 500 ? String(co.reviewUrl) : "",
     plan: planOf(j, moneyOf(j, changes, payments).contract, data.financing ?? {}),
     canPay: !!(loc && (GHL_TOKEN || GHL_API_KEY || await savedKey(loc))),
     crew,
@@ -431,6 +462,37 @@ Deno.serve(async (req) => {
         method: "PATCH", headers: { Prefer: "return=representation" }, body: JSON.stringify(patch),
       });
       if (!r.ok || !rows(r).length) return json({ ok: false, error: "This change order was just updated. Reload the page." }, 409);
+      return json(await view(c));
+    }
+
+    if (b.op === "review") {
+      if (limited("rev:" + ip, 12)) return json({ ok: false, error: "Too many tries. Try again in a few minutes." }, 429);
+      if (c.job.status !== "done") return json({ ok: false, error: "You can review the work once the job is finished." });
+      const overall = Math.round(num(b.rating));
+      if (overall < 1 || overall > 5) return json({ ok: false, error: "Pick 1 to 5 stars first." });
+      const text = clean(b.text, 2000);
+      const cats: Row = {};
+      REV_CATS.forEach((k) => { const v = Math.round(num((b.cats ?? {})[k])); if (v >= 1 && v <= 5) cats[k] = v; });
+      const shared = sharedPhotos(c.job, l);
+      const pics = [...new Set(arr(b.photos).map((k) => Math.floor(num(k))))].filter((k) => k >= 0 && k < shared.length).slice(0, 6).map((k) => shared[k]);
+      const now = new Date().toISOString();
+      const words = {
+        overall, overall_comment: text || null, cats, would_hire: typeof b.hire === "boolean" ? b.hire : null,
+        photos: pics, share: b.share !== false,
+      };
+      const sel = `owner=eq.${owner}&job_id=eq.${jid}&sample=is.false`;
+      const done = rows(await rest(`review_requests?${sel}&used_at=not.is.null&select=token&order=used_at.desc&limit=1`))[0];
+      let r: { ok: boolean; status: number; data: any };
+      if (done) {
+        r = await rest(`review_requests?token=eq.${done.token}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ ...words, edited_at: now }) });
+      } else {
+        const open = rows(await rest(`review_requests?${sel}&used_at=is.null&select=token&order=created_at.desc&limit=1`))[0];
+        const who = { customer_name: clean(c.job.name, 120) || null, job_title: clean(c.job.title, 160) || null, source: "portal" };
+        r = open
+          ? await rest(`review_requests?token=eq.${open.token}&used_at=is.null`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ ...words, ...who, used_at: now }) })
+          : await rest("review_requests", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ ...words, ...who, owner, job_id: l.job_id, used_at: now }) });
+      }
+      if (!r.ok) { console.error("review save", r.status, JSON.stringify(r.data).slice(0, 300)); return json({ ok: false, error: "Couldn't post your review. Try again." }, 500); }
       return json(await view(c));
     }
 
