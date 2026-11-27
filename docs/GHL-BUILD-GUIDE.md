@@ -292,6 +292,40 @@ Every alert in S1, S2 and S5 goes to the owner's cell (the owner phone custom va
 | 35 / 36 (Enterprise) | Built with Stop on response OFF on purpose. The app says ON. | Leave as built. I'll fix the app. |
 | Enterprise Owner Phone custom value | Your real cell, ships to every Enterprise client | Clear it |
 
+### REMINDER: when HighLevel is back on, the homeowner's project page (added 2026-11-27)
+
+Question that started this: "when a roofer makes the project for the
+homeowner, is it sent to them automatically?" Answer: the texts that carry the
+link are automatic (contract signed, job scheduled, crew arrived, phase done,
+change order waiting, job complete, warranty), but nothing goes out the moment
+the project is made.
+
+1. **Link made automatically on every new project. DONE (no HighLevel needed).**
+   Since 2026-11-27 the database makes the homeowner link the moment a project
+   is saved (`supabase/migrations/20261127_portal_link_auto.sql`; samples are
+   skipped, a link the owner turned off stays off). Nothing is sent by it. If
+   the homeowner already has a BuilderPro account, the project shows up there.
+   *When HighLevel is on:* make a test project, mark it scheduled, and check
+   the contact's **BP Portal Link** field is filled and the "Job Scheduled"
+   text has the link at the end.
+2. **"Your project page" welcome text (OS + Enterprise). TO BUILD.**
+   - Code (Claude, when HighLevel is unfrozen): a new event `project_created`
+     with tag `bp-project-created` in `supabase/functions/ghl-events`, sent
+     once per project when it's first saved, skipped for samples and for jobs
+     with customer messages paused; a per-job "Don't text the homeowner"
+     switch on the project's Customer tab.
+   - HighLevel (you): workflow **"Project Page Ready"**, trigger tag added
+     `bp-project-created`, Re-entry off, contact time zone 8am to 8pm.
+     SMS: "Hi {{contact.first_name}}, it's {{contact.bp_company_name}}. Here's
+     your project page for your {{contact.bp_job_name}}: schedule, photos,
+     payments and messages in one place. {{contact.bp_portal_link}}"
+     Then the same by email, subject "Your {{contact.bp_job_name}} project page".
+3. **No blank links (all workflows that use `{{contact.bp_portal_link}}`). TO BUILD.**
+   Projects made before 2026-11-27 may have no link. In 30 Job Scheduled, 32
+   Crew Arrived, 33 Job Completed, 37 Contract Signed, 38 Phase Done, 41 Change
+   Order Waiting and 43 Warranty Info, add an If/Else at the top: if **BP Portal
+   Link** is empty, send the same text without the "Follow along: ..." part.
+
 ### Also worth adding (all plans unless noted)
 
 - **"New lead went quiet" (OS+):** opportunity in New Lead for 48 hours with no
