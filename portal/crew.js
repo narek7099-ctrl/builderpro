@@ -694,7 +694,7 @@
       + (any1099 ? 'None of your 1099 contractors has hours in this period, so there are no checks to print.'
         : 'Checks print for 1099 contractors, and everyone on your team is set as W-2. (A W-2 paycheck needs tax taken out, so it goes through your payroll.) To pay someone by check, open them in Employees and set Type to 1099 subcontractor.')
       + '</span><button type="button" class="bpx-btn ghost hl-keep" onclick="bpCheckSample()">See a sample check</button></div>';
-    note = ckHint + note;
+    /* (2026-11-27) checks work for everyone now, from the Pay button: no hint needed */
     var nDisp = list.reduce(function (n, r) { return n + r.disp.length; }, 0);
     if (nDisp) head += '<div class="pay-disp" role="alert"><span class="ms">flag</span><span><b>' + nDisp + ' disputed ' + (nDisp === 1 ? 'entry' : 'entries') + '</b> — review before paying.</span>'
       + '<button type="button" onclick="bpHoursDisputed()">Review</button></div>';
@@ -745,6 +745,10 @@
   }
 
   /* ------------------------------------------------------------ Pay --- */
+  /* 2026-11-27: checks for W-2 people too. Their check is for take-home pay, which the owner
+     types in after working out the taxes with their payroll or accountant (BuilderPro does not
+     calculate or file payroll tax); the stub then shows gross, taxes and deductions, take-home. */
+  function ckNet() { var el = $('ckNet'); if (!el) return null; var v = parseFloat(String(el.value).replace(/[^0-9.]/g, '')); return isFinite(v) && v > 0 ? Math.round(v * 100) / 100 : null; }
   /* 2026-11-26 (the owner's ask): one Pay button per person. It asks how: a pay stub, a
      check, or both (the check with the pay stub printed after it). Checks are for 1099
      contractors only; a W-2 paycheck needs tax taken out, so that goes through payroll and
@@ -762,8 +766,8 @@
       + '<div class="pay6-amt"><b>' + m2(amt) + '</b><span>' + esc(nice(d.from)) + ' \u2013 ' + esc(nice(d.to)) + ' \u00b7 ' + (c99 ? '1099 contractor' : 'W-2 employee') + '</span></div>'
       + '<div class="pay6-l" role="radiogroup" aria-label="How do you want to pay?">'
       + opt('stub', 'receipt_long', 'Pay stub', 'The record of hours and pay, to print or save as a PDF.', !c99, false)
-      + opt('check', 'payments', 'Check', c99 ? 'Print a check, signed with your saved e-signature.' : 'For 1099 contractors. W-2 pay goes through your payroll.', false, !c99)
-      + opt('both', 'library_books', 'Both', c99 ? 'The check, with the pay stub printed right after it.' : 'For 1099 contractors only.', c99, !c99)
+      + opt('check', 'payments', 'Check', 'Print a check, signed with your saved e-signature.' + (c99 ? '' : ' You enter their take-home pay after taxes.'), false, false)
+      + opt('both', 'library_books', 'Both', 'The check, with the pay stub printed right after it.', c99, false)
       + '</div><p class="pay6-n">Nothing is printed or marked paid yet: you see it first, then confirm.</p>'
       + '<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" onclick="bpPayGo(\'' + d.e.id + '\',\'' + d.from + '\')">Next</button></div></div>');
     var cards = document.querySelectorAll('.bpx-modalcard'), mc = cards[cards.length - 1]; if (mc) mc.style.maxWidth = '460px';
@@ -829,13 +833,14 @@
         + d.lines.map(function (l) { return '<tr><td>' + esc(l[0]) + '</td><td class="n">' + (e.pay_type === 'salary' ? '—' : l[1]) + '</td><td class="n">' + m2(l[2]) + '</td><td class="n">' + m2(l[3]) + '</td></tr>'; }).join('')
       + '</tbody></table>'
       + '<div class="ps-sum"><div><span>Gross pay</span><span>' + m2(d.r.gross) + '</span></div>'
-        + (w2 ? '<div class="ps-tax"><span>Taxes and deductions</span><span>Handled by your payroll</span></div>' : '<div class="ps-tax"><span>Tax withheld</span><span>None (1099)</span></div>')
-        + '<div class="t"><span>' + (w2 ? 'Gross pay this period' : 'Amount paid') + '</span><span>' + m2(d.r.gross) + '</span></div>'
+        + (w2 && d.net != null ? '<div class="ps-tax"><span>Taxes and deductions</span><span>\u2212' + m2(Math.max(0, d.r.gross - d.net)) + '</span></div>'
+          : w2 ? '<div class="ps-tax"><span>Taxes and deductions</span><span>Handled by your payroll</span></div>' : '<div class="ps-tax"><span>Tax withheld</span><span>None (1099)</span></div>')
+        + '<div class="t"><span>' + (w2 && d.net != null ? 'Take-home pay' : w2 ? 'Gross pay this period' : 'Amount paid') + '</span><span>' + m2(w2 && d.net != null ? d.net : d.r.gross) + '</span></div>'
         + '<div class="ps-ytd"><span>Year to date, gross</span><span>' + m2(d.ytd) + '</span></div></div>'
       + (d.days.length ? '<div class="ps-days"><b>Days worked</b><table class="ps-tb sm"><thead><tr><th>Day</th><th>Job</th><th class="n">Hours</th><th class="n">OT</th></tr></thead><tbody>'
         + d.days.map(function (x) { return '<tr><td>' + esc(dayLabel(x.worked_on)) + '</td><td>' + esc(String(x.job_name || '—').replace(/\s*\(sample\)/g, '')) + '</td><td class="n">' + (+x.hours || 0) + '</td><td class="n">' + (+x.ot_hours || '—') + '</td></tr>'; }).join('')
         + '</tbody></table></div>' : '')
-      + '<div class="ps-foot">' + (w2 ? 'Amounts are before tax. Withholding and filing are done by your payroll provider.' : 'Paid as an independent contractor; no tax was withheld.') + ' Made with BuilderPro.</div>'
+      + '<div class="ps-foot">' + (w2 && d.net != null ? 'Taxes and deductions as worked out by your employer; their payroll provider or accountant files them.' : w2 ? 'Amounts are before tax. Withholding and filing are done by your payroll provider.' : 'Paid as an independent contractor; no tax was withheld.') + ' Made with BuilderPro.</div>'
       + (d.paid ? '<div class="ps-stamp">Paid</div>' : '')
       + '</div>';
   }
@@ -904,7 +909,7 @@
     return u || (location.origin + '/assets/brand/logo-mark-128.png');
   }
   function checkFace(d, o) {
-    o = o || {}; var co = d.co, amt = d.r.paid ? +d.r.paid.amount || d.r.gross : d.r.gross;
+    o = o || {}; var co = d.co, amt = o.amt != null ? o.amt : (d.r.paid ? +d.r.paid.amount || d.r.gross : d.r.gross);
     var top = o.top != null ? !!o.top : !!chkGet('top', true);
     var adj = chkGet('adj', { x: 0, y: 0 }), dx = (+adj.x || 0) / 16 / 8.5 * 100, dy = (+adj.y || 0) / 16 / 3.5 * 100;
     var at2 = function (l, t) { return 'left:' + (l + dx).toFixed(2) + '%;top:' + (t + dy).toFixed(2) + '%'; };
@@ -928,17 +933,19 @@
   function voucher(d, o, keep) {
     var rt = +d.e.rate || 0;
     return '<div class="ck-v"><div class="ck-vh"><b><img src="' + esc(ckLogo(d.co)) + '" alt="">' + esc(d.co.name || 'Your business') + '</b><span>Check ' + esc(o.no || '') + ' · ' + esc(o.date || '') + '</span></div>'
-      + '<div class="ck-vp"><b>Paid to ' + esc(d.e.name) + '</b><span>1099 contractor · no tax withheld</span></div>'
+      + '<div class="ck-vp"><b>Paid to ' + esc(d.e.name) + '</b><span>' + (d.e.kind === '1099' ? '1099 contractor · no tax withheld' : 'W-2 employee') + '</span></div>'
       + '<table><thead><tr><th>For</th><th class="n">Hours</th><th class="n">Rate</th><th class="n">Amount</th></tr></thead><tbody>'
       + d.lines.map(function (l) { return '<tr><td>' + esc(l[0]) + ', ' + esc(nice(d.from)) + ' – ' + esc(nice(d.to)) + '</td><td class="n">' + (d.e.pay_type === 'salary' ? '—' : l[1]) + '</td><td class="n">' + m2(l[2]) + '</td><td class="n">' + m2(l[3]) + '</td></tr>'; }).join('')
-      + '</tbody></table><div class="ck-vt"><span>' + esc(o.memo || '') + '</span><b>Total ' + m2(d.r.paid ? +d.r.paid.amount || d.r.gross : d.r.gross) + '</b></div>'
-      + '<div class="ck-vk">' + (keep ? 'Keep for your records' : 'Contractor’s copy') + '</div></div>';
+      + (o.amt != null && d.e.kind !== '1099' ? '<tr><td>Taxes and deductions</td><td class="n"></td><td class="n"></td><td class="n">\u2212' + m2(Math.max(0, d.r.gross - o.amt)) + '</td></tr>' : '')
+      + '</tbody></table><div class="ck-vt"><span>' + esc(o.memo || '') + '</span><b>' + (o.amt != null && d.e.kind !== '1099' ? 'Take-home ' + m2(o.amt) : 'Total ' + m2(d.r.paid ? +d.r.paid.amount || d.r.gross : d.r.gross)) + '</b></div>'
+      + '<div class="ck-vk">' + (keep ? 'Keep for your records' : (d.e.kind === '1099' ? 'Contractor’s copy' : 'Employee’s copy')) + '</div></div>';
   }
   function sheet(d, o) { return '<div class="ck-page">' + checkFace(d, o) + voucher(d, o, false) + voucher(d, o, true) + '</div>'; }
   function today() { return new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
   window.bpPayCheck = function (empId, from, how) {
     ckCss(); how = how || {};
     var d = stubData(empId, from || S.payFrom || periodOf(Date.now())[0]); if (!d) return;
+    var w2 = d.e.kind !== '1099';
     var no = String(chkGet('next', 1001)), addrs = chkGet('addr', {}), memo = 'Pay ' + nice(d.from) + ' – ' + nice(d.to);
     bpModal('<h3>Check for ' + esc(d.e.name) + '</h3>'
       + '<div class="ck-wrap" id="ckPrev"></div>'
@@ -946,18 +953,24 @@
       + '<div class="ck-form"><div><label>Check number</label><input id="ckNo" inputmode="numeric" value="' + esc(no) + '"></div>'
       + '<div><label>Date</label><input id="ckDate" value="' + esc(today()) + '"></div>'
       + '<div class="w"><label>Memo</label><input id="ckMemo" value="' + esc(memo) + '"></div>'
+      + (w2 ? '<div class="w ck-net"><label>Take-home pay <small>after taxes. Their gross pay is ' + m2(d.r.gross) + '; work out what comes out with your payroll or accountant.</small></label><input id="ckNet" inputmode="decimal" placeholder="$0.00" autocomplete="off"><div class="ck-netmsg" id="ckNetMsg" role="alert"></div></div>' : '')
       + '<div class="w ck-chk"><label><input type="checkbox" id="ckStub"' + (how.stub ? ' checked' : '') + '> Print the pay stub after the check <small>A full page with the hours, rate and year-to-date pay, for their records.</small></label></div>'
       + '<div class="w ck-chk"><label><input type="checkbox" id="ckTop"' + (chkGet('top', true) ? ' checked' : '') + '> Print my logo and business name in the top-left corner <small>Turn this off if your checks already have your name printed there.</small></label></div>'
       + '<div class="w"><label>Mailing address <small>for a window envelope, optional</small></label><textarea id="ckAddr" rows="2" placeholder="Street\nCity, State ZIP">' + esc(addrs[empId] || '') + '</textarea></div></div>'
       + '<p class="ck-note">Print onto pre-printed business checks with the check on top (from your bank or an office store). Your bank details and the magnetic number line are already on them, so BuilderPro never asks for them. Two stubs with the pay details print below the check. <b>Pay</b> signs it with your saved signature, prints it and marks it paid; paid another way? Close this and use Mark paid.</p>'
       + '<div class="row"><button class="bpx-btn ghost" onclick="bpCheckAdjOpen()">Line up</button><button class="bpx-btn ghost" onclick="bpCheckPrint(\'' + d.e.id + '\',\'' + d.from + '\',1)">Test on plain paper</button>'
       + '<button class="bpx-btn ghost" onclick="bpCheckPrint(\'' + d.e.id + '\',\'' + d.from + '\',0)">Print to sign by hand</button>'
-      + (d.paid ? '' : '<button class="bpx-btn ck-paybtn" onclick="bpCheckPay(\'' + d.e.id + '\',\'' + d.from + '\')"><span class="ms" style="font-size:18px;vertical-align:-4px;margin-right:4px">draw</span>Pay ' + m2(d.r.gross) + '</button>') + '</div>');
+      + (d.paid ? '' : '<button class="bpx-btn ck-paybtn" id="ckPayBtn" onclick="bpCheckPay(\'' + d.e.id + '\',\'' + d.from + '\')"><span class="ms" style="font-size:18px;vertical-align:-4px;margin-right:4px">draw</span>Pay ' + m2(d.r.gross) + '</button>') + '</div>');
     var cards = document.querySelectorAll('.bpx-modalcard'), mc = cards[cards.length - 1]; if (mc) { mc.style.maxWidth = '820px'; mc.style.width = '95vw'; mc.classList.add('ps-modal'); }
     var sig = null;
-    var draw = function () { var el = $('ckPrev'); if (el) el.innerHTML = checkFace(d, { bg: 1, sig: sig, no: ($('ckNo') || {}).value, date: ($('ckDate') || {}).value, memo: ($('ckMemo') || {}).value, addr: ($('ckAddr') || {}).value, top: ($('ckTop') || {}).checked }); };
+    var draw = function () {
+      var amt = w2 ? (ckNet() || 0) : d.r.gross;
+      var el = $('ckPrev'); if (el) el.innerHTML = checkFace(d, { bg: 1, sig: sig, no: ($('ckNo') || {}).value, date: ($('ckDate') || {}).value, memo: ($('ckMemo') || {}).value, addr: ($('ckAddr') || {}).value, top: ($('ckTop') || {}).checked, amt: amt });
+      var pb = $('ckPayBtn'); if (pb) pb.lastChild.textContent = w2 && !ckNet() ? 'Pay' : 'Pay ' + m2(amt);
+      var mm = $('ckNetMsg'); if (mm && ckNet()) mm.textContent = ckNet() > d.r.gross ? 'That\u2019s more than their gross pay of ' + m2(d.r.gross) + '.' : '';
+    };
     if (window.bpUsLoad) bpUsLoad().then(function (row) { sig = row && row.image; if (sig) draw(); }, function () {});
-    ['ckNo', 'ckDate', 'ckMemo', 'ckAddr'].forEach(function (id) { var el = $(id); if (el) el.oninput = draw; });
+    ['ckNo', 'ckDate', 'ckMemo', 'ckAddr', 'ckNet'].forEach(function (id) { var el = $(id); if (el) el.oninput = draw; });
     if ($('ckTop')) $('ckTop').onchange = function () { chkSet('top', this.checked); draw(); };
     draw();
   };
@@ -988,17 +1001,19 @@
   };
   window.bpCheckPay = function (empId, from) {
     var d = stubData(empId, from); if (!d) return;
+    var w2 = d.e.kind !== '1099', amt = w2 ? ckNet() : d.r.gross;
+    if (w2 && !amt) { var mm = $('ckNetMsg'), ni = $('ckNet'); if (mm) mm.textContent = 'Enter their take-home pay first.'; if (ni) ni.focus(); return; }
     var signP = window.bpUsLoad ? bpUsLoad().catch(function () { return null; }) : Promise.resolve(null);
     signP.then(function (row) {
       var sig = row && row.image;
-      return ok2({ kind: 'check', title: 'Pay ' + d.e.name + ' by check?', amount: d.r.gross, who: 'Check ' + (($('ckNo') || {}).value || chkGet('next', 1001)) + ' \u00b7 ' + nice(d.from) + ' \u2013 ' + nice(d.to),
-        lines: [sig ? 'Signed with your saved signature.' : 'You have no saved signature, so it prints for you to sign by hand (Settings \u203a Your signature to add one).', 'It prints now, then shows as paid in Finances.', 'Print on your pre-printed checks.', ($('ckStub') || {}).checked ? 'Their pay stub prints right after the check.' : ''],
-        cta: 'Yes, pay ' + m2(d.r.gross) }).then(function (y) {
+      return ok2({ kind: 'check', title: 'Pay ' + d.e.name + ' by check?', amount: amt, who: 'Check ' + (($('ckNo') || {}).value || chkGet('next', 1001)) + ' \u00b7 ' + nice(d.from) + ' \u2013 ' + nice(d.to),
+        lines: [sig ? 'Signed with your saved signature.' : 'You have no saved signature, so it prints for you to sign by hand (Settings \u203a Your signature to add one).', 'It prints now, then shows as paid in Finances.', 'Print on your pre-printed checks.', ($('ckStub') || {}).checked ? 'Their pay stub prints right after the check.' : '', w2 ? 'Gross pay ' + m2(d.r.gross) + ' goes into Finances as wages; the check is for take-home.' : ''],
+        cta: 'Yes, pay ' + m2(amt) }).then(function (y) {
           if (!y) return;
-          bpCheckPrint(empId, from, 0, { sig: sig, skipAsk: 1, stub: !!($('ckStub') || {}).checked });
+          bpCheckPrint(empId, from, 0, { sig: sig, skipAsk: 1, stub: !!($('ckStub') || {}).checked, net: w2 ? amt : null });
           bpPayMark(empId, from, 1, 1);
           if (window.bpCloseModal) bpCloseModal();
-          if (window.bpToast) bpToast(d.e.name + ' paid ' + m2(d.r.gross) + ' by check.', 'success');
+          if (window.bpToast) bpToast(d.e.name + ' paid ' + m2(amt) + ' by check.', 'success');
         });
     });
   };
@@ -1006,12 +1021,17 @@
     opt = opt || {};
     var ids = empId ? [empId] : dueFor(from, periodEnd(from)).filter(function (r) { return r.e.kind === '1099'; }).map(function (r) { return r.e.id; });
     if (!ids.length) { alert('No 1099 contractors to pay in this period.'); return; }
+    /* a W-2 check is for take-home pay, typed in on the check screen */
+    if (empId && opt.net == null && (bpEmpById(empId) || {}).kind !== '1099') {
+      opt.net = ckNet();
+      if (!opt.net) { var mm = $('ckNetMsg'), ni = $('ckNet'); if (mm) mm.textContent = 'Enter their take-home pay first.'; if (ni) ni.focus(); return; }
+    }
     if (!test && !opt.skipAsk) {
-      var tot0 = ids.reduce(function (t, id) { var dd = stubData(id, from); return t + (dd ? dd.r.gross : 0); }, 0);
+      var tot0 = opt.net != null ? opt.net : ids.reduce(function (t, id) { var dd = stubData(id, from); return t + (dd ? dd.r.gross : 0); }, 0);
       return ok2({ kind: 'check', title: ids.length > 1 ? 'Print ' + ids.length + ' checks?' : 'Print this check?', amount: tot0,
         who: ids.length > 1 ? 'Every 1099 contractor this period' : (stubData(ids[0], from) || { e: { name: '' } }).e.name,
         lines: ['They print to sign by hand. This doesn\u2019t mark anyone paid.', 'Print on your pre-printed checks.'], cta: ids.length > 1 ? 'Yes, print ' + ids.length + ' checks' : 'Yes, print check' })
-        .then(function (y) { if (y) bpCheckPrint(empId, from, test, { skipAsk: 1, stub: opt.stub }); });
+        .then(function (y) { if (y) bpCheckPrint(empId, from, test, { skipAsk: 1, stub: opt.stub, net: opt.net }); });
     }
     if (opt.stub == null && $('ckStub')) opt.stub = $('ckStub').checked;
     if (opt.stub) stubCss();
@@ -1020,7 +1040,8 @@
     if (empId && $('ckAddr')) { var A = chkGet('addr', {}); A[empId] = $('ckAddr').value; chkSet('addr', A); }
     var addrs = chkGet('addr', {});
     var pages = ids.map(function (id, i) { var d = stubData(id, from); if (!d) return '';
-      return sheet(d, { bg: !!test, sig: opt.sig || null, no: String(first + i), date: date, memo: memoIn != null && empId ? memoIn : 'Pay ' + nice(d.from) + ' – ' + nice(d.to), addr: addrs[id] || '', top: !!chkGet('top', true) })
+      if (opt.net != null && empId) d.net = opt.net;
+      return sheet(d, { bg: !!test, sig: opt.sig || null, no: String(first + i), date: date, memo: memoIn != null && empId ? memoIn : 'Pay ' + nice(d.from) + ' – ' + nice(d.to), addr: addrs[id] || '', top: !!chkGet('top', true), amt: d.net != null ? d.net : null })
         + (opt.stub ? '<div class="ps-page">' + stubHtml(d) + '</div>' : ''); }).join('');
     if (!test) chkSet('next', first + ids.length);
     ckCss();
@@ -1055,6 +1076,7 @@
       + '#bpx .ck-top{display:flex;align-items:center;gap:1.3cqw;max-width:40%;white-space:normal;color:#000}#bpx .ck-top img{height:6.6cqw;max-width:14cqw;object-fit:contain;flex:none}#bpx .ck-top b{display:block;font-size:1.95cqw;font-weight:700;line-height:1.15}#bpx .ck-top i{display:block;font-style:normal;font-size:1.3cqw;line-height:1.35;color:#222}'
       + '#bpx .ck-vh b{display:flex;align-items:center;gap:8px}#bpx .ck-vh img{height:22px;max-width:90px;object-fit:contain}'
       + '#bpx .ck-chk label{display:flex !important;align-items:flex-start;gap:8px;font-size:13.5px !important;font-weight:600;color:var(--ink) !important;flex-wrap:wrap}#bpx .ck-form .ck-chk input[type=checkbox]{width:18px !important;min-width:18px !important;height:18px !important;min-height:0 !important;margin:1px 0 0 !important;padding:0 !important;flex:none !important;accent-color:var(--blue)}#bpx .ck-form .ck-chk label{margin:0 !important;cursor:pointer}#bpx .ck-chk small{flex-basis:100%;margin-left:26px;font-weight:400;color:var(--grey)}'
+      + '#bpx .ck-net input{max-width:220px;font-size:18px !important;font-weight:700}#bpx .ck-netmsg{margin-top:6px;font-size:13px;font-weight:600;color:#b45309}#bpx .ck-netmsg:empty{display:none}'
       + '#bpx .ck-micr{left:22%;top:93%;font-family:"Courier New",monospace;font-size:1.7cqw;letter-spacing:.12em;text-transform:none}'
       + '#bpx .ck-v{box-sizing:border-box;height:3.75in;padding:.35in .5in 0;font-size:10pt;color:#000;border-top:1px dashed #bbb}#bpx .ck-vh,#bpx .ck-vp,#bpx .ck-vt{display:flex;justify-content:space-between;gap:12px}'
       + '#bpx .ck-vh b{font-size:11pt}#bpx .ck-vp{margin:8px 0}#bpx .ck-vp span,#bpx .ck-vh span{color:#444}'
