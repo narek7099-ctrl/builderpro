@@ -267,6 +267,13 @@
           + '<div style="display:flex;align-items:center;gap:6px"><input id="emp-burden" type="number" min="0" max="200" step="1" '
           + 'value="' + (+f.burden_pct || '') + '" placeholder="0" oninput="bpEmpKind()" style="flex:1"><span class="bpx-mut">%</span></div></div></div>'
       + '<div class="bpx-mut" id="emp-hint" style="font-size:12px;margin-top:8px;line-height:1.6"></div>'
+      /* what some states require on a W-2 pay stub (2026-11-27): an ID and the sick leave they have */
+      + '<div class="bpx-sub" style="margin:16px 0 0;font-weight:600;color:var(--ink,inherit)">On pay stubs</div>'
+      + '<div style="display:grid;grid-template-columns:minmax(0,1fr);gap:0">'
+        + '<div><label>ID</label><div style="display:flex;gap:6px"><select id="emp-idk" aria-label="Which ID" style="flex:0 0 44%;min-width:0;width:44%"><option value="num"' + (/^ssn:/.test(f.stub_id || '') ? '' : ' selected') + '>Employee #</option><option value="ssn"' + (/^ssn:/.test(f.stub_id || '') ? ' selected' : '') + '>SSN, last 4</option></select>'
+          + '<input id="emp-stubid" maxlength="12" autocomplete="off" placeholder="e.g. 1234" value="' + esc(String(f.stub_id || '').replace(/^ssn:/, '')) + '" style="flex:1;min-width:0"></div></div>'
+        + '<div><label>Paid sick leave available</label><div style="display:flex;align-items:center;gap:6px"><input id="emp-sick" type="number" min="0" max="999" step="0.5" placeholder="hours" value="' + (f.sick_hours == null ? '' : esc(f.sick_hours)) + '" style="flex:0 1 160px"><span class="bpx-mut">hrs</span></div></div></div>'
+      + '<div class="bpx-mut" style="font-size:12px;margin-top:6px;line-height:1.5">Some states, like California, require these on a W-2 employee\u2019s pay stub. Never the full Social Security number: only the last 4 digits are kept.</div>'
       + '<div class="bpx-sub" style="margin:16px 0 0;font-weight:600;color:var(--ink,inherit)">Experience</div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
         + '<div><label>Started in the trade</label><input id="emp-sty" type="number" min="1940" max="' + new Date().getFullYear() + '" placeholder="e.g. 2012" value="' + esc(f.started_trade_year || '') + '"></div>'
@@ -352,6 +359,11 @@
       bio: (($('emp-bio') || {}).value || '').trim().slice(0, 600) || null
     };
     if (g('hired')) prof.hired_on = g('hired');
+    /* pay stub ID: an employee number, or only the LAST 4 digits of an SSN (never more) */
+    var sid = g('stubid').replace(/\s+/g, ''), idk = ($('emp-idk') || {}).value;
+    if (idk === 'ssn') { sid = sid.replace(/\D/g, '').slice(-4); prof.stub_id = sid ? 'ssn:' + sid : null; }
+    else prof.stub_id = sid ? sid.slice(0, 12) : null;
+    var sk = g('sick'); prof.sick_hours = sk === '' ? null : Math.max(0, Math.min(999, Math.round((+sk || 0) * 100) / 100));
     Object.keys(prof).forEach(function (k) { row[k] = prof[k]; });
     if (S.sample) {   /* example portal: nothing to save to */
       if (id) Object.assign(bpEmpById(id) || {}, row);
@@ -365,7 +377,7 @@
     };
     Promise.resolve(send(row)).then(function (r) {
       /* the experience columns not migrated yet: save the rest */
-      if (r && r.error && /started_trade_year|hired_on|skills|certifications|bio/.test(String(r.error.message || ''))) {
+      if (r && r.error && /started_trade_year|hired_on|skills|certifications|bio|stub_id|sick_hours/.test(String(r.error.message || ''))) {
         Object.keys(prof).forEach(function (k) { delete row[k]; });
         return send(row);
       }
@@ -826,7 +838,8 @@
       + '<div class="ps-top"><div class="ps-co">' + (logo ? '<img src="' + esc(logo) + '" alt="">' : '<span class="ps-mono">' + esc(String(co.name || 'B').charAt(0)) + '</span>')
         + '<div><b>' + esc(co.name || 'Your business') + '</b>' + (co.address ? '<small>' + esc(co.address) + '</small>' : '') + (co.phone ? '<small>' + esc(co.phone) + '</small>' : '') + '</div></div>'
         + '<div class="ps-title"><b>Pay stub</b><small>' + esc(d.no) + '</small></div></div>'
-      + '<div class="ps-meta"><div><small>Paid to</small><b>' + esc(e.name) + '</b><span>' + esc(e.trade || '') + (e.trade ? ' · ' : '') + (w2 ? 'W-2 employee' : '1099 contractor') + '</span></div>'
+      + '<div class="ps-meta"><div><small>Paid to</small><b>' + esc(e.name) + '</b><span>' + esc(e.trade || '') + (e.trade ? ' · ' : '') + (w2 ? 'W-2 employee' : '1099 contractor') + '</span>'
+          + (e.stub_id ? '<span>' + (/^ssn:/.test(e.stub_id) ? 'SSN ending ' + esc(e.stub_id.slice(4)) : 'Employee # ' + esc(e.stub_id)) + '</span>' : '') + '</div>'
         + '<div><small>Pay period</small><b>' + when(d.from) + ' – ' + when(d.to) + '</b><span>' + ({ weekly: 'Weekly', biweekly: 'Every two weeks', monthly: 'Monthly' })[freq()] + '</span></div>'
         + '<div><small>' + (payDate ? 'Paid on' : 'Status') + '</small><b>' + (payDate || 'Not paid yet') + '</b><span>Rate ' + rateTxt + '</span></div></div>'
       + '<table class="ps-tb"><thead><tr><th>Earnings</th><th class="n">Hours</th><th class="n">Rate</th><th class="n">Amount</th></tr></thead><tbody>'
@@ -836,7 +849,8 @@
         + (w2 && d.net != null ? '<div class="ps-tax"><span>Taxes and deductions</span><span>\u2212' + m2(Math.max(0, d.r.gross - d.net)) + '</span></div>'
           : w2 ? '<div class="ps-tax"><span>Taxes and deductions</span><span>Handled by your payroll</span></div>' : '<div class="ps-tax"><span>Tax withheld</span><span>None (1099)</span></div>')
         + '<div class="t"><span>' + (w2 && d.net != null ? 'Take-home pay' : w2 ? 'Gross pay this period' : 'Amount paid') + '</span><span>' + m2(w2 && d.net != null ? d.net : d.r.gross) + '</span></div>'
-        + '<div class="ps-ytd"><span>Year to date, gross</span><span>' + m2(d.ytd) + '</span></div></div>'
+        + '<div class="ps-ytd"><span>Year to date, gross</span><span>' + m2(d.ytd) + '</span></div>'
+        + (w2 && e.sick_hours != null && e.sick_hours !== '' ? '<div class="ps-ytd"><span>Paid sick leave available</span><span>' + (+e.sick_hours) + ' hrs</span></div>' : '') + '</div>'
       + (d.days.length ? '<div class="ps-days"><b>Days worked</b><table class="ps-tb sm"><thead><tr><th>Day</th><th>Job</th><th class="n">Hours</th><th class="n">OT</th></tr></thead><tbody>'
         + d.days.map(function (x) { return '<tr><td>' + esc(dayLabel(x.worked_on)) + '</td><td>' + esc(String(x.job_name || '—').replace(/\s*\(sample\)/g, '')) + '</td><td class="n">' + (+x.hours || 0) + '</td><td class="n">' + (+x.ot_hours || '—') + '</td></tr>'; }).join('')
         + '</tbody></table></div>' : '')
