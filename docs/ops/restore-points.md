@@ -534,3 +534,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-27 homeowner Home: one big project card instead of three tiles: restore to fd8f7e2
 - 2026-11-27 one app look: homeowner + crew phone screens take the contractor app's bars, cards, buttons, icons: restore to 9f32a8a
 - 2026-11-27 one app look on computer: homeowner pages get the contractor's navy sidebar, top bar, cards: restore to 411def9
+- 2026-11-27 demo assets: Ridgeline Roofing (sample) logo and documents: restore to ee89b3b

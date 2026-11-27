@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 160" role="img" aria-label="Ridgeline Roofing">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#17476f"/><stop offset="1" stop-color="#0c2b47"/></linearGradient></defs>
+  <rect x="0" y="0" width="160" height="160" rx="36" fill="url(#g)"/>
+  <circle cx="111" cy="49" r="12.5" fill="#f6a623"/>
+  <path d="M24 99 L80 47 L136 99" fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M46 116 L80 86 L114 116" fill="none" stroke="#f6a623" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="188" y="84" font-family="Georgia, 'Times New Roman', serif" font-size="58" font-weight="700" fill="#0c2b47" letter-spacing="1">RIDGELINE</text>
+  <text x="191" y="126" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#f39c12" letter-spacing="9.5">ROOFING · EST. 2009</text>
+</svg>
