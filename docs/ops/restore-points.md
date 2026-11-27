@@ -522,3 +522,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-27 pay stub ID + sick leave: restore to c37b69c
 - 2026-11-27 QuickBooks hours + auto paid: restore to b4d1279
 - 2026-11-27 gusto application draft: restore to ce99286
+- 2026-11-27 settings regroup: restore to c9695f5

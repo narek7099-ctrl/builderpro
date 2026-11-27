@@ -35,3 +35,4 @@ portal/m6.css
 portal/emp6.css
 portal/pjs.css
 portal/calday.css
+portal/set6.css

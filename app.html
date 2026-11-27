@@ -105,9 +105,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261127-qb1">
-<link rel="stylesheet" href="site/present.css?v=20261127-qb1">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261127-qb1"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261127-st4">
+<link rel="stylesheet" href="site/present.css?v=20261127-st4">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261127-st4"}}</script>
 
 
 <style id="bpi-icons">
@@ -13049,9 +13049,11 @@ function bpSettings(){
   var logoInner=BPLOGO?('<img id="set-logoimg" src="'+BPLOGO+'">'):'<span id="set-logoimg">Logo</span>';
   var brandHex=bpBrandHex(c.brandColor), calcHex=bpBrandHex((bpCzThemeGet('calc')||{}).primary);
   var SECS=[
-    ['business','Business','storefront','Who you are, and how customers reach you.'],
+    ['business','Business profile','storefront','Your name, logo and colors, and how customers reach you.'],
+    ['listing','Find a Pro listing','travel_explore','How homeowners see you on BuilderPro\'s Find a Pro.'],
+    ['licenses','Licenses & insurance','badge','Your license, insurance and bonds. We warn you 30 days before one expires.'],
     ['hours','Hours & replies','schedule','When you\'re open, and what a missed call gets back.'],
-    ['owner','Owner','person','Personalizes your dashboard, messages and estimates.'],
+    ['owner','Your profile','person','Your name and contact details. Personalizes your dashboard, messages and estimates.'],
     ['phone','Business number','call','Get the number your customers already text into BuilderPro, so every text shows up here and '+BP_AI_NAME+' can answer it.'],
     ['ridge',''+BP_AI_NAME+' (receptionist)','smart_toy','Answers your calls and texts 24/7. Set how she sounds and what she offers.'],
     ['signature','Your signature','draw','Signed on every contract you send, so it goes out already signed by you.'],
@@ -13062,9 +13064,19 @@ function bpSettings(){
     ['security','Security','lock','Your password, and the devices you are signed in on.'],
     ['team','Team','group','Who else can sign in, and what they can see.'],
     ['plan','Plan & billing','credit_card','Your BuilderPro membership.']].filter(function(t){ return !window.bpTeamIsOwner||bpTeamIsOwner()||(t[0]!=='team'&&t[0]!=='plan'); });
-  /* Calculators and Automations (2026-11-25) are their own pages: their rows open them */
-  var rail=SECS.map(function(t){return t[4]?'<button class="st-nav st-go" onclick="bpNav(\''+t[4]+'\')"><span class="ms">'+t[2]+'</span><span>'+t[1]+'</span><span class="ms st-go-i">chevron_right</span></button>'
-    :'<button class="st-nav'+(_bpSetSec===t[0]?' on':'')+'" data-set-tab="'+t[0]+'" onclick="bpSetTab(\''+t[0]+'\')"><span class="ms">'+t[2]+'</span><span>'+t[1]+'</span></button>';}).join('');
+  /* the rail in groups, with a search (2026-11-27): thirteen items in one list was hard to scan */
+  var SGROUPS=[['Your business',['business','hours','phone','listing','licenses']],[BP_AI_NAME+' & automations',['ridge','autos','calcs']],['You',['owner','signature','notify','appearance','security']],['Account',['team','plan']]];
+  var SKW={business:'logo brand color colour name trade license number phone email website address service area company',hours:'hours open closed schedule missed call auto reply text after hours',
+    phone:'business number phone number port texting text enable sms',listing:'find a pro listing services about photos yelp homeowners search',licenses:'license insurance bond policy expire permit',
+    ridge:'lisa receptionist ai calls answer voice greeting knows prices faq questions',autos:'automations follow up texts reminders reviews workflows',calcs:'calculators instant quote website calculator widget',
+    owner:'owner my name my phone my email profile',signature:'signature sign contract e-sign esign',notify:'notifications bell alerts push email sound',appearance:'theme dark mode light colors dashboard layout look',
+    security:'password sign out log out devices delete account',team:'team members invite crew office logins roles access',plan:'plan billing subscription cancel invoice price upgrade card payment'};
+  var navBtn=function(t){return t[4]?'<button class="st-nav st-go" onclick="bpNav(\''+t[4]+'\')"><span class="ms">'+t[2]+'</span><span>'+t[1]+'</span><span class="ms st-go-i">chevron_right</span></button>'
+    :'<button class="st-nav'+(_bpSetSec===t[0]?' on':'')+'" data-set-tab="'+t[0]+'" onclick="bpSetTab(\''+t[0]+'\')"><span class="ms">'+t[2]+'</span><span>'+t[1]+'</span></button>';};
+  var rail='<div class="st-find"><span class="ms" aria-hidden="true">search</span><input id="st-q" type="search" placeholder="Search settings" aria-label="Search settings" autocomplete="off" oninput="bpSetFind(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();bpSetFindGo()}"></div>'
+    +SGROUPS.map(function(g){ var items=g[1].map(function(id){return SECS.filter(function(t){return t[0]===id;})[0];}).filter(Boolean); if(!items.length) return '';
+      return '<div class="st-gh">'+bpEsc(g[0])+'</div><div class="st-navg">'+items.map(function(t){ return navBtn(t).replace('<button ','<button data-kw="'+bpEsc((t[1]+' '+(SKW[t[0]]||'')).toLowerCase())+'" '); }).join('')+'</div>';
+    }).join('')+'<div class="st-none" id="st-none" hidden>No setting matches that. Try a different word.</div>';
   var sec=function(id,body){var t=SECS.filter(function(x){return x[0]===id;})[0];
     return '<section id="set-sec-'+id+'" class="st-sec"'+(_bpSetSec===id?'':' style="display:none"')+'><div class="st-head"><h2>'+t[1]+'</h2><p>'+t[3]+'</p></div>'+body+'</section>';};
   var themeSeg='<div class="bpx-jobtabs" id="bpx-theme-seg">'+[['light','Light','light_mode'],['dark','Dark','dark_mode'],['system','System','contrast']].map(function(o2){
@@ -13112,12 +13124,14 @@ function bpSettings(){
         +f('set-cweb','Website',c.website,'yourcompany.com','url')
         +f('set-caddr','Address',c.address,'123 Main St, City, ST')
         +f('set-carea','Service area',c.serviceArea,'Cities or ZIPs you cover, e.g. Austin, 78701, 78704','text',BP_AI_NAME+' uses this to tell callers whether you cover them, and Find a Pro shows you to homeowners there.')
-        +grp('Find a Pro listing')
-        +row('Show my business in Find a Pro','Homeowners searching BuilderPro\'s Find a Pro (builderpro-os.com/#pros, and every client portal) can find you and ask for a quote. Requests land in Contacts.','<label class="st-tog"><input type="checkbox" id="set-clisted"'+(c.listed===false?'':' checked')+'><span>Listed</span></label>','set-clisted')
+      )
+      +sec('listing',
+        row('Show my business in Find a Pro','Homeowners searching BuilderPro\'s Find a Pro (builderpro-os.com/#pros, and every client portal) can find you and ask for a quote. Requests land in Contacts.','<label class="st-tog"><input type="checkbox" id="set-clisted"'+(c.listed===false?'':' checked')+'><span>Listed</span></label>','set-clisted')
         +f('set-csvc','Services you offer',c.services,'Roof repair, Gutters, Skylights','text','Separate with commas. This is what homeowners search for.')
         +f('set-cabout','About your business',c.about,'Family-owned since 2009. Free estimates.','text','One or two sentences on your listing.')
         +row('Listing photos','Your best work, up to 10. The first one is the cover homeowners see in search. Photos of finished jobs work best.',bpListPhotosHtml(),'')
         +row('Yelp page','Paste the link to your business on yelp.com. Your Yelp rating and review count show on your listing.','<div class="st-yelp"><input id="set-cyelp" type="url" value="'+bpEsc(c.yelp||'')+'" placeholder="https://www.yelp.com/biz/your-business"><button type="button" class="bpx-rowbtn" onclick="bpYelpCheck()">Check</button></div><div id="set-cyelp-m" class="st-hint" aria-live="polite"></div>','set-cyelp'))
+      +sec('licenses','<div id="lic-host"></div>')
       +sec('hours',
         grp('Opening hours')
         +'<div class="st-row"><div class="st-lab"><label>Days and times</label><div class="st-hint">Sets your booking windows, and tells '+BP_AI_NAME+' when you\'re closed.</div>'
@@ -13131,9 +13145,11 @@ function bpSettings(){
         +f('set-ophone','Owner phone',o.phone,'(555) 555-5555','tel')
         +f('set-oemail','Owner email',o.email,'owner@company.com','email','Saved to your account.'))
       +sec('phone','<div id="bpx-ph-host"></div>')
-      +sec('ridge','<div id="bpx-rg-host"></div>'
-        /* what she knows lives on the same page now, under her setup (it used to be its own Settings item) */
-        +'<div class="st-head" id="set-brain" style="margin-top:28px"><h2>What '+BP_AI_NAME+' knows</h2><p>Your prices, services and answers she uses with customers. Fill in anything she couldn\'t answer.</p></div><div id="bpx-br-host"></div>')
+      /* her page in two tabs (2026-11-27): her setup, and the knowledge and rules she works from */
+      +sec('ridge','<div class="bpx-jobtabs st-sub" role="tablist" aria-label="'+bpEsc(BP_AI_NAME)+'"><button type="button" class="bpx-jt on" role="tab" data-sub="setup" onclick="bpSetSub(\'setup\')"><span class="ms">tune</span> Setup</button>'
+          +'<button type="button" class="bpx-jt" role="tab" data-sub="brain" onclick="bpSetSub(\'brain\')"><span class="ms">psychology</span> Knowledge &amp; rules</button></div>'
+        +'<div class="st-subp" data-subp="setup"><div id="bpx-rg-host"></div></div>'
+        +'<div class="st-subp" data-subp="brain" id="set-brain" hidden><p class="st-subd">Your prices, services and answers she uses with customers. Fill in anything she couldn\'t answer.</p><div id="bpx-br-host"></div></div>')
       +sec('signature','<div id="bpx-us-host"></div>')
       +sec('security',
         '<div class="st-row"><div class="st-row-t"><b>Change password</b><p>Signed in as <span id="bpx-sec-who"></span>. Pick at least 8 characters.</p></div>'
@@ -13168,7 +13184,7 @@ function bpSettings(){
             ?'<div class="st-plan-card"><div class="st-plan-ic warn"><span class=ms>event_busy</span></div><b>Your plan is set to end</b><p>'+bpEsc(bpPlanInfo().note)+' Changed your mind? Keep it and nothing changes.</p><button class="bpx-rowbtn" style="margin:0" onclick="bpCancelUndo()">Keep my plan</button></div>'
             :'<div class="st-plan-card"><div class="st-plan-ic warn"><span class=ms>logout</span></div><b>Cancel</b><p>Ends the membership at the end of the current period. On a free trial you\'re never charged. Your data stays for 30 days.</p><button class="bpx-rowbtn st-danger" style="margin:0" onclick="bpCancelOpen()">Cancel my plan</button></div>')
         +'</div>'):'')
-      +'<div class="bpx-set-foot st-foot" id="bpx-setfoot"'+((_bpSetSec==='plan'||_bpSetSec==='team'||_bpSetSec==='security'||_bpSetSec==='ridge'||_bpSetSec==='brain'||_bpSetSec==='appearance'||_bpSetSec==='phone'||_bpSetSec==='signature'||_bpSetSec==='notify')?' hidden style="display:none"':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>'
+      +'<div class="bpx-set-foot st-foot" id="bpx-setfoot"'+((_bpSetSec==='plan'||_bpSetSec==='team'||_bpSetSec==='security'||_bpSetSec==='ridge'||_bpSetSec==='brain'||_bpSetSec==='appearance'||_bpSetSec==='phone'||_bpSetSec==='signature'||_bpSetSec==='notify'||_bpSetSec==='licenses')?' hidden style="display:none"':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>'
       +'</div>'
     +'</div>';
   /* the trade box suggests every trade with a calculator (Concrete & Paving, Flooring, ...) */
@@ -13182,14 +13198,30 @@ function bpSettings(){
   if(_bpSetSec==='notify'&&window.bpNotifySettings) bpNotifySettings();
 }
 var _bpSetSec='business';
+/* Search settings (2026-11-27): matches the page names and everyday words ("logo", "password", "missed call") */
+window.bpSetFind=function(v){
+  var w=String(v||'').toLowerCase().trim().split(/\s+/).filter(Boolean), any=false;
+  document.querySelectorAll('#bpxViewArea .st-navg').forEach(function(g){
+    var n=0; g.querySelectorAll('[data-kw]').forEach(function(b){ var kw=b.getAttribute('data-kw'), ok=!w.length||w.every(function(x){return kw.indexOf(x)>=0;}); b.hidden=!ok; if(ok)n++; });
+    g.hidden=!n; var h=g.previousElementSibling; if(h&&h.classList.contains('st-gh')) h.hidden=!n; if(n) any=true;
+  });
+  var no=q('st-none'); if(no) no.hidden=any;
+};
+window.bpSetSub=function(k){
+  document.querySelectorAll('#set-sec-ridge .st-sub [data-sub]').forEach(function(b){ var on=b.getAttribute('data-sub')===k; b.classList.toggle('on',on); b.setAttribute('aria-selected',on?'true':'false'); });
+  document.querySelectorAll('#set-sec-ridge [data-subp]').forEach(function(p){ p.hidden=p.getAttribute('data-subp')!==k; });
+  if(k==='brain'&&window.bpBrainRender) bpBrainRender();
+  var m=document.querySelector('#bpx .bpx-main'); if(m&&m.scrollTop>200) m.scrollTop=0;
+};
+window.bpSetFindGo=function(){ var b=document.querySelector('#bpxViewArea .st-navg [data-kw]:not([hidden])'); if(b) b.click(); };
 window.bpAiView=function(){ _bpSetSec='ridge'; bpSettings(); };
 window.bpSetTab=function(t){
   var toBrain=t==='brain'; if(toBrain) t='ridge';   /* "What Lisa knows" is part of Lisa's page */
   _bpSetSec=t;
-  ['business','hours','owner','phone','ridge','brain','signature','notify','appearance','team','plan','security'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
+  ['business','listing','licenses','hours','owner','phone','ridge','brain','signature','notify','appearance','team','plan','security'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
   document.querySelectorAll('[data-set-tab]').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-set-tab')===t); });
-  var foot=q('bpx-setfoot'); if(foot){var hide=(t==='plan'||t==='team'||t==='ridge'||t==='brain'||t==='appearance'||t==='phone'||t==='signature'||t==='notify');foot.hidden=hide;foot.style.display=hide?'none':'';}   /* those tabs save themselves */
-  if(t==='ridge'){ var h=q('bpx-rg-host'); if(h&&!h.firstChild)bpAtlasView('bpx-rg-host'); if(window.bpBrainRender) bpBrainRender(); if(toBrain) setTimeout(function(){ var b=q('set-brain'); if(b&&b.scrollIntoView) b.scrollIntoView({block:'start'}); },150); }
+  var foot=q('bpx-setfoot'); if(foot){var hide=(t==='plan'||t==='team'||t==='ridge'||t==='brain'||t==='appearance'||t==='phone'||t==='signature'||t==='notify'||t==='licenses');foot.hidden=hide;foot.style.display=hide?'none':'';}   /* those tabs save themselves */
+  if(t==='ridge'){ var h=q('bpx-rg-host'); if(h&&!h.firstChild)bpAtlasView('bpx-rg-host'); if(window.bpBrainRender) bpBrainRender(); if(toBrain) setTimeout(function(){ bpSetSub('brain'); },60); }
   if(t==='phone') bpPhoneRender();
   if(t==='brain'&&window.bpBrainRender) bpBrainRender();
   if(t==='signature') bpUsSettings();
@@ -15133,7 +15165,7 @@ window.bpRepCopy=function(text,btn){
 <!--/app-only-->
 </body>
 <!--app-only-->
-<link rel="stylesheet" href="portal/app.css?v=eef96054cb" data-bundle>
+<link rel="stylesheet" href="portal/app.css?v=10c0f222f1" data-bundle>
 <script src="portal/team.js?v=20261115a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261127qb"></script>
@@ -15155,7 +15187,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/dash.js?v=20261124fj"></script>
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261116a"></script>
-<script src="portal/permits.js?v=20261024q30"></script>
+<script src="portal/permits.js?v=20261127st"></script>
 <script src="portal/projsheet.js?v=20261125pd"></script>
 <script src="portal/contact.js?v=20261124z"></script>
 <script src="portal/gcal.js?v=20261118f"></script>
@@ -15185,11 +15217,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261125ls"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261127-qb1"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261127-qb1"></script>
-<script src="site/vendor/SplitText.min.js?v=20261127-qb1"></script>
-<script src="site/site.js?v=20261127-qb1"></script>
-<script src="site/present.js?v=20261127-qb1"></script>
+<script src="site/vendor/gsap.min.js?v=20261127-st4"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261127-st4"></script>
+<script src="site/vendor/SplitText.min.js?v=20261127-st4"></script>
+<script src="site/site.js?v=20261127-st4"></script>
+<script src="site/present.js?v=20261127-st4"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>
