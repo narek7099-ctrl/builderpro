@@ -519,3 +519,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-26 crew/sub sweep: restore to fa12340
 - 2026-11-26 Pay chooser: restore to f33b62d
 - 2026-11-27 checks for W-2 (take-home): restore to 9c599c9
+- 2026-11-27 pay stub ID + sick leave: restore to c37b69c
