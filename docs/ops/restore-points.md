@@ -541,3 +541,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-28 who-goes-where v3 (job difficulty vs experience, skills, distance; DB bp_ceo_route) + nicer routes map (mapstyle.js): restore to dc01f26
 - 2026-11-28 new dark sign-in screen (planet glow, pill buttons, Last used): restore to 278b543
 - 2026-11-28 sign-in screen white with the website's moving silk: restore to fd04d22
+- 2026-11-28 sign-in: Apple/Google buttons (shown when enabled in Supabase), last-used per method, empty OAuth logins removed: restore to 961435a

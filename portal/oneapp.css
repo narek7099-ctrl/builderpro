@@ -243,3 +243,13 @@
 }
 @media (prefers-reduced-motion:no-preference){#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-step:not([hidden]){animation:lgIn .35s cubic-bezier(.2,.8,.2,1) both}}
 @keyframes lgIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* Apple and Google (only shown once switched on) */
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-social{display:flex;flex-direction:column;gap:12px}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-social:empty{display:none}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-apple{background:#000;color:#fff;box-shadow:0 10px 24px -12px rgba(0,0,0,.6)}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-apple:hover{background:#16181d}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-google{background:#fff;color:#1f1f1f;box-shadow:inset 0 0 0 1px #dadce0,0 4px 14px -6px rgba(16,24,40,.12)}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-google:hover{background:#f8fafd}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-pill svg.lg-fill{fill:currentColor;stroke:none;width:20px;height:20px;margin-top:-2px}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-google img{flex:none}
