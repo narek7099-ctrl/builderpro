@@ -189,68 +189,57 @@
   #bpSign .ho-acct .my-del:active{transform:scale(.98)}
 }
 
-/* ===== sign in (2026-11-28): dark sky, a planet's lit edge, pill buttons ===== */
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg{position:relative;min-height:100vh;min-height:100dvh;padding:0;background:#02050b !important;color:#fff;overflow:hidden;align-items:stretch;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-sky{position:absolute;inset:0;pointer-events:none}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-stars{position:absolute;inset:0;background:radial-gradient(1px 1px at 32.4% 9.4%,rgba(255,255,255,0.35),transparent),radial-gradient(1.8px 1.8px at 82.1% 5.8%,rgba(255,255,255,0.35),transparent),radial-gradient(1px 1px at 91.0% 13.3%,rgba(255,255,255,0.9),transparent),radial-gradient(1.8px 1.8px at 41.8% 14.9%,rgba(255,255,255,0.9),transparent),radial-gradient(1px 1px at 5.9% 35.1%,rgba(255,255,255,0.35),transparent),radial-gradient(1px 1px at 57.7% 24.6%,rgba(255,255,255,0.35),transparent),radial-gradient(1.4px 1.4px at 55.7% 8.3%,rgba(255,255,255,0.5),transparent),radial-gradient(1.8px 1.8px at 54.1% 35.4%,rgba(255,255,255,0.5),transparent),radial-gradient(1px 1px at 10.3% 35.4%,rgba(255,255,255,0.7),transparent),radial-gradient(1.8px 1.8px at 9.7% 44.2%,rgba(255,255,255,0.35),transparent),radial-gradient(1.8px 1.8px at 61.9% 30.8%,rgba(255,255,255,0.9),transparent),radial-gradient(1.4px 1.4px at 77.7% 28.9%,rgba(255,255,255,0.7),transparent),radial-gradient(1px 1px at 30.0% 49.3%,rgba(255,255,255,0.35),transparent),radial-gradient(1px 1px at 57.4% 32.6%,rgba(255,255,255,0.9),transparent),radial-gradient(1px 1px at 28.8% 60.8%,rgba(255,255,255,0.9),transparent),radial-gradient(1.4px 1.4px at 16.5% 21.2%,rgba(255,255,255,0.9),transparent),radial-gradient(1.8px 1.8px at 3.9% 41.4%,rgba(255,255,255,0.7),transparent),radial-gradient(1.4px 1.4px at 34.0% 21.7%,rgba(255,255,255,0.9),transparent),radial-gradient(1px 1px at 6.9% 5.8%,rgba(255,255,255,0.9),transparent),radial-gradient(1px 1px at 69.7% 4.0%,rgba(255,255,255,0.9),transparent),radial-gradient(1px 1px at 28.5% 23.9%,rgba(255,255,255,0.35),transparent),radial-gradient(1.8px 1.8px at 94.1% 22.0%,rgba(255,255,255,0.35),transparent),radial-gradient(1px 1px at 49.4% 13.5%,rgba(255,255,255,0.5),transparent),radial-gradient(1.4px 1.4px at 73.8% 24.7%,rgba(255,255,255,0.35),transparent),radial-gradient(1px 1px at 16.6% 24.9%,rgba(255,255,255,0.5),transparent),radial-gradient(1px 1px at 81.9% 53.6%,rgba(255,255,255,0.9),transparent),radial-gradient(1.4px 1.4px at 98.6% 42.3%,rgba(255,255,255,0.5),transparent),radial-gradient(1px 1px at 15.1% 10.9%,rgba(255,255,255,0.5),transparent),radial-gradient(1px 1px at 1.2% 51.5%,rgba(255,255,255,0.7),transparent),radial-gradient(1.8px 1.8px at 28.2% 9.0%,rgba(255,255,255,0.7),transparent),radial-gradient(1px 1px at 61.0% 19.8%,rgba(255,255,255,0.35),transparent),radial-gradient(1.8px 1.8px at 45.7% 54.0%,rgba(255,255,255,0.9),transparent),radial-gradient(1.4px 1.4px at 39.8% 24.4%,rgba(255,255,255,0.9),transparent),radial-gradient(1px 1px at 6.2% 4.2%,rgba(255,255,255,0.9),transparent),radial-gradient(1px 1px at 16.2% 21.1%,rgba(255,255,255,0.35),transparent),radial-gradient(1px 1px at 0.0% 9.4%,rgba(255,255,255,0.7),transparent),radial-gradient(1px 1px at 61.4% 4.4%,rgba(255,255,255,0.9),transparent),radial-gradient(1px 1px at 14.9% 15.6%,rgba(255,255,255,0.7),transparent),radial-gradient(1.4px 1.4px at 47.4% 7.2%,rgba(255,255,255,0.9),transparent),radial-gradient(1px 1px at 48.0% 19.3%,rgba(255,255,255,0.35),transparent),radial-gradient(1.4px 1.4px at 75.0% 45.9%,rgba(255,255,255,0.5),transparent),radial-gradient(1.8px 1.8px at 51.6% 12.7%,rgba(255,255,255,0.7),transparent),radial-gradient(1px 1px at 14.7% 33.7%,rgba(255,255,255,0.7),transparent),radial-gradient(1px 1px at 97.9% 53.5%,rgba(255,255,255,0.7),transparent),radial-gradient(1px 1px at 90.8% 22.1%,rgba(255,255,255,0.7),transparent),radial-gradient(1px 1px at 63.6% 38.0%,rgba(255,255,255,0.5),transparent),radial-gradient(1px 1px at 81.8% 45.9%,rgba(255,255,255,0.5),transparent),radial-gradient(1px 1px at 51.8% 22.0%,rgba(255,255,255,0.35),transparent),radial-gradient(1px 1px at 79.0% 29.3%,rgba(255,255,255,0.7),transparent),radial-gradient(1px 1px at 44.7% 58.1%,rgba(255,255,255,0.7),transparent),radial-gradient(1.4px 1.4px at 8.1% 6.3%,rgba(255,255,255,0.5),transparent),radial-gradient(1.8px 1.8px at 33.8% 29.9%,rgba(255,255,255,0.35),transparent),radial-gradient(1px 1px at 47.9% 40.5%,rgba(255,255,255,0.35),transparent),radial-gradient(1px 1px at 91.0% 48.5%,rgba(255,255,255,0.9),transparent),radial-gradient(1px 1px at 88.9% 26.9%,rgba(255,255,255,0.35),transparent),radial-gradient(1.4px 1.4px at 80.1% 60.2%,rgba(255,255,255,0.9),transparent),radial-gradient(1px 1px at 40.1% 58.7%,rgba(255,255,255,0.5),transparent),radial-gradient(1.8px 1.8px at 99.3% 1.7%,rgba(255,255,255,0.9),transparent),radial-gradient(1.8px 1.8px at 80.7% 9.1%,rgba(255,255,255,0.9),transparent),radial-gradient(1.8px 1.8px at 65.7% 21.7%,rgba(255,255,255,0.5),transparent),radial-gradient(1px 1px at 2.1% 49.6%,rgba(255,255,255,0.5),transparent),radial-gradient(1px 1px at 43.4% 54.0%,rgba(255,255,255,0.35),transparent),radial-gradient(1px 1px at 25.2% 18.2%,rgba(255,255,255,0.7),transparent),radial-gradient(1px 1px at 25.9% 26.0%,rgba(255,255,255,0.35),transparent),radial-gradient(1.4px 1.4px at 91.0% 21.9%,rgba(255,255,255,0.9),transparent),radial-gradient(1px 1px at 82.7% 54.4%,rgba(255,255,255,0.5),transparent),radial-gradient(1.4px 1.4px at 52.4% 1.2%,rgba(255,255,255,0.5),transparent),radial-gradient(1px 1px at 60.9% 48.1%,rgba(255,255,255,0.5),transparent),radial-gradient(1px 1px at 14.2% 38.4%,rgba(255,255,255,0.35),transparent),radial-gradient(1.8px 1.8px at 32.6% 32.1%,rgba(255,255,255,0.9),transparent);opacity:.85}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-planet{position:absolute;left:50%;top:41%;width:260vw;height:260vw;max-width:2600px;max-height:2600px;transform:translateX(-50%);border-radius:50%;
-  background:radial-gradient(ellipse 60% 30% at 50% 0%,#0f1d33 0%,#060c18 45%,#02050b 75%);
-  box-shadow:0 -1px 0 rgba(214,232,255,.85),0 -5px 18px rgba(150,195,255,.5),0 -22px 70px rgba(0,111,255,.38),0 -70px 180px rgba(0,111,255,.22),inset 0 3px 8px rgba(190,220,255,.35)}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-flare{position:absolute;left:50%;top:41%;width:min(90vw,560px);height:90px;transform:translate(-50%,-50%);
-  background:radial-gradient(ellipse 18% 22% at 50% 50%,rgba(255,255,255,.98),rgba(220,236,255,.7) 35%,transparent 75%),radial-gradient(ellipse 50% 9% at 50% 50%,rgba(200,225,255,.75),transparent 80%);filter:blur(1px)}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-wrap{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:flex-end;gap:0;width:100%;max-width:400px;margin:0 auto;min-height:100vh;min-height:100dvh;padding:0 22px calc(22px + env(safe-area-inset-bottom))}
+/* ===== sign in (2026-11-28): white, the website's moving silk behind, pill buttons ===== */
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg{position:relative;min-height:100vh;min-height:100dvh;padding:0;background:#fff !important;color:#0f1729;overflow:hidden;align-items:stretch;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-sky{position:absolute;inset:0;pointer-events:none;background:radial-gradient(900px 520px at 50% 105%,rgba(0,111,255,.07),transparent 70%)}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-sky canvas{position:absolute !important;inset:0 !important;width:100% !important;height:100% !important;z-index:0 !important;pointer-events:none}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-wrap{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:flex-end;width:100%;max-width:400px;margin:0 auto;min-height:100vh;min-height:100dvh;padding:0 22px calc(22px + env(safe-area-inset-bottom))}
 #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-brand{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 30px}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-brand .bpmark{filter:brightness(1.6) saturate(1.1) drop-shadow(0 0 10px rgba(120,170,255,.45))}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-brand b{font-size:30px;font-weight:700;letter-spacing:-.035em;color:#fff}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-brand b{font-size:30px;font-weight:700;letter-spacing:-.035em;color:#001530}
 #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-step{display:flex;flex-direction:column;gap:12px}
 #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-step[hidden]{display:none}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-pill{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:54px;padding:0 20px;border-radius:999px;border:0;font:inherit;font-size:16px;font-weight:600;letter-spacing:-.01em;text-decoration:none;cursor:pointer;transition:transform .12s ease,background .15s ease,opacity .15s}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-pill{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:54px;padding:0 20px;border-radius:999px;border:0;font:inherit;font-size:16px;font-weight:600;letter-spacing:-.01em;text-decoration:none;cursor:pointer;transition:transform .12s ease,background .15s ease,box-shadow .15s,opacity .15s}
 #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-pill:active{transform:scale(.98)}
 #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-pill:disabled{opacity:.6;cursor:default}
 #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-pill svg{width:19px;height:19px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-light{background:#f5f6f8;color:#0b0f17;box-shadow:inset 0 1px 0 #fff,0 6px 20px -8px rgba(0,0,0,.6)}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-light:hover{background:#fff}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-dark{background:rgba(255,255,255,.08);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-dark:hover{background:rgba(255,255,255,.13)}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-ghost{background:none;color:#c9d2df;min-height:40px;font-size:14.5px;font-weight:500}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-ghost:hover{color:#fff}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-light{background:#001530;color:#fff;box-shadow:0 10px 24px -10px rgba(0,21,48,.55)}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-light:hover{background:#0a2448}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-dark{background:rgba(255,255,255,.78);color:#0f1729;box-shadow:inset 0 0 0 1px #e3e8ef,0 4px 14px -6px rgba(16,24,40,.12);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-dark:hover{background:#fff}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-ghost{background:none;color:#475467;min-height:40px;font-size:14.5px;font-weight:500}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-ghost:hover{color:#006fff}
 #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-lastb{padding:0 18px 0 8px;justify-content:flex-start}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-av{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#006fff,#001530);color:#fff;font-size:15px;font-weight:700}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-av{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#006fff,#16C79A);color:#fff;font-size:15px;font-weight:700}
 #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-em{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;padding-right:30px}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-badge{position:absolute;top:-9px;right:18px;font-style:normal;font-size:11px;font-weight:600;letter-spacing:0;padding:3px 9px;border-radius:999px;background:#16181d;color:#e9edf3;box-shadow:0 0 0 1px rgba(255,255,255,.14)}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-ho{align-self:center;margin-top:2px;font-size:13.5px;color:#9aa6b8;text-decoration:none}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-ho:hover{color:#fff}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-form{padding:18px;border-radius:24px;background:rgba(10,16,28,.72);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),0 20px 60px -20px rgba(0,0,0,.8);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);gap:0}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-badge{position:absolute;top:-9px;right:18px;font-style:normal;font-size:11px;font-weight:700;letter-spacing:0;padding:3px 9px;border-radius:999px;background:#fff;color:#001530;box-shadow:0 0 0 1px #dfe5ee,0 2px 6px rgba(16,24,40,.12)}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-ho{align-self:center;margin-top:2px;font-size:13.5px;color:#667085;text-decoration:none}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-ho:hover{color:#006fff}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-form{padding:18px;border-radius:24px;background:rgba(255,255,255,.82);box-shadow:inset 0 0 0 1px #e3e8ef,0 24px 60px -24px rgba(16,24,40,.28);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);gap:0}
 #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-fh{display:flex;align-items:center;gap:10px;margin:0 0 14px}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-back{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;flex:none}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-back{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;border:0;background:#f2f4f7;color:#0f1729;cursor:pointer;flex:none}
 #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-back svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.03em;color:#fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.03em;color:#001530 !important}
 #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg #bpxSetPw h1{margin-bottom:6px}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-sub{font-size:13.5px;line-height:1.5;color:#9aa6b8;margin:0 0 10px}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-sub b{color:#fff}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg label{display:block;margin:10px 2px 6px;font-size:12.5px;font-weight:600;color:#aeb8c7 !important}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg input{width:100%;height:50px;padding:0 16px;border-radius:14px !important;border:0 !important;background:rgba(255,255,255,.07) !important;color:#fff !important;font:inherit;font-size:16px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1) !important;outline:none;box-sizing:border-box}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg input::placeholder{color:#6f7b8d}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg input:focus{box-shadow:inset 0 0 0 1.5px #4b99fe,0 0 0 4px rgba(0,111,255,.22) !important}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg input:-webkit-autofill{-webkit-text-fill-color:#fff;-webkit-box-shadow:0 0 0 40px #141c2b inset !important;caret-color:#fff}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-sub{font-size:13.5px;line-height:1.5;color:#667085;margin:0 0 10px}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-sub b{color:#0f1729}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg label{display:block;margin:10px 2px 6px;font-size:12.5px;font-weight:600;color:#475467 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg input{width:100%;height:50px;padding:0 16px;border-radius:14px !important;border:0 !important;background:#f4f6f9 !important;color:#0f1729 !important;font:inherit;font-size:16px;box-shadow:inset 0 0 0 1px #e3e8ef !important;outline:none;box-sizing:border-box}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg input::placeholder{color:#98a2b3}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg input:focus{background:#fff !important;box-shadow:inset 0 0 0 1.5px #006fff,0 0 0 4px rgba(0,111,255,.14) !important}
 #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .bpx-pwrow{position:relative}
 #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .bpx-pwrow input{padding-right:70px}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .bpx-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:none;color:#8fbaff;font:inherit;font-size:13px;font-weight:600;padding:8px;cursor:pointer}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .bpx-forgot{align-self:flex-end;margin:10px 2px 14px auto;border:0;background:none;font:inherit;font-size:13px;font-weight:600;color:#8fbaff;cursor:pointer;padding:2px}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .bpx-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:none;color:#006fff;font:inherit;font-size:13px;font-weight:600;padding:8px;cursor:pointer}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .bpx-forgot{align-self:flex-end;margin:10px 2px 14px auto;border:0;background:none;font:inherit;font-size:13px;font-weight:600;color:#006fff;cursor:pointer;padding:2px}
 #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-submit{margin-top:4px}
 #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg #bpxSetPw .lg-submit{margin-top:16px}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .bpx-msg{margin:10px 4px 0;font-size:13px;line-height:1.45;color:#cfe3ff;text-align:center}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .bpx-msg{margin:10px 4px 0;font-size:13px;line-height:1.45;color:#0853B5;text-align:center}
 #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .bpx-msg:empty{display:none}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .bpx-msg.err{color:#dbe9ff !important;background:rgba(0,111,255,.14) !important;border:1px solid rgba(75,153,254,.35) !important;border-radius:12px;padding:10px 12px}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .bpx-msg.err{color:#0853B5 !important;background:#eef5ff !important;border:1px solid #cfe0fb !important;border-radius:12px;padding:10px 12px}
 #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-foot{display:flex;justify-content:center;gap:22px;margin-top:22px}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-foot a{font-size:12.5px;color:#6f7b8d;text-decoration:none}
-#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-foot a:hover{color:#c9d2df}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-foot a{font-size:12.5px;color:#98a2b3;text-decoration:none}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-foot a:hover{color:#475467}
 @media (min-width:700px){
-  #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-planet{top:44%;width:2200px;height:2200px}
-  #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-flare{top:44%}
-  #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-wrap{justify-content:flex-start;padding-top:calc(44vh + 70px);padding-bottom:32px}
-  #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg.lg-on2 .lg-wrap{padding-top:calc(44vh - 70px)}
+  #bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-wrap{justify-content:center;padding-top:40px;padding-bottom:40px}
 }
-@media (max-height:700px) and (max-width:699px){#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-brand{margin-bottom:20px}#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-planet,#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-flare{top:30%}}
 @media (prefers-reduced-motion:no-preference){#bpx#bpx#bpx#bpx#bpx#bpx #bpxLogin.lg .lg-step:not([hidden]){animation:lgIn .35s cubic-bezier(.2,.8,.2,1) both}}
 @keyframes lgIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
