@@ -139,4 +139,26 @@
     document.body.classList.toggle('ho-up', !!h1 && h1.getBoundingClientRect().bottom < 60);
   }
   window.addEventListener('scroll', barTitle, { passive: true });
+  /* ---- swipe a bottom sheet down to close it, like the contractor app's sheets ---- */
+  var W = { card: null, y0: 0, d: 0, close: null };
+  document.addEventListener('touchstart', function (e) {
+    if (!phone() || e.touches.length !== 1 || !e.target.closest) return;
+    var t = e.target, card = null, close = null;
+    if ((card = t.closest('#hpMore.hp-sheet'))) close = function () { if (window.bpHpMore) bpHpMore(false); };
+    else if (t.closest('.hrv-grab, .hrv-h') && (card = t.closest('.hrv-card'))) close = function () { if (window.bpHpRevClose) bpHpRevClose(); };
+    if (!card || t.closest('input, textarea, select')) return;
+    W.card = card; W.close = close; W.y0 = e.touches[0].clientY; W.d = 0;
+  }, { passive: true });
+  document.addEventListener('touchmove', function (e) {
+    if (!W.card) return;
+    var dy = e.touches[0].clientY - W.y0;
+    if (dy <= 0) { W.card.style.transform = ''; W.d = 0; return; }
+    W.d = dy; W.card.style.transition = 'none'; W.card.style.transform = 'translateY(' + dy + 'px)';
+  }, { passive: true });
+  document.addEventListener('touchend', function () {
+    var c = W.card, close = W.close; if (!c) return; W.card = null;
+    c.style.transition = 'transform .2s cubic-bezier(.2,0,0,1)';
+    if (W.d > Math.min(120, c.offsetHeight * 0.3)) { c.style.transform = 'translateY(100%)'; setTimeout(close, 180); }
+    else c.style.transform = '';
+  }, { passive: true });
 })();

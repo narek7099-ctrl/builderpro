@@ -176,3 +176,15 @@
   /* no explanation lines under titles on a phone, as in the contractor app */
   #bpSign .ho-sub,#bpSign .pr-hero-t p{display:none !important}
 }
+
+/* 2026-11-28: chat fills the screen like the contractor app's; account delete is a row, not a web link */
+#bpSign .ho-acct .my-del{text-decoration:none;color:#b42318;font-weight:600}
+@media (max-width:899px){
+  #bpSign .hp-app.is-chat .hp-content{padding:0 !important}
+  #bpSign .hp-app.is-chat .hp-chat{height:calc(100vh - 56px - 61px) !important;height:calc(100dvh - 56px - 61px - env(safe-area-inset-bottom)) !important;min-height:0 !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;background:#fff !important;animation:none}
+  #bpSign .hp-app.is-chat .hp-thread{background:#fff}
+  #bpSign .hp-app.is-chat .hp-chat-h{padding:10px 16px}
+  #bpSign .hp-app.is-chat .hp-chat-h>a.hp-btn{display:none !important}
+  #bpSign .ho-acct .my-del{align-self:stretch !important;width:100%;min-height:50px;margin-top:2px;border-radius:18px;background:#fff;font-size:15px;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(15,23,42,.07)}
+  #bpSign .ho-acct .my-del:active{transform:scale(.98)}
+}

@@ -536,3 +536,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-27 one app look on computer: homeowner pages get the contractor's navy sidebar, top bar, cards: restore to 411def9
 - 2026-11-27 demo assets: Ridgeline Roofing (sample) logo and documents: restore to ee89b3b
 - 2026-11-27 homeowner screens change in place (slides, back stack, pull to refresh, sticky top bar title): restore to eec93e2
+- 2026-11-28 homeowner full-screen chat, swipe-down sheets, account delete row: restore to 79c2f56
