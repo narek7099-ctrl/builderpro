@@ -105,9 +105,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261128-mp1">
-<link rel="stylesheet" href="site/present.css?v=20261128-mp1">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261128-mp1"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261128-lg4">
+<link rel="stylesheet" href="site/present.css?v=20261128-lg4">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261128-lg4"}}</script>
 
 
 <style id="bpi-icons">
@@ -1856,36 +1856,41 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 <!-- ===== CLIENT PORTAL ===== -->
 <div id="bpx">
   <!-- login -->
-  <div class="bpx-auth" id="bpxLogin">
-    <div class="bpx-wrap">
-      <div class="bpx-brand2"><svg class="bpmark" width="46" height="46" aria-label="BuilderPro"><use href="#bpMark"/></svg><b class="wm">Builder<span>Pro</span></b></div>
-      <div class="bpx-card">
-        <div id="bpxLoginForm">
-        <h1>Welcome back</h1>
-        <div class="bpx-sub2">Sign in to your BuilderPro dashboard.</div>
-        <label>Email</label>
-        <input type="email" id="bpxEmail" placeholder="you@company.com" autocomplete="username">
-        <label>Password</label>
-        <div class="bpx-pwrow"><input type="password" id="bpxPassword" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')bpDoAuth()"><button type="button" class="bpx-eye" aria-label="Show password" aria-pressed="false" onclick="var i=document.getElementById('bpxPassword'),on=i.type==='password';i.type=on?'text':'password';this.setAttribute('aria-pressed',on);this.setAttribute('aria-label',on?'Hide password':'Show password');this.textContent=on?'Hide':'Show'">Show</button></div>
-        <button type="button" class="bpx-forgot" id="bpxForgot" onclick="bpForgot()">Forgot password?</button>
-        <button class="bpx-btn" onclick="bpDoAuth()">Sign in</button>
+  <!-- sign in (2026-11-28): dark sky, a planet's glowing edge, pill buttons, "Last used" -->
+  <div class="bpx-auth lg" id="bpxLogin">
+    <div class="lg-sky" aria-hidden="true"><i class="lg-stars"></i><i class="lg-planet"></i><i class="lg-flare"></i></div>
+    <div class="lg-wrap">
+      <div class="lg-brand"><svg class="bpmark" width="34" height="34" aria-hidden="true"><use href="#bpMark"/></svg><b>BuilderPro</b></div>
+      <div id="bpxLoginForm">
+        <div class="lg-step" id="lgStart">
+          <div id="lgLast"></div>
+          <button type="button" class="lg-pill lg-light" id="lgEmailBtn" data-lg-go onclick="bpLgStep(2)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg><span>Continue with email</span></button>
+          <a class="lg-pill lg-dark" id="lgTrial" href="/signup.html">Start your 14-day free trial</a>
+          <a class="lg-ho" href="/#my" onclick="location.href='/#my';location.reload();return false">Homeowner? See your projects</a>
+        </div>
+        <div class="lg-step lg-form" id="lgForm" hidden>
+          <div class="lg-fh"><button type="button" class="lg-back" onclick="bpLgStep(1)" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><h1>Welcome back</h1></div>
+          <label for="bpxEmail">Email</label>
+          <input type="email" id="bpxEmail" placeholder="you@company.com" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('bpxPassword').focus()">
+          <label for="bpxPassword">Password</label>
+          <div class="bpx-pwrow"><input type="password" id="bpxPassword" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')bpDoAuth()"><button type="button" class="bpx-eye" aria-label="Show password" aria-pressed="false" onclick="var i=document.getElementById('bpxPassword'),on=i.type==='password';i.type=on?'text':'password';this.setAttribute('aria-pressed',on);this.setAttribute('aria-label',on?'Hide password':'Show password');this.textContent=on?'Hide':'Show'">Show</button></div>
+          <button type="button" class="bpx-forgot" id="bpxForgot" onclick="bpForgot()">Forgot password?</button>
+          <button type="button" class="lg-pill lg-light lg-submit" id="bpxSignBtn" onclick="bpDoAuth()">Sign in</button>
+        </div>
         <div class="bpx-msg" id="bpxAuthMsg"></div>
-        <div class="bpx-new">New to BuilderPro? <a href="/signup.html">Start your 14-day free trial</a></div>
-        <div class="bpx-hint bpx-ho">Homeowner? <a href="/#my" onclick="location.href='/#my';location.reload();return false">Create a free account</a> to see your projects.</div>
-        </div>
-        <div id="bpxSetPw" style="display:none">
-        <h1 id="bpxSetPwTitle">Set your password</h1>
-        <div class="bpx-sub2" id="bpxSetPwSub">Choose a password for <b id="bpxSetPwEmail"></b>.</div>
-        <label>New password</label>
-        <input type="password" id="bpxNewPw" placeholder="At least 8 characters" autocomplete="new-password">
-        <label>Confirm password</label>
-        <input type="password" id="bpxNewPw2" placeholder="Type it again" autocomplete="new-password" onkeydown="if(event.key==='Enter')bpSetPassword()">
-        <button class="bpx-btn" id="bpxSetPwBtn" onclick="bpSetPassword()">Save password and continue</button>
-        <div class="bpx-msg" id="bpxSetPwMsg"></div>
-        <div class="bpx-hint">Use at least 8 characters. A mix of words and numbers is strongest.</div>
-        </div>
       </div>
-      <div class="bpx-foot2"><a href="/">builderpro-os.com</a> &middot; <a href="/privacy.html">Privacy</a> &middot; <a href="/terms.html">Terms</a></div>
+      <div id="bpxSetPw" class="lg-form" style="display:none">
+        <h1 id="bpxSetPwTitle">Set your password</h1>
+        <div class="lg-sub" id="bpxSetPwSub">Choose a password for <b id="bpxSetPwEmail"></b>.</div>
+        <label for="bpxNewPw">New password</label>
+        <input type="password" id="bpxNewPw" placeholder="At least 8 characters" autocomplete="new-password">
+        <label for="bpxNewPw2">Confirm password</label>
+        <input type="password" id="bpxNewPw2" placeholder="Type it again" autocomplete="new-password" onkeydown="if(event.key==='Enter')bpSetPassword()">
+        <button type="button" class="lg-pill lg-light lg-submit" id="bpxSetPwBtn" onclick="bpSetPassword()">Save password and continue</button>
+        <div class="bpx-msg" id="bpxSetPwMsg"></div>
+        <div class="lg-sub">Use at least 8 characters. A mix of words and numbers is strongest.</div>
+      </div>
+      <div class="lg-foot"><a href="/privacy.html">Privacy policy</a><a href="/terms.html">Terms of service</a></div>
     </div>
   </div>
   <!-- app: dark sidebar, slim white top bar, section tabs, content (portal/shell.js) -->
@@ -2518,7 +2523,7 @@ function bpShowSetPw(email){
   var inv=/type=invite/.test(window.__bpAuthHash||'');
   document.getElementById('bpxSetPwTitle').textContent=inv?'Welcome to BuilderPro':'Set a new password';
   document.getElementById('bpxSetPwEmail').textContent=email||'';
-  document.getElementById('bpxLogin').style.display='flex';
+  document.getElementById('bpxLogin').style.display='flex';if(window.bpLgStep)bpLgStep(1);
   setTimeout(function(){ var i=document.getElementById('bpxNewPw'); if(i)i.focus(); },50);
 }
 function bpSetPassword(){
@@ -2761,12 +2766,32 @@ function bpDoAuth(){
   msg.className='bpx-msg';
   /* Preview / no Supabase script — fall back to a demo session so the UI still explores. */
   if(!BP_LIVE){bpEnterPortal(email);return;}
-  var btn=document.querySelector('#bpxLogin .bpx-btn');if(btn){btn.disabled=true;btn.textContent='Signing in…';}
+  var btn=document.getElementById('bpxSignBtn');if(btn){btn.disabled=true;btn.textContent='Signing in…';}
   BP_SB.auth.signInWithPassword({email:email,password:pw}).then(function(r){
-    if(r.error)throw r.error;bpEnterPortal(r.data.user.email);
+    if(r.error)throw r.error;try{localStorage.setItem('bpLastEmail',String(r.data.user.email||email).toLowerCase());}catch(e){}bpEnterPortal(r.data.user.email);
   }).catch(function(e){msg.className='bpx-msg err';msg.textContent=bpFriendly(e&&e.message);})
-  .then(function(){if(btn){btn.disabled=false;btn.textContent='Sign In';}});
+  .then(function(){if(btn){btn.disabled=false;btn.textContent='Sign in';}});
 }
+/* sign in (2026-11-28): step 1 picks how, step 2 is the email form. The email used last
+   on this device (saved after a sign-in) gets its own button with a "Last used" badge. */
+function bpLgLast(){ try{ var e=String(localStorage.getItem('bpLastEmail')||''); return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)?e:''; }catch(x){ return ''; } }
+function bpLgPaint(){
+  var host=document.getElementById('lgLast'), eb=document.getElementById('lgEmailBtn'), tr=document.getElementById('lgTrial'); if(!host) return;
+  var last=bpLgLast();
+  host.innerHTML=last?'<button type="button" class="lg-pill lg-light lg-lastb" onclick="bpLgStep(2,1)"><span class="lg-av">'+bpEsc(last.charAt(0).toUpperCase())+'</span><span class="lg-em">Continue as '+bpEsc(last)+'</span><em class="lg-badge">Last used</em></button>':'';
+  if(eb){ eb.classList.toggle('lg-light',!last); eb.classList.toggle('lg-dark',!!last); eb.querySelector('span').textContent=last?'Use another email':'Continue with email'; }
+  if(tr){ tr.classList.toggle('lg-ghost',!!last); tr.classList.toggle('lg-dark',!last); tr.textContent=last?'New here? Start a free trial':'Start your 14-day free trial'; }
+}
+window.bpLgStep=function(n,useLast){
+  var a=document.getElementById('lgStart'), f=document.getElementById('lgForm'), em=document.getElementById('bpxEmail'), pw=document.getElementById('bpxPassword');
+  if(!a||!f) return;
+  a.hidden=n===2; f.hidden=n!==2;
+  document.getElementById('bpxLogin').classList.toggle('lg-on2',n===2);
+  var msg=document.getElementById('bpxAuthMsg'); if(msg&&n===1){msg.className='bpx-msg';msg.textContent='';}
+  if(n===2){ var last=bpLgLast(); if(useLast&&last){ em.value=last; setTimeout(function(){pw.focus();},60); } else { if(!useLast&&em.value===last) em.value=''; setTimeout(function(){em.focus();},60); } }
+  else bpLgPaint();
+};
+document.addEventListener('DOMContentLoaded',bpLgPaint);
 function bpForgot(){
   var em=document.getElementById('bpxEmail'),email=em.value.trim(),msg=document.getElementById('bpxAuthMsg'),btn=document.getElementById('bpxForgot');
   var say=function(t,bad){msg.className='bpx-msg'+(bad?' err':'');msg.textContent=t;if(msg.scrollIntoView)msg.scrollIntoView({block:'nearest',behavior:'smooth'});};
@@ -2797,7 +2822,7 @@ function bpLogout(force){
   if(window.bpDeviceForget) bpDeviceForget();
   if(window.bpShell)bpShell.closeAll();
   document.getElementById('bpxApp').classList.remove('on');
-  document.getElementById('bpxLogin').style.display='flex';
+  document.getElementById('bpxLogin').style.display='flex';if(window.bpLgStep)bpLgStep(1);
   document.getElementById('bpxPassword').value='';
 }
 var BPVIEWS={reviews:{t:'Reviews',s:'What your customers said about your work, and your replies.'},assets:{t:'Equipment',s:''},connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewdash:{t:'Home',s:''},crewclock:{t:'Time clock',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Jobs',s:''},crewid:{t:'My ID',s:''},crewmsgs:{t:'Messages',s:''},subjobs:{t:'Jobs',s:''},subinvoices:{t:'Invoices',s:''},subchanges:{t:'Change orders',s:''},subcomply:{t:'Compliance',s:''},subcompany:{t:'My company',s:''},subs:{t:'Subcontractors',s:''},routing:{t:'Driving routes',s:''},quote:{t:'Estimate',s:''},invoicebuilder:{t:'Invoice',s:''},teamchat:{t:'Team chat',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active jobs',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finincome:{t:'Income',s:''},finexpenses:{t:'Expenses',s:''},finarchive:{t:'Tax years',s:''},payouts:{t:'Card payments',s:''},quickbooks:{t:'QuickBooks',s:''},checks:{t:'Lead stats',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Order lists',s:''},receipts:{t:'Receipts',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
@@ -15210,7 +15235,7 @@ window.bpRepCopy=function(text,btn){
 <!--/app-only-->
 </body>
 <!--app-only-->
-<link rel="stylesheet" href="portal/app.css?v=fd1b68fb92" data-bundle>
+<link rel="stylesheet" href="portal/app.css?v=540a437ed3" data-bundle>
 <script src="portal/team.js?v=20261115a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261128rt"></script>
@@ -15267,11 +15292,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261125ls"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261128-mp1"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261128-mp1"></script>
-<script src="site/vendor/SplitText.min.js?v=20261128-mp1"></script>
-<script src="site/site.js?v=20261128-mp1"></script>
-<script src="site/present.js?v=20261128-mp1"></script>
+<script src="site/vendor/gsap.min.js?v=20261128-lg4"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261128-lg4"></script>
+<script src="site/vendor/SplitText.min.js?v=20261128-lg4"></script>
+<script src="site/site.js?v=20261128-lg4"></script>
+<script src="site/present.js?v=20261128-lg4"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>
