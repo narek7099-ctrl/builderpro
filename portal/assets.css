@@ -248,3 +248,52 @@
   #bpx#bpx .eq-hacts{grid-column:1/-1;margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
   #bpx#bpx .eq-hacts>.bpx-addbtn{grid-column:1/-1}
 }
+
+/* ---- who looks after it (2026-11-28) ---- */
+#bpx .eq-av{display:inline-grid;place-items:center;flex:none;width:22px;height:22px;border-radius:50%;background:#e6f0ff;color:#006fff;font-style:normal;font-size:10px;font-weight:700;letter-spacing:.02em}
+#bpx .eq-who{display:inline-flex;align-items:center;gap:6px;margin-top:5px;font-size:12.5px;font-weight:600;color:var(--ink);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .eq-who.none{color:#006fff}
+#bpx .eq-who .ms{font-size:16px}
+#bpx .eq-need{display:flex;align-items:center;gap:14px;width:100%;margin:18px 0 0;padding:14px 16px;border:1px solid #cfe0fb;border-radius:16px;background:#f2f7ff;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+#bpx .eq-need:hover,#bpx .eq-need.on{border-color:#006fff}
+#bpx .eq-need-i{display:grid;place-items:center;flex:none;width:40px;height:40px;border-radius:12px;background:#006fff;color:#fff}
+#bpx .eq-need-t{flex:1;min-width:0}
+#bpx .eq-need-t b{display:block;font-size:15px;font-weight:700}
+#bpx .eq-need-t small{display:block;font-size:13px;color:var(--grey);margin-top:2px}
+#bpx .eq-need-go{flex:none;padding:8px 14px;border-radius:10px;background:#006fff;color:#fff;font-size:13.5px;font-weight:600}
+#bpx .eq-own{display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--soft,#f6f8fb);font-size:14px;color:var(--ink);max-width:460px}
+#bpx .eq-own .eq-av{width:32px;height:32px;font-size:12px}
+#bpx .eq-own>span:not(.ms){flex:1;min-width:0}
+#bpx .eq-own small{display:block;font-size:12px;color:var(--grey);font-weight:500;margin-top:1px}
+#bpx button.eq-own{width:100%;border:1px dashed #9cc0f5;background:#f2f7ff;font:inherit;text-align:left;cursor:pointer;color:#006fff}
+#bpx button.eq-own .ms{font-size:22px}
+#bpx button.eq-own b{color:#006fff}
+#bpx .eq-own-ch{flex:none;border:0;background:none;font:inherit;font-size:13.5px;font-weight:600;color:#006fff;cursor:pointer;padding:6px 4px}
+#bpx .eq-asg h3{margin:0 0 12px}
+#bpx .eq-asg-unit{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:var(--soft,#f6f8fb)}
+#bpx .eq-asg-unit .eq-th{width:42px;height:42px}
+#bpx .eq-asg-unit b{display:block;font-size:14.5px}
+#bpx .eq-asg-unit small{display:block;font-size:12.5px;color:var(--grey)}
+#bpx .eq-asg-sub{margin:10px 2px 12px;font-size:13px;color:var(--grey)}
+#bpx .eq-pplist{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden;max-height:min(50vh,420px);overflow-y:auto}
+#bpx .eq-pp{display:flex;align-items:center;gap:12px;width:100%;padding:11px 14px;border:0;border-top:1px solid var(--line);background:var(--card);font:inherit;color:var(--ink);text-align:left;cursor:pointer}
+#bpx .eq-pp:first-child{border-top:0}
+#bpx .eq-pp:hover{background:var(--soft,#f6f8fb)}
+#bpx .eq-pp.on{background:#f2f7ff}
+#bpx .eq-pp .eq-av{width:36px;height:36px;font-size:13px}
+#bpx .eq-pp-t{flex:1;min-width:0}
+#bpx .eq-pp-t b{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600}
+#bpx .eq-pp-t b em{font-style:normal;font-size:11px;font-weight:700;color:#087F61;background:#e3f8f1;padding:2px 8px;border-radius:99px}
+#bpx .eq-pp-t small{display:block;font-size:12.5px;color:var(--grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .eq-pp-go{color:#98a2b3}
+#bpx .eq-pp-ok{color:#006fff}
+#bpx.bpx-dark .eq-need,#bpx.bpx-dark button.eq-own{background:rgba(0,111,255,.10);border-color:rgba(0,111,255,.35)}
+#bpx.bpx-dark .eq-pp.on{background:rgba(0,111,255,.12)}
+#bpx.bpx-dark .eq-av{background:rgba(0,111,255,.18);color:#8fbaff}
+#bpx.bpx-dark .eq-pp-t b em{background:rgba(22,199,154,.15);color:#5fe0bd}
+@media (max-width:899px){
+  #bpx .eq-need{margin-top:12px}
+  #bpx .eq-need-go{display:none}
+  #bpx .eq-own{max-width:none}
+  #bpx#bpx .eq-hero .eq-own{grid-column:1/-1;margin-top:10px}
+}
