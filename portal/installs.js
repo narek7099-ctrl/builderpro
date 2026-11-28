@@ -98,6 +98,18 @@
       /* the record on the Equipment page */
       if (window.BPA && BPA.fromInstall) Promise.resolve(BPA.load()).then(function () { return BPA.fromInstall(j); }).then(function (a) {
         if (!a) return; try { bpJobsSet(bpJobsGet()); } catch (e) {}
+        /* 2026-11-28: the job is done, so the equipment needs someone to look after it.
+           Owner and office go straight to the record on Equipment and pick who. */
+        var crewLogin = window.bpTeamIsCrew && bpTeamIsCrew();
+        if (!crewLogin && !a.employee_id && BPA.assign) {
+          /* after anything else finishing opened (the review link) is dealt with */
+          var t0 = Date.now();
+          (function tick() {
+            if (document.getElementById('bpx-modal')) { if (Date.now() - t0 < 15 * 60e3) setTimeout(tick, 400); return; }
+            BPA.open(a.id); setTimeout(function () { BPA.assign(a.id, { done: 1 }); }, 350);
+          })();
+          return;
+        }
         if (window.bpToast) bpToast('Added to Equipment. Open it there to scan the nameplate.', 'success');
       });
       return out;

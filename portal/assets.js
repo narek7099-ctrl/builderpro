@@ -154,6 +154,90 @@
     return carrying;
   }
   var byId = function (id) { return (A.list || []).filter(function (x) { return x.id === id; })[0] || null; };
+
+  /* ================================================================
+     Who looks after it (2026-11-28)
+     Every piece of equipment is assigned to someone on the Employees list.
+     Crew logins see only what is assigned to them (RLS on assets, with
+     employee_id -> their login kept in step by the database). Signing off a
+     finished job brings the contractor here to pick someone. The suggestion
+     puts first who worked the job, then who already looks after equipment at
+     that address, then the right trade.
+     ================================================================ */
+  var ini = function (n) { var p = String(n || '?').replace(/\(sample\)/i, '').trim().split(/\s+/); return ((p[0] || '?')[0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase(); };
+  function whoLine(a) {
+    if (crew()) return '<div class="eq-own"><i class="eq-av">' + esc(ini(a.assigned_name || (window.BP_TEAM && BP_TEAM.name))) + '</i><span>Assigned to <b>you</b></span></div>';
+    if (!a.employee_id) return '<button class="eq-own need" onclick="BPA.assign()"><span class="ms">person_add</span><span><b>Assign an employee</b><small>Only they will see it in their app</small></span></button>';
+    return '<div class="eq-own"><i class="eq-av">' + esc(ini(a.assigned_name)) + '</i><span>Looked after by <b>' + esc(a.assigned_name || 'Employee') + '</b>' + (a.assigned_to ? '' : '<small>No app login yet, so they can’t see it</small>') + '</span><button class="eq-own-ch" onclick="BPA.assign()">Change</button></div>';
+  }
+  var PEOPLE_FIT = {   /* the trade (bpTradeCat) that looks after each kind */
+    ac_condenser: 'HVAC', heat_pump: 'HVAC', furnace: 'HVAC', air_handler: 'HVAC', package_unit: 'HVAC', rooftop_unit: 'HVAC', mini_split: 'HVAC', boiler: 'HVAC',
+    water_heater_tank: 'Plumbing', water_heater_tankless: 'Plumbing', water_softener: 'Plumbing', well_pump: 'Plumbing', sump_pump: 'Plumbing',
+    pool_pump: 'Pools', pool_heater: 'Pools', pool_filter: 'Pools', electrical_panel: 'Electrical', generator: 'Electrical', ev_charger: 'Electrical',
+    solar_inverter: 'Electrical', battery: 'Electrical', roof: 'Roofing'
+  };
+  function suggest(a, emps) {
+    var j = a.job_id ? jobBy(a.job_id) : null, onJob = {}, lead = '';
+    if (j) {
+      (window.bpJobAssignees ? bpJobAssignees(j) : []).forEach(function (x) { onJob[x.employeeId] = 1; });
+      var cr = (window.pjCrews ? pjCrews() : []).filter(function (c) { return c.id === j.crew; })[0];
+      if (cr) { (cr.members || []).forEach(function (id) { onJob[id] = 1; }); lead = cr.lead || ''; }
+      var by = String((j.install && j.install.by) || '').toLowerCase();
+      if (by) emps.forEach(function (e) { if (String(e.name || '').toLowerCase() === by || String(e.email || '').toLowerCase() === by) onJob[e.id] = 1; });
+    }
+    var here = {}, want = PEOPLE_FIT[a.category] || '';
+    (A.list || []).forEach(function (b) { if (b.id !== a.id && b.employee_id && ((a.contact_id && b.contact_id === a.contact_id) || (a.addr && b.addr === a.addr))) here[b.employee_id] = (here[b.employee_id] || 0) + 1; });
+    return emps.map(function (e) {
+      var trade = window.bpTradeCat ? bpTradeCat(e.trade) : String(e.trade || ''), sk = (e.skills || []).join(' ') + ' ' + (e.certifications || '');
+      var fit = want && (trade === want || (window.bpTradeCat && bpTradeCat(sk) === want)), pts = 0, why = [];
+      if (onJob[e.id]) { pts += 100; why.push(e.id === lead ? 'Led this job' : 'Worked this job'); }
+      if (here[e.id]) { pts += 40 + here[e.id]; why.push('Looks after ' + here[e.id] + ' other unit' + (here[e.id] === 1 ? '' : 's') + ' here'); }
+      if (fit) { pts += 25; why.push(want + ' tech'); }
+      if (e.team_id) pts += 5; else why.push('no app login yet');
+      return { e: e, pts: pts, why: why.join(' · ') || (e.trade || 'Employee') };
+    }).sort(function (x, y) { return (y.pts - x.pts) || String(x.e.name).localeCompare(String(y.e.name)); });
+  }
+  A.openRow = function (id) { A.open(id); if (A.filter === 'unassigned' && !crew()) A.assign(id); };
+  A.assign = function (id, o) {
+    o = o || {}; id = id || A.id; var a = byId(id); if (!a || crew()) return;
+    Promise.resolve(window.bpCrewLoad ? bpCrewLoad() : null).catch(function () {}).then(function () {
+      var emps = (window.bpEmpsActive ? bpEmpsActive() : []).filter(function (e) { return e && e.id && !/^office$/i.test(e.trade || ''); });
+      var rec = suggest(a, emps), top = rec[0] && rec[0].pts >= 25 ? rec[0].e.id : '';
+      var row = function (r) {
+        var e = r.e, on = a.employee_id === e.id;
+        return '<button class="eq-pp' + (on ? ' on' : '') + '" onclick="BPA.setWho(\'' + a.id + '\',\'' + e.id + '\')"><i class="eq-av">' + esc(ini(e.name)) + '</i>'
+          + '<span class="eq-pp-t"><b>' + esc(e.name || 'Employee') + (e.id === top && !on ? ' <em>Suggested</em>' : '') + '</b><small>' + esc(r.why) + '</small></span>'
+          + (on ? '<span class="ms eq-pp-ok">check_circle</span>' : '<span class="ms eq-pp-go">chevron_right</span>') + '</button>';
+      };
+      bpModal('<div class="eq-dlg eq-asg"><h3>' + (o.done ? 'Job finished. Who looks after this?' : 'Who looks after this?') + '</h3>'
+        + '<div class="eq-asg-unit">' + thumb(a) + '<span><b>' + esc(a.name || catName(a.category)) + '</b><small>' + esc([a.customer, a.addr].filter(Boolean).join(' · ') || catName(a.category)) + '</small></span></div>'
+        + '<p class="eq-asg-sub">They get its service visits and see it in their app. Nobody else on the crew does.</p>'
+        + (rec.length ? '<div class="eq-pplist">' + rec.map(row).join('') + '</div>'
+          : '<div class="eq-none">No employees yet. Add your people under Employees, then assign them here.</div>')
+        + '<div class="bpx-mmsg" id="eq-amsg"></div>'
+        + '<div class="row">' + (a.employee_id ? '<button class="bpx-btn ghost" onclick="BPA.setWho(\'' + a.id + '\',\'\')">Unassign</button>' : '') + '<button class="bpx-btn ghost" onclick="bpCloseModal()">' + (o.done ? 'Later' : 'Cancel') + '</button></div></div>');
+      var cards = document.querySelectorAll('.bpx-modalcard'), mc = cards[cards.length - 1]; if (mc) mc.classList.add('eq-card', 'eq-asg-card');
+      if (mc) paintRefs(mc);
+    });
+  };
+  A.setWho = function (id, empId) {
+    var a = byId(id); if (!a) return;
+    var e = empId && window.bpEmpById ? bpEmpById(empId) : null;
+    var m = $('eq-amsg'); if (m) m.textContent = 'Saving…';
+    var ch = { employee_id: empId || null };
+    var done = function (row) {
+      Object.assign(a, row || { employee_id: ch.employee_id, assigned_name: e ? e.name : null, assigned_to: e ? e.team_id || null : null });
+      bpCloseModal();
+      if (window.bpHaptic) bpHaptic('success');
+      toast(empId ? 'Assigned to ' + (a.assigned_name || 'them') + (a.assigned_to ? '. It’s in their app now.' : '. Invite them to the app so they can see it.') : 'Unassigned.', 'success');
+      if (A.id === id) drawRecord(); else drawList();
+    };
+    if (!live()) return done();
+    Promise.resolve(BP_SB.from('assets').update(Object.assign({}, ch, { updated_at: new Date().toISOString() })).eq('id', id).select()).then(function (r) {
+      if (r && r.error) { if (m) m.textContent = 'Couldn’t save: ' + r.error.message; return; }
+      done(r && r.data && r.data[0]);
+    }, function () { if (m) m.textContent = 'Couldn’t save. Check your connection and try again.'; });
+  };
   function history(id) {
     if (!live()) return Promise.resolve([]);
     return Promise.resolve(BP_SB.from('asset_services').select('*').eq('asset_id', id).order('at', { ascending: false }).limit(200))
@@ -219,6 +303,7 @@
   A.search = function (v) { A.q = String(v || '').toLowerCase(); drawRows(); };
   function matches(a, f) {
     var x = facts(a);
+    if (f === 'unassigned') return !a.employee_id;
     if (f === 'due') return x.svc.k === 'over' || x.svc.k === 'soon';
     if (f === 'eol') return !!x.eol;
     if (f === 'warr') return x.warr;
@@ -232,16 +317,17 @@
     var tile = function (k, v, t, c, ico) { return '<button class="eq-tile' + (A.filter === k ? ' on' : '') + '" onclick="BPA.setFilter(\'' + k + '\')"><span class="ms" style="color:' + c + '">' + ico + '</span><b>' + v + '</b><small>' + t + '</small></button>'; };
     var chip = function (k, t) { return '<button class="eq-chip' + (A.filter === k ? ' on' : '') + '" onclick="BPA.setFilter(\'' + k + '\')">' + t + '</button>'; };
     area.innerHTML = '<div class="eq">'
-      + '<div class="bpx-chead eq-head"><div><h2>Equipment</h2><p class="eq-sub">' + (crew() ? 'The equipment at the jobs you\u2019re on, and anything you add.' : 'Every unit you install or service, with its age, warranty and when it will need replacing.') + '</p></div>'
+      + '<div class="bpx-chead eq-head"><div><h2>Equipment</h2><p class="eq-sub">' + (crew() ? 'The equipment you look after, and anything you add.' : 'Every unit you install or service, with its age, warranty and when it will need replacing.') + '</p></div>'
         /* the buttons sit in the header once there is a list; an empty page has them in its own card only */
         + (L.length ? '<div class="eq-acts"><button class="bpx-btn ghost" onclick="BPA.add()"><span class="ms">edit_note</span>Add by hand</button>'
         + '<button class="bpx-addbtn" onclick="BPA.add({scan:1})"><span class="ms">photo_camera</span>Scan a nameplate</button></div>' : '') + '</div>'
+      + (!crew() && n('unassigned') ? '<button class="eq-need' + (A.filter === 'unassigned' ? ' on' : '') + '" onclick="BPA.setFilter(\'unassigned\')"><span class="eq-need-i"><span class="ms">person_add</span></span><span class="eq-need-t"><b>' + n('unassigned') + (n('unassigned') === 1 ? ' needs an employee' : ' need an employee') + '</b><small>Pick who looks after ' + (n('unassigned') === 1 ? 'it' : 'each one') + '. Only they will see it in their app.</small></span><span class="eq-need-go">Assign</span></button>' : '')
       + (L.length ? '<div class="eq-tiles">' + tile('all', L.length, 'All equipment', 'var(--blue)', 'inventory_2') + tile('due', n('due'), 'Service due', '#0953b4', 'build_circle')
           + tile('eol', n('eol'), 'Near end of life', '#0853B5', 'hourglass_bottom') + tile('warr', n('warr'), 'Under warranty', '#087F61', 'verified_user') + '</div>'
         + '<div class="eq-bar"><label class="eq-search"><span class="ms">search</span><input placeholder="Search customer, make, model or serial" value="' + esc(A.q) + '" oninput="BPA.search(this.value)"></label>'
-          + '<div class="eq-chips">' + chip('all', 'All') + TAGS.map(function (t) { return chip(t[0], t[1]); }).join('') + '</div></div>'
+          + '<div class="eq-chips">' + chip('all', 'All') + (crew() ? '' : chip('unassigned', 'Needs an employee')) + TAGS.map(function (t) { return chip(t[0], t[1]); }).join('') + '</div></div>'
         + '<div class="eq-list" id="eq-rows"></div>'
-      : '<div class="bpx-panel eq-empty"><span class="ms">qr_code_scanner</span><b>' + (crew() ? 'No equipment at your jobs yet' : 'No equipment yet') + '</b><p>Scan the nameplate of a unit you install or service. BuilderPro reads the make, model and serial and tells you when it’s due for service.</p>'
+      : '<div class="bpx-panel eq-empty"><span class="ms">qr_code_scanner</span><b>' + (crew() ? 'No equipment assigned to you yet' : 'No equipment yet') + '</b><p>Scan the nameplate of a unit you install or service. BuilderPro reads the make, model and serial and tells you when it’s due for service.</p>'
         + '<div class="eq-empty-acts"><button class="bpx-addbtn" onclick="BPA.add({scan:1})"><span class="ms">photo_camera</span>Scan a nameplate</button>'
         + '<button class="bpx-btn ghost" onclick="BPA.add()"><span class="ms">edit_note</span>Add by hand</button></div></div>')
       + '</div>';
@@ -260,8 +346,9 @@
       .sort(function (a, b) { var fa = facts(a), fb = facts(b); var r = { over: 0, soon: 1, ok: 2, none: 3 }; return (r[fa.svc.k] - r[fb.svc.k]) || String(b.updated_at).localeCompare(String(a.updated_at)); });
     el.innerHTML = L.length ? L.map(function (a) {
       var x = facts(a);
-      return '<button class="eq-row" onclick="BPA.open(\'' + a.id + '\')">' + thumb(a)
+      return '<button class="eq-row" onclick="BPA.openRow(\'' + a.id + '\')">' + thumb(a)
         + '<span class="eq-rt"><b>' + esc(a.name || catName(a.category)) + '</b><small>' + esc([a.customer, a.addr].filter(Boolean).join(' · ') || 'No customer yet') + '</small>'
+        + (crew() ? '' : '<span class="eq-who' + (a.employee_id ? '' : ' none') + '">' + (a.employee_id ? '<i class="eq-av">' + esc(ini(a.assigned_name)) + '</i>' + esc(a.assigned_name || 'Employee') : '<span class="ms">person_add</span>No employee yet') + '</span>')
         + '<span class="eq-rtags">' + (a.tags || []).map(function (t) { return '<i class="eq-tag t-' + esc(t) + '">' + esc((TAGS.filter(function (z) { return z[0] === t; })[0] || [0, t])[1]) + '</i>'; }).join('') + '</span></span>'
         + '<span class="eq-rc"><em>Age</em>' + (x.start ? since(x.start) : '—') + '</span>'
         + '<span class="eq-rc"><em>Replace by</em>' + (x.repl ? nice(ymd(x.repl)) : '—') + '</span>'
@@ -306,7 +393,7 @@
               var on = TAGS.filter(function (t) { return (a.tags || []).indexOf(t[0]) > -1; });
               if (A.tagOpen) return '<div class="eq-tags">' + TAGS.map(tagBtn).join('') + '<button class="eq-tagdone" onclick="BPA.tagEdit(0)">Done</button></div>';
               return '<div class="eq-tags">' + on.map(function (t) { return '<span class="eq-tag t-' + t[0] + '">' + t[1] + '</span>'; }).join('') + '<button class="eq-tagadd" onclick="BPA.tagEdit(1)"><span class="ms">' + (on.length ? 'edit' : 'sell') + '</span>' + (on.length ? '' : 'Tag it') + '</button></div>';
-            })() + '</div>'
+            })() + whoLine(a) + '</div>'
         + '<div class="eq-hacts"><button class="bpx-addbtn" onclick="BPA.service()"><span class="ms">build</span>Log a service visit</button>'
           + '<button class="bpx-btn ghost eq-ai" onclick="BPA.ask()"><span class="ms">auto_awesome</span>Ask AI</button>'
           + '<button class="bpx-btn ghost" onclick="BPA.edit()"><span class="ms">edit</span>Edit</button></div></section>'
