@@ -538,3 +538,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - 2026-11-27 homeowner screens change in place (slides, back stack, pull to refresh, sticky top bar title): restore to eec93e2
 - 2026-11-28 homeowner full-screen chat, swipe-down sheets, account delete row: restore to 79c2f56
 - 2026-11-28 equipment assigned to an employee; crew see only theirs (DB: assets.employee_id/assigned_to + RLS): restore to 3ce972e
+- 2026-11-28 who-goes-where v3 (job difficulty vs experience, skills, distance; DB bp_ceo_route) + nicer routes map (mapstyle.js): restore to dc01f26

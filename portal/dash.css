@@ -664,7 +664,7 @@
 #bpx .ls-bar-ok .ms{color:#087F61;font-size:20px}
 #bpx .ls-bar-go{border-color:#cfdcff;background:#f5f8ff}
 /* Projects: map + route */
-#bpx .pj-mapwrap{display:grid;grid-template-columns:1fr 320px;gap:14px;margin-top:10px}
+#bpx .pj-mapwrap{display:grid;grid-template-columns:1fr 320px;gap:14px;margin-top:10px}#bpx .pj-mapwrap>*{min-width:0}
 @media (max-width:900px){#bpx .pj-mapwrap{grid-template-columns:1fr}}
 #bpx .pj-map{position:relative;height:560px;border-radius:16px;overflow:hidden;border:1px solid var(--line,#e7e9ee);background:#eef1f5}
 #bpx .pj-mapempty{position:absolute;left:12px;right:12px;bottom:12px;z-index:500;background:#fff;border-radius:10px;padding:10px 12px;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.1)}
@@ -1524,3 +1524,26 @@
 /* the dashboard drawn again while showing (fresh data, a live update): charts and cards
    appear finished instead of growing in a second time (portal/dash.js sets it for 2.5 s) */
 #bpx#bpx#bpx #bpxViewArea.bp-still *,#bpx#bpx#bpx #bpxViewArea.bp-still *::before,#bpx#bpx#bpx #bpxViewArea.bp-still *::after{animation-duration:0s!important;animation-delay:0s!important}
+
+/* ---- the routes map, nicer (2026-11-28; portal/mapstyle.js recolors the basemap) ---- */
+#bpx .pj-map{border:0;box-shadow:0 0 0 1px rgba(16,24,40,.06),0 8px 24px -10px rgba(16,24,40,.18)}
+#bpx .pj-map .leaflet-control-zoom{border:0 !important;box-shadow:0 2px 8px rgba(16,24,40,.16) !important;border-radius:12px !important;overflow:hidden}
+#bpx .pj-map .leaflet-control-zoom a{width:36px !important;height:36px !important;line-height:34px !important;font-size:18px !important;color:#1d2939 !important;background:#fff !important;border-bottom:1px solid #eef1f5 !important}
+#bpx .pj-map .leaflet-control-zoom a:last-child{border-bottom:0 !important}
+#bpx .pj-map .leaflet-control-attribution{font-size:9.5px;background:rgba(255,255,255,.72) !important;border-radius:6px 0 0 0;padding:1px 6px;color:#667085}
+#bpx .pj-map .leaflet-control-attribution a{color:#475467}
+#bpx .pjx-sw{display:flex;padding:3px;gap:2px;border-radius:12px;background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(16,24,40,.16);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+#bpx .pjx-sw button{border:0;background:none;font:inherit;font-size:12.5px;font-weight:600;color:#475467;padding:7px 12px;border-radius:9px;cursor:pointer}
+#bpx .pjx-sw button.on{background:#001530;color:#fff}
+#bpx .pj-map.pjx-sat .leaflet-tile-pane{filter:none !important}
+/* job pins: a ringed dot with a soft shadow, and a ring of light when picked */
+#bpx .pj-map .pjm-pin span,#bpx .pj-map .pj-pin span{width:24px;height:24px;border:3px solid #fff;box-shadow:0 0 0 1px rgba(16,24,40,.08),0 4px 10px rgba(16,24,40,.32)}
+#bpx .pj-map .pjm-pin.sel span{transform:scale(1.25);box-shadow:0 0 0 6px rgba(0,111,255,.22),0 4px 10px rgba(16,24,40,.32)}
+#bpx .pj-map .pjm-pin,#bpx .pj-map .pj-pin{transition:transform .15s}
+#bpx .pj-map .pjm-pin:hover,#bpx .pj-map .pj-pin:hover{transform:translateY(-2px)}
+/* numbered stops on a planned route */
+#bpx .pj-map .pj-num span{width:30px;height:30px;margin:-2px 0 0 -2px;background:#006fff;border:3px solid #fff;font:800 13px/1 system-ui,-apple-system,sans-serif;box-shadow:0 0 0 1px rgba(16,24,40,.08),0 4px 12px rgba(0,48,120,.35)}
+#bpx .pj-map .pj-num.shop span{background:#001530}
+#bpx .pj-map .leaflet-popup-content-wrapper{border-radius:14px;box-shadow:0 10px 30px -8px rgba(16,24,40,.3)}
+#bpx .pj-map .leaflet-popup-content{margin:12px 14px;font-size:13px;line-height:1.5}
+#bpx.bpx-dark .pjx-sw{background:rgba(17,24,39,.9)}#bpx.bpx-dark .pjx-sw button{color:#c5cdd8}#bpx.bpx-dark .pjx-sw button.on{background:#006fff}

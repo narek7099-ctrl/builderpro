@@ -234,6 +234,9 @@
     if (fl.indexOf('coi_expiring') >= 0) t.push('<span class="rc-tag warn">Insurance expiring</span>');
     if (sub && !fl.some(function (f) { return /^coi_/.test(f); })) t.push('<span class="rc-tag ok">Insured</span>');
     if (fl.indexOf('trade_mismatch') >= 0) t.push('<span class="rc-tag warn">Other trade</span>');
+    if (fl.indexOf('under_experienced') >= 0) t.push('<span class="rc-tag warn">Needs ' + (+c.need_years || 0) + '+ yrs</span>');
+    else if (c.years) t.push('<span class="rc-tag">' + c.years + ' yrs</span>');
+    if (c.miles != null) t.push('<span class="rc-tag' + (+c.miles <= 5 ? ' ok' : '') + '">' + (+c.miles <= 1 ? 'Next door' : c.miles + ' mi') + '</span>');
     if (c.rating != null) t.push('<span class="rc-tag">' + (+c.rating).toFixed(1) + '★</span>');
     return t.join('');
   }
@@ -256,6 +259,7 @@
     else if (!d) h += '<div class="bpx-mut ceo-wait" style="font-size:12.5px" data-pjm-wait>Ranking your crew and subs for this job…</div>';
     else if (!d.ok) h += '<div class="bpx-mut" style="font-size:12.5px">' + esc(d.error || 'No recommendation right now.') + ' <button type="button" class="bpx-linkbtn" data-pjm-retry>Try again</button></div>';
     else {
+      if (C.difBar && d.job) h += C.difBar(d.job);
       var top = (d.candidates || []).slice(0, 3);
       /* the best crew always shows, even when three people outscore it */
       var bc = d.best_crew || (d.candidates || []).filter(function (c) { return c.kind === 'crew'; })[0];
@@ -282,6 +286,8 @@
     el.querySelector('[data-pjm-close]').onclick = closePanel;
     el.querySelector('[data-pjm-open]').onclick = function () { if (window.bpProjOpen) bpProjOpen(id); };
     el.querySelectorAll('[data-pjm-att]').forEach(function (b) { b.onclick = function () { var x = att[+b.getAttribute('data-pjm-att')]; if (!x) return; if (x.link) C.follow(x.link, x.job || id); else if (window.bpProjOpen) bpProjOpen(id); }; });
+    var ds = el.querySelector('[data-rc-dif]');
+    if (ds) ds.onchange = function () { if (C.setDifficulty) C.setDifficulty(id, ds.value); delete C.route[id]; delete M.keep[id]; panelDraw(); getRoute(id).then(function () { if (M.sel === id) panelDraw(); }); };
     var r = el.querySelector('[data-pjm-retry]'); if (r) r.onclick = function () { delete C.route[id]; delete M.rerr[id]; delete M.keep[id]; panelDraw(); getRoute(id).then(function () { if (M.sel === id) panelDraw(); }); };
     el.querySelectorAll('[data-pjm-emp]').forEach(function (b) {
       b.onclick = function () {
@@ -328,7 +334,7 @@
     var iso = dayIso();
     if (!M.day || M.day.iso !== iso) M.day = { iso: iso, shown: false };
     var head = '<div class="pjm-dh"><span class="ms">auto_awesome</span><b>Plan the day</b></div>'
-      + '<p>Who goes where on <b>' + dayLbl(iso) + '</b>. The AI CEO suggests the best free person for each job with nobody on it, then you route each person’s stops.</p>';
+      + '<p>Who goes where on <b>' + dayLbl(iso) + '</b>. Hardest jobs pick first and get your most experienced people; easy jobs go to whoever is free and close by. Then you route each person’s stops.</p>';
     if (!M.day.shown) { el.innerHTML = head + '<button type="button" class="bpx-btn ghost" style="width:100%" data-pjm-plan><span class="ms" style="font-size:18px;vertical-align:-4px;margin-right:6px">group</span>Suggest who goes where</button>'; el.querySelector('[data-pjm-plan]').onclick = dayRun; return; }
     var D = M.day;
     if (D.wait) { el.innerHTML = head + '<div class="bpx-mut ceo-wait" style="font-size:13px">Looking at ' + D.n + ' job' + (D.n === 1 ? '' : 's') + ' and who is free…</div>'; return; }
@@ -341,7 +347,8 @@
         + '<ul class="pjm-gs">' + g.stops.map(function (s) {
           var on = s.sugg && C.onJob(C.curJob(s.j.id), { kind: g.crew ? 'crew' : 'employee', id: g.id });
           var tg = (s.sugg ? (on ? '<span class="rc-tag ok">Assigned</span>' : '<span class="rc-tag">Suggested · ' + (+s.c.score || 0) + '</span>') : '<span class="rc-tag ok">On the job</span>')
-            + (s.busy ? '<span class="rc-tag bad">Busy that day</span>' : '') + (s.mis ? '<span class="rc-tag warn">Other trade</span>' : '')
+            + (s.dif ? '<span class="rc-tag' + (s.dif.level >= 4 ? ' warn' : s.dif.level <= 1 ? ' ok' : '') + '">' + esc(s.dif.label) + ' job</span>' : '')
+            + (s.busy ? '<span class="rc-tag bad">Busy that day</span>' : '') + (s.mis ? '<span class="rc-tag warn">Other trade</span>' : '') + (s.under ? '<span class="rc-tag warn">Needs more experience</span>' : '')
             + ((s.j.addr || '').trim() ? '' : '<span class="rc-tag warn">No address</span>');
           return '<li><div><b>' + esc(s.j.name || 'Project') + '</b><small>' + esc(s.j.addr || s.j.title || '') + '</small><div class="rc-tags">' + tg + '</div>'
             + (s.warn ? '<div class="pj-warn" style="margin-top:5px">' + esc(s.warn) + '</div>' : '') + '</div>'
@@ -378,6 +385,26 @@
     need = unassigned.length;
     var ranks = canRank() ? await Promise.all(unassigned.map(function (j) { return getRoute(j.id); })) : unassigned.map(function () { return { ok: false, error: 'Sign in to get suggestions.' }; });
     if (M.day !== D) return;
+    /* 2026-11-28: the hardest jobs pick first, so the experienced people go where they're
+       needed; one person gets one job a day unless the jobs are easy and close together */
+    var lvOf = function (j) { var d = ranks[unassigned.indexOf(j)] || {}; return (d.job && d.job.difficulty && +d.job.difficulty.level) || 2; };
+    var used = {};
+    var mi = function (a, b) {
+      if (!a || !b || !isFinite(a.lat) || !isFinite(b.lat)) return null;
+      var R = 3959, dl = (b.lat - a.lat) * Math.PI / 180, dn = (b.lng - a.lng) * Math.PI / 180;
+      var h = Math.sin(dl / 2) * Math.sin(dl / 2) + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dn / 2) * Math.sin(dn / 2);
+      return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+    };
+    var canTake = function (c, j, lv) {
+      var u = used[c.id]; if (!u) return true;
+      var d = mi(u.geo, j.geo);
+      return lv <= 2 && u.lv <= 2 && u.n < 3 && d != null && d <= 15;
+    };
+    list = list.slice().sort(function (a, b) {
+      var ua = unassigned.indexOf(a) > -1, ub = unassigned.indexOf(b) > -1;
+      if (ua !== ub) return ua ? 1 : -1;
+      return ua ? lvOf(b) - lvOf(a) : 0;
+    });
     list.forEach(function (j) {
       var pp = people(j);
       if (pp.length) { pp.forEach(function (p) { put(p, { j: j, sugg: false }); }); return; }
@@ -386,19 +413,27 @@
       var emps = (d.candidates || []).filter(function (c) { return c.kind !== 'sub'; });
       var isBusy = function (c) { return (c.flags || []).indexOf('busy') >= 0 || c.free === false; };
       var isMis = function (c) { return (c.flags || []).indexOf('trade_mismatch') >= 0; };
+      var isUnder = function (c) { return (c.flags || []).indexOf('under_experienced') >= 0; };
+      var lv = lvOf(j), dif = (d.job && d.job.difficulty) || null, free = function (c) { return !isBusy(c) && canTake(c, j, lv); };
       /* people only: a crew is suggested on its own when it is free, matches the trade and scores at least as well */
       var crews = emps.filter(function (c) { return c.kind === 'crew'; }).concat(d.best_crew ? [d.best_crew] : []);
       emps = emps.filter(function (c) { return c.kind !== 'crew'; });
-      var best = emps.filter(function (c) { return !isBusy(c) && !isMis(c); })[0] || emps.filter(function (c) { return !isBusy(c); })[0] || emps[0];
-      var bc = crews.filter(function (c) { return !isBusy(c) && !isMis(c) && !takenCrew[c.id]; })[0];
-      if (bc && (!best || isBusy(best) || isMis(best) || (+bc.score || 0) >= (+best.score || 0))) {
+      var best = emps.filter(function (c) { return free(c) && !isMis(c) && !isUnder(c); })[0]
+        || emps.filter(function (c) { return free(c) && !isMis(c); })[0] || emps.filter(free)[0]
+        || emps.filter(function (c) { return !isBusy(c); })[0] || emps[0];
+      var bc = crews.filter(function (c) { return !isBusy(c) && !isMis(c) && !isUnder(c) && !takenCrew[c.id]; })[0];
+      if (bc && (!best || isBusy(best) || isMis(best) || isUnder(best) || (+bc.score || 0) >= (+best.score || 0))) {
         takenCrew[bc.id] = 1;
-        put({ id: bc.id, name: bc.name, crew: bc }, { j: j, sugg: true, c: bc, busy: false, mis: false, warn: '' }); return;
+        put({ id: bc.id, name: bc.name, crew: bc }, { j: j, sugg: true, c: bc, busy: false, mis: false, warn: '', dif: dif }); return;
       }
       if (!best) { var sub = (d.candidates || [])[0]; left.push({ j: j, why: sub ? 'Best fit is a sub: ' + sub.name + '. Assign them on the project.' : 'Nobody to rank yet' }); return; }
-      var busy = isBusy(best), mis = isMis(best);
-      var warn = busy ? best.name + ' is the best match but is busy that day. Check their other job before you assign.' : mis ? best.name + ' is free but works a different trade (' + (best.trade || 'other') + '). Nobody free in ' + ((d.job && d.job.trade) || 'this trade') + '.' : '';
-      put({ id: best.id, name: best.name }, { j: j, sugg: true, c: best, busy: busy, mis: mis, warn: warn });
+      var busy = isBusy(best), mis = isMis(best), under = isUnder(best), twice = !canTake(best, j, lv);
+      var warn = busy ? best.name + ' is the best match but is busy that day. Check their other job before you assign.'
+        : twice ? best.name + ' already has a job that day, and nobody else fits. Check the timing before you assign.'
+        : mis ? best.name + ' is free but works a different trade (' + (best.trade || 'other') + '). Nobody free in ' + ((d.job && d.job.trade) || 'this trade') + '.'
+        : under ? 'This ' + String((dif && dif.label) || 'hard').toLowerCase() + ' job needs about ' + ((dif && dif.need_years) || best.need_years || 0) + '+ years and ' + best.name + ' has ' + (+best.years || 0) + '. Pair them with someone senior if you can.' : '';
+      var u = used[best.id]; used[best.id] = { n: (u ? u.n : 0) + 1, lv: Math.max(u ? u.lv : 0, lv), geo: j.geo || (u && u.geo) };
+      put({ id: best.id, name: best.name }, { j: j, sugg: true, c: best, busy: busy, mis: mis, under: under, warn: warn, dif: dif });
     });
     D.groups = order.map(function (k) { return groups[k]; }); D.left = left; D.need = need; D.wait = false;
     dayDraw();

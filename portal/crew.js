@@ -278,7 +278,8 @@
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
         + '<div><label>Started in the trade</label><input id="emp-sty" type="number" min="1940" max="' + new Date().getFullYear() + '" placeholder="e.g. 2012" value="' + esc(f.started_trade_year || '') + '"></div>'
         + '<div><label>With you since</label><input id="emp-hired" type="date" value="' + esc(f.hired_on || (f.created_at ? String(f.created_at).slice(0, 10) : '')) + '"></div></div>'
-      + '<label>Skills <span class="bpx-mut" style="font-weight:400">(comma separated)</span></label>' + inp('skills', 'Shingle, Flat roof, Gutters', (f.skills || []).join(', '))
+      + '<label>Skills <span class="bpx-mut" style="font-weight:400">(comma separated)</span></label>' + inp('skills', 'Tear-off, Steep slope, Flat roof, Gutters', (f.skills || []).join(', '))
+        + '<div class="bpx-mut" style="font-size:12px;margin:-4px 0 10px;line-height:1.45">Used to pick who goes where: a job that names one of these skills goes to them first, and harder jobs go to people with more years in the trade.</div>'
       + '<label>Certifications</label>' + inp('certs', 'OSHA 30, manufacturer certified installer', f.certifications)
       + '<label>About them</label><textarea id="emp-bio" rows="2" maxlength="600" placeholder="A line or two. They see this on their ID.">' + esc(f.bio || '') + '</textarea>'
       + '<label>Notes</label>' + inp('notes', 'Who to call, anything else', f.notes)

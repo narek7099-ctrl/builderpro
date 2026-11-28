@@ -90,7 +90,14 @@
       '.rc-sc{grid-column:2 / 4;display:flex;align-items:center;gap:8px}',
       '.rc-bar{display:block;flex:1;height:7px;border-radius:7px;background:var(--line-2,#edf0f4);overflow:hidden}.rc-bar i{display:block;height:100%;border-radius:7px;background:var(--blue,#2563eb)}',
       '.rc-sc b{font-size:12.5px;font-variant-numeric:tabular-nums;min-width:26px;text-align:right}',
-      '.rc-bd{grid-column:2 / 4;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}',
+      '.rc-bd{grid-column:2 / 4;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px 10px;min-width:0}',
+      '@media (max-width:640px){.rc-bd{grid-template-columns:repeat(3,minmax(0,1fr))}}',
+      '.rc-dif{display:flex;align-items:center;gap:12px;margin:8px 0 6px;padding:10px 12px;border-radius:12px;background:var(--soft,#f6f8fb);border:1px solid var(--line,#e3e8ef)}',
+      '.rc-dif-l{flex:1;min-width:0}.rc-dif-l b{display:block;font-size:14px;font-weight:700;color:var(--ink,#0f1a2b)}.rc-dif-l small{display:block;font-size:12px;color:var(--mu,#6b7a90);margin-top:2px;line-height:1.4}',
+      '.rc-dif.lv4,.rc-dif.lv5{background:#f2f7ff;border-color:#cfe0fb}.rc-dif.lv4 b,.rc-dif.lv5 b{color:#0853B5}.rc-dif.lv1 b{color:#087F61}',
+      '.rc-dif-s{display:flex;flex-direction:column;gap:2px;font-size:11px;font-weight:600;color:var(--mu,#6b7a90)}.rc-dif-s select{font:inherit;font-size:13px;font-weight:600;color:var(--ink,#0f1a2b);border:1px solid var(--line,#e3e8ef);border-radius:8px;padding:6px 8px;background:var(--card,#fff)}',
+      '#bpx.bpx-dark .rc-dif.lv4,#bpx.bpx-dark .rc-dif.lv5{background:rgba(0,111,255,.1);border-color:rgba(0,111,255,.35)}#bpx.bpx-dark .rc-dif.lv4 b,#bpx.bpx-dark .rc-dif.lv5 b{color:#8fbaff}',
+      '@media (max-width:560px){.rc-dif{flex-direction:column;align-items:stretch}}',
       '.rc-bd div{font-size:10.5px;color:var(--mu,#6b7a90)}.rc-bd i{display:block;height:3px;border-radius:3px;background:var(--line-2,#edf0f4);margin-top:2px;overflow:hidden}.rc-bd i u{display:block;height:100%;background:#94a3b8;text-decoration:none}',
       '.rc-why{grid-column:2 / 4;font-size:12.5px;line-height:1.45;color:var(--ink-2,#1b2a41);overflow-wrap:anywhere}',
       '.rc-btn{grid-row:1;grid-column:3;white-space:nowrap}',
@@ -313,6 +320,23 @@
     if (okk && window._bpProjId === jobId && window.bpProjCrewRender) bpProjCrewRender();
     return okk && onJob(curJob(jobId), { kind: 'crew', id: crewId });
   }
+  /* how hard the job is (bp_job_difficulty): read from the job, or set by the contractor */
+  var DIF = ['Easy', 'Standard', 'Skilled', 'Hard', 'Expert'], DIFN = [0, 1, 2, 4, 7];
+  function difBar(j) {
+    var d = j.difficulty; if (!d || !d.level) return '';
+    var opts = '<option value=""' + (d.auto ? ' selected' : '') + '>Auto (' + esc(d.label) + ')</option>'
+      + DIF.map(function (t, i) { return '<option value="' + (i + 1) + '"' + (!d.auto && d.level === i + 1 ? ' selected' : '') + '>' + t + (DIFN[i] ? ' · ' + DIFN[i] + '+ yrs' : '') + '</option>'; }).join('');
+    return '<div class="rc-dif lv' + d.level + '"><span class="rc-dif-l"><b>' + esc(d.label) + ' ' + esc(j.trade && j.trade !== 'general' ? j.trade + ' ' : '') + 'job</b>'
+      + '<small>' + (d.need_years ? 'Needs someone with about ' + d.need_years + '+ yrs. ' : 'Anyone on the crew can do it. ') + esc(d.auto ? d.why + '.' : 'You set this.') + '</small></span>'
+      + '<label class="rc-dif-s"><span>How hard</span><select data-rc-dif aria-label="How hard is this job">' + opts + '</select></label></div>';
+  }
+  function setDifficulty(jobId, v) {
+    if (!window.bpJobsGet || !window.bpJobsSet) return;
+    var all = bpJobsGet(), x = all.filter(function (y) { return y.id === jobId; })[0]; if (!x) return;
+    if (v) x.difficulty = +v; else delete x.difficulty;
+    bpJobsSet(all);
+  }
+  C.difBar = difBar; C.setDifficulty = setDifficulty;
   function recoRow(c, j) {
     var fl = c.flags || [], tags = [];
     if (c.rating != null) tags.push('<span class="rc-tag">' + (+c.rating).toFixed(1) + '★ · ' + c.reviews + '</span>');
@@ -322,6 +346,9 @@
     if (fl.indexOf('coi_missing') >= 0) tags.push('<span class="rc-tag bad">No insurance on file</span>');
     if (fl.indexOf('coi_expiring') >= 0) tags.push('<span class="rc-tag warn">Insurance expiring</span>');
     if (fl.indexOf('trade_mismatch') >= 0) tags.push('<span class="rc-tag warn">Other trade</span>');
+    if (fl.indexOf('under_experienced') >= 0) tags.push('<span class="rc-tag warn">Needs ' + (+c.need_years || 0) + '+ yrs</span>');
+    if (fl.indexOf('overqualified') >= 0) tags.push('<span class="rc-tag">Senior hand</span>');
+    if (c.miles != null) tags.push('<span class="rc-tag' + (+c.miles <= 5 ? ' ok' : '') + '">' + (+c.miles <= 1 ? 'Next door' : c.miles + ' mi away') + '</span>');
     var bd = c.breakdown || {}, bar = function (l, v) { return '<div>' + l + '<i><u style="width:' + Math.round((+v || 0) * 100) + '%"></u></i></div>'; };
     var on = onJob(curJob(window._bpProjId), c);
     var crew = c.kind === 'crew';
@@ -334,17 +361,20 @@
       + (crew ? crewMembers(c) : '') + '<div class="rc-tags">' + tags.join('') + '</div></div>'
       + '<div class="rc-btn">' + btn + '</div>'
       + '<div class="rc-sc" title="Match score"><span class="rc-bar" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + (+c.score || 0) + '" aria-label="Match score"><i style="width:' + Math.max(3, Math.min(100, +c.score || 0)) + '%"></i></span><b>' + (+c.score || 0) + '</b></div>'
-      + '<div class="rc-bd">' + bar('Trade', bd.trade) + bar('Rating', bd.rating) + bar('Experience', bd.experience) + bar('Availability', bd.availability) + '</div>'
+      + '<div class="rc-bd">' + bar('Trade', bd.trade) + (bd.expertise != null ? bar('Skills', bd.expertise) : '') + bar('Experience', bd.experience) + bar('Rating', bd.rating) + bar('Availability', bd.availability) + (bd.distance != null && j && j.located ? bar('Distance', bd.distance) : '') + '</div>'
       + '<div class="rc-why">' + esc(c.explain || (c.reasons || []).join('; ')) + '</div></div>';
   }
   function recoDraw(host, d) {
     var j = d.job || {};
     host.innerHTML = '<div class="pjs-h" style="display:flex;align-items:center;gap:8px">Recommended ' + srcBadge(d.source) + '<button type="button" class="bpx-linkbtn" data-rc-refresh style="margin-left:auto">Refresh</button></div>'
-      + '<div class="bpx-mut" style="font-size:12.5px;line-height:1.5">Ranked by the AI CEO for this ' + esc(j.trade || '') + ' job' + (j.estimate ? ' (' + money(j.estimate) + (j.weight >= 1.3 ? ', bigger than usual, so ratings and experience count more' : '') + ')' : '') + '. Nobody is put on the job until you tap Assign.</div>'
+      + difBar(j)
+      + '<div class="bpx-mut" style="font-size:12.5px;line-height:1.5">Ranked by trade, skills, experience, ratings, who is free and who is close by. ' + (j.difficulty && j.difficulty.level >= 4 ? 'Harder jobs weigh experience the most.' : j.difficulty && j.difficulty.level <= 2 ? 'On easy jobs, who is free and nearby counts most.' : '') + ' Nobody is put on the job until you tap Assign.</div>'
       + (d.candidates && d.candidates.length ? '<div class="rc-list">' + d.candidates.map(function (c) { return recoRow(c, j); }).join('') + '</div>'
         : '<div class="bpx-mut" style="font-size:13px;margin-top:8px">Add people under Employees or Subcontractors and they will be ranked here.</div>')
       + ((d.flagged || []).length ? '<div class="rc-foot"><span class="ms" style="font-size:15px;vertical-align:-3px;color:#0853B5">shield</span> Ranked lower: ' + d.flagged.map(function (f) { return esc(f.name) + ' (' + ((f.flags || []).indexOf('coi_missing') >= 0 ? 'no insurance on file' : 'insurance expired') + ')'; }).join(', ') + '.</div>' : '')
       + ((d.on_job || []).length ? '<div class="rc-foot">Already on it: ' + d.on_job.map(function (x) { return esc(x.name); }).join(', ') + '.</div>' : '');
+    var ds = host.querySelector('[data-rc-dif]');
+    if (ds) ds.onchange = function () { setDifficulty(j.id || window._bpProjId, ds.value); delete C.route[j.id || window._bpProjId]; window.bpCeoReco(curJob(window._bpProjId)); };
     host.querySelector('[data-rc-refresh]').onclick = function () { delete C.route[j.id || window._bpProjId]; window.bpCeoReco(curJob(window._bpProjId)); };
     host.querySelectorAll('[data-rc-emp]').forEach(function (b) {
       b.onclick = function () {
