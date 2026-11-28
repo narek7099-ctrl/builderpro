@@ -36,3 +36,16 @@ Do these in order; each step needs the one before it. Steps 1–4 take about an 
     - the liability limit (the fees paid in the last 12 months)
     - the texting-consent and AI sections
 16. **Optional:** business insurance (general liability, plus cyber/technology errors and omissions), and a Google Business Profile for BuilderPro.
+
+## Payroll: real checks and pay stubs for W-2 workers (after the LLC)
+Today BuilderPro prints 1099 contractor checks (signed with the saved e-signature) and pay stubs, but it does no payroll tax: for W-2 employees the owner types the take-home pay and files the taxes elsewhere. The plan is to run real payroll inside BuilderPro through Gusto Embedded Payroll: Gusto does the tax math, withholding, filings, W-2s, 1099s and direct deposit; BuilderPro runs payroll from the crew's clock-in hours, shows the stubs, prints checks and posts labor to each job.
+17. **Gusto Embedded application.** Needs the LLC (step 1's EIN and the legal name). The draft is `docs/partners/gusto-embedded-preapproval.md`. Tell Claude: *"Fill the Gusto application: legal name [ ], state [ ], EIN [ ], [number] contractor companies with about [number] workers, mainly in [states], payroll add-on price [idea], contact [name, email]."* The contact on the application should be the adult who signs for the LLC. Then submit it on Gusto's embedded payroll site.
+18. **If Gusto says "come back when you have more customers":** ask Claude for the lighter version, which sends crew hours into each contractor's own Gusto account and brings the pay stubs back. No partner approval is needed.
+19. **Once approved:** tell Claude "Gusto approved us". It builds company setup, worker onboarding (W-4, bank details), the payroll review screen with a two-step confirm, stubs and checks from Gusto's numbers, and labor posted to jobs.
+
+## Sign in with Apple and Google (needs the Apple Developer account from step 9)
+The buttons are already built and stay hidden until each provider is switched on in Supabase (Authentication > Sign In / Providers). Never paste the keys into a chat; type them into Supabase yourself.
+20. **Google (free):** Google Cloud Console > OAuth client, type "Web application", authorized redirect URL `https://ttzwzouhiwdwamuimhpo.supabase.co/auth/v1/callback`. Paste the Client ID and Secret into Supabase > Google.
+21. **Apple:** in the Apple Developer account, a Services ID with "Sign in with Apple" (same callback URL) and a Sign in with Apple key (.p8). Enter the Services ID, Team ID, Key ID and key in Supabase > Apple.
+22. Supabase > Authentication > URL Configuration: make sure `https://builderpro-os.com/app` is an allowed redirect URL. Then tell Claude which one is on so it can test a real sign-in.
+
