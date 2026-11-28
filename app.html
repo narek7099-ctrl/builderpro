@@ -105,9 +105,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261128-lg4">
-<link rel="stylesheet" href="site/present.css?v=20261128-lg4">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261128-lg4"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261128-lg5">
+<link rel="stylesheet" href="site/present.css?v=20261128-lg5">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261128-lg5"}}</script>
 
 
 <style id="bpi-icons">
@@ -1856,9 +1856,9 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 <!-- ===== CLIENT PORTAL ===== -->
 <div id="bpx">
   <!-- login -->
-  <!-- sign in (2026-11-28): dark sky, a planet's glowing edge, pill buttons, "Last used" -->
+  <!-- sign in (2026-11-28): white, the website's moving blue-and-mint silk, pill buttons, "Last used" -->
   <div class="bpx-auth lg" id="bpxLogin">
-    <div class="lg-sky" aria-hidden="true"><i class="lg-stars"></i><i class="lg-planet"></i><i class="lg-flare"></i></div>
+    <div class="lg-sky" id="lgSky" aria-hidden="true"></div>
     <div class="lg-wrap">
       <div class="lg-brand"><svg class="bpmark" width="34" height="34" aria-hidden="true"><use href="#bpMark"/></svg><b>BuilderPro</b></div>
       <div id="bpxLoginForm">
@@ -2789,9 +2789,22 @@ window.bpLgStep=function(n,useLast){
   document.getElementById('bpxLogin').classList.toggle('lg-on2',n===2);
   var msg=document.getElementById('bpxAuthMsg'); if(msg&&n===1){msg.className='bpx-msg';msg.textContent='';}
   if(n===2){ var last=bpLgLast(); if(useLast&&last){ em.value=last; setTimeout(function(){pw.focus();},60); } else { if(!useLast&&em.value===last) em.value=''; setTimeout(function(){em.focus();},60); } }
-  else bpLgPaint();
+  else { bpLgPaint(); bpLgSilk(); }
 };
-document.addEventListener('DOMContentLoaded',bpLgPaint);
+/* the website's moving silk (site/silk.js) behind the sign-in screen only: loaded when it shows,
+   resting whenever the screen is hidden (signed in), so the app itself stays plain and fast */
+var _bpLgSilk=null,_bpLgSilkLoading=false;
+function bpLgSilk(){
+  var L=document.getElementById('bpxLogin'), sky=document.getElementById('lgSky'); if(!L||!sky) return;
+  var shown=function(){ return L.style.display!=='none'&&L.offsetParent!==null; };
+  if(_bpLgSilk){ _bpLgSilk.active(shown()); return; }
+  if(!shown()||_bpLgSilkLoading) return;
+  var go=function(){ if(_bpLgSilk||!window.bpSilk) return; _bpLgSilk=window.bpSilk(sky,{waist:window.innerWidth>900?0.36:0.22}); if(!_bpLgSilk) return;
+    _bpLgSilk.canvas.classList.add('lg-silk'); new MutationObserver(function(){ _bpLgSilk.active(shown()); }).observe(L,{attributes:true,attributeFilter:['style','class']}); };
+  if(window.bpSilk) return go();
+  _bpLgSilkLoading=true; var sc=document.createElement('script'); sc.src='/site/silk.js?v=20261117a'; sc.onload=go; document.head.appendChild(sc);
+}
+document.addEventListener('DOMContentLoaded',function(){ bpLgPaint(); setTimeout(bpLgSilk,300); });
 function bpForgot(){
   var em=document.getElementById('bpxEmail'),email=em.value.trim(),msg=document.getElementById('bpxAuthMsg'),btn=document.getElementById('bpxForgot');
   var say=function(t,bad){msg.className='bpx-msg'+(bad?' err':'');msg.textContent=t;if(msg.scrollIntoView)msg.scrollIntoView({block:'nearest',behavior:'smooth'});};
@@ -15235,7 +15248,7 @@ window.bpRepCopy=function(text,btn){
 <!--/app-only-->
 </body>
 <!--app-only-->
-<link rel="stylesheet" href="portal/app.css?v=540a437ed3" data-bundle>
+<link rel="stylesheet" href="portal/app.css?v=a3d613a800" data-bundle>
 <script src="portal/team.js?v=20261115a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261128rt"></script>
@@ -15292,11 +15305,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261125ls"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261128-lg4"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261128-lg4"></script>
-<script src="site/vendor/SplitText.min.js?v=20261128-lg4"></script>
-<script src="site/site.js?v=20261128-lg4"></script>
-<script src="site/present.js?v=20261128-lg4"></script>
+<script src="site/vendor/gsap.min.js?v=20261128-lg5"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261128-lg5"></script>
+<script src="site/vendor/SplitText.min.js?v=20261128-lg5"></script>
+<script src="site/site.js?v=20261128-lg5"></script>
+<script src="site/present.js?v=20261128-lg5"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>
