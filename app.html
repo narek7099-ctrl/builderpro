@@ -105,9 +105,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261128-lg5">
-<link rel="stylesheet" href="site/present.css?v=20261128-lg5">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261128-lg5"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261128-oa1">
+<link rel="stylesheet" href="site/present.css?v=20261128-oa1">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261128-oa1"}}</script>
 
 
 <style id="bpi-icons">
@@ -1863,6 +1863,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
       <div class="lg-brand"><svg class="bpmark" width="34" height="34" aria-hidden="true"><use href="#bpMark"/></svg><b>BuilderPro</b></div>
       <div id="bpxLoginForm">
         <div class="lg-step" id="lgStart">
+          <div id="lgSocial" class="lg-social"></div>
           <div id="lgLast"></div>
           <button type="button" class="lg-pill lg-light" id="lgEmailBtn" data-lg-go onclick="bpLgStep(2)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg><span>Continue with email</span></button>
           <a class="lg-pill lg-dark" id="lgTrial" href="/signup.html">Start your 14-day free trial</a>
@@ -2699,6 +2700,7 @@ function bpLeaveHomeowner(){
   document.title='BuilderPro';
 }
 function bpEnterPortal(email){
+  if(bpOAuthGate(email)) return;
   /* a homeowner account (homeowner-signup) never sees the contractor app */
   /* My projects / Find a pro run on their own for a homeowner. A contractor
      signing in from one of those pages gets the portal, with the homeowner
@@ -2768,19 +2770,78 @@ function bpDoAuth(){
   if(!BP_LIVE){bpEnterPortal(email);return;}
   var btn=document.getElementById('bpxSignBtn');if(btn){btn.disabled=true;btn.textContent='Signing in…';}
   BP_SB.auth.signInWithPassword({email:email,password:pw}).then(function(r){
-    if(r.error)throw r.error;try{localStorage.setItem('bpLastEmail',String(r.data.user.email||email).toLowerCase());}catch(e){}bpEnterPortal(r.data.user.email);
+    if(r.error)throw r.error;try{localStorage.setItem('bpLastEmail',String(r.data.user.email||email).toLowerCase());localStorage.setItem('bpLastMethod','email');}catch(e){}bpEnterPortal(r.data.user.email);
   }).catch(function(e){msg.className='bpx-msg err';msg.textContent=bpFriendly(e&&e.message);})
   .then(function(){if(btn){btn.disabled=false;btn.textContent='Sign in';}});
 }
 /* sign in (2026-11-28): step 1 picks how, step 2 is the email form. The email used last
    on this device (saved after a sign-in) gets its own button with a "Last used" badge. */
 function bpLgLast(){ try{ var e=String(localStorage.getItem('bpLastEmail')||''); return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)?e:''; }catch(x){ return ''; } }
+/* Apple and Google show only when they are switched on in Supabase (Authentication > Providers):
+   /auth/v1/settings says which are, so a button never leads to an error page */
+var _bpLgProv=null;
+function bpLgProviders(){
+  if(_bpLgProv) return Promise.resolve(_bpLgProv);
+  try{ var c=JSON.parse(sessionStorage.getItem('bpLgProv')||'null'); if(c&&Date.now()-c.at<10*60e3){ _bpLgProv=c.p; return Promise.resolve(_bpLgProv); } }catch(e){}
+  if(!window.BP_LIVE) return Promise.resolve({});
+  return fetch(BP_URL+'/auth/v1/settings',{headers:{apikey:BP_ANON}}).then(function(r){return r.json();}).then(function(d){
+    var x=(d&&d.external)||{}; _bpLgProv={apple:!!x.apple,google:!!x.google};
+    try{ sessionStorage.setItem('bpLgProv',JSON.stringify({at:Date.now(),p:_bpLgProv})); }catch(e){}
+    return _bpLgProv;
+  }).catch(function(){ return {}; });
+}
+function bpLgLastMethod(){ try{ var m=localStorage.getItem('bpLastMethod')||''; return /^(apple|google|email)$/.test(m)?m:(bpLgLast()?'email':''); }catch(e){ return ''; } }
+var BP_LG_APPLE='<svg class="lg-fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.37 12.6c-.02-2.07 1.7-3.07 1.77-3.12-.97-1.41-2.47-1.6-3-1.62-1.27-.13-2.49.75-3.13.75-.65 0-1.64-.73-2.7-.71-1.38.02-2.66.81-3.37 2.05-1.44 2.5-.37 6.2 1.03 8.23.69.99 1.5 2.1 2.57 2.06 1.04-.04 1.43-.67 2.68-.67 1.25 0 1.6.67 2.7.65 1.11-.02 1.81-1.01 2.49-2.01.79-1.15 1.11-2.27 1.13-2.33-.03-.01-2.16-.83-2.17-3.28zM14.32 6.53c.57-.69.95-1.65.85-2.6-.82.03-1.81.55-2.4 1.24-.53.61-.99 1.59-.87 2.53.91.07 1.85-.46 2.42-1.17z"/></svg>';
 function bpLgPaint(){
-  var host=document.getElementById('lgLast'), eb=document.getElementById('lgEmailBtn'), tr=document.getElementById('lgTrial'); if(!host) return;
-  var last=bpLgLast();
-  host.innerHTML=last?'<button type="button" class="lg-pill lg-light lg-lastb" onclick="bpLgStep(2,1)"><span class="lg-av">'+bpEsc(last.charAt(0).toUpperCase())+'</span><span class="lg-em">Continue as '+bpEsc(last)+'</span><em class="lg-badge">Last used</em></button>':'';
-  if(eb){ eb.classList.toggle('lg-light',!last); eb.classList.toggle('lg-dark',!!last); eb.querySelector('span').textContent=last?'Use another email':'Continue with email'; }
-  if(tr){ tr.classList.toggle('lg-ghost',!!last); tr.classList.toggle('lg-dark',!last); tr.textContent=last?'New here? Start a free trial':'Start your 14-day free trial'; }
+  var host=document.getElementById('lgLast'), soc=document.getElementById('lgSocial'), eb=document.getElementById('lgEmailBtn'), tr=document.getElementById('lgTrial'); if(!host) return;
+  var last=bpLgLast(), lm=bpLgLastMethod(), P=_bpLgProv||{}, any=!!(P.apple||P.google);
+  var badge='<em class="lg-badge">Last used</em>';
+  if(soc) soc.innerHTML=(P.apple?'<button type="button" class="lg-pill lg-apple" onclick="bpLgOAuth(\'apple\')">'+BP_LG_APPLE+'<span>Continue with Apple</span>'+(lm==='apple'?badge:'')+'</button>':'')
+    +(P.google?'<button type="button" class="lg-pill lg-google" onclick="bpLgOAuth(\'google\')"><img src="assets/brand/google-g.png" alt="" width="18" height="18"><span>Continue with Google</span>'+(lm==='google'?badge:'')+'</button>':'');
+  var asMe=last&&lm==='email';
+  host.innerHTML=asMe?'<button type="button" class="lg-pill lg-light lg-lastb" onclick="bpLgStep(2,1)"><span class="lg-av">'+bpEsc(last.charAt(0).toUpperCase())+'</span><span class="lg-em">Continue as '+bpEsc(last)+'</span>'+badge+'</button>':'';
+  if(eb){ var prim=!asMe&&!any; eb.classList.toggle('lg-light',prim); eb.classList.toggle('lg-dark',!prim); eb.querySelector('span').textContent=asMe?'Use another email':'Continue with email'; }
+  if(tr){ var quiet=asMe||any; tr.classList.toggle('lg-ghost',quiet); tr.classList.toggle('lg-dark',!quiet); tr.textContent=quiet?'New here? Start a free trial':'Start your 14-day free trial'; }
+}
+window.bpLgOAuth=function(p){
+  if(!window.BP_LIVE||!BP_SB) return;
+  try{ sessionStorage.setItem('bpOAuth',p); }catch(e){}
+  var msg=document.getElementById('bpxAuthMsg'); if(msg){ msg.className='bpx-msg'; msg.textContent='Opening '+(p==='apple'?'Apple':'Google')+'…'; }
+  Promise.resolve(BP_SB.auth.signInWithOAuth({provider:p,options:{redirectTo:location.origin+'/app'}})).then(function(r){
+    if(r&&r.error) throw r.error;
+  }).catch(function(e){ try{ sessionStorage.removeItem('bpOAuth'); }catch(x){} if(msg){ msg.className='bpx-msg err'; msg.textContent=(p==='apple'?'Apple':'Google')+' sign-in isn’t available right now. Use your email instead.'; } });
+};
+/* back from Apple or Google: a brand-new login with no BuilderPro business and no team spot is
+   removed again (account-delete takes an empty login away at once), and they are pointed to the
+   free trial. Anyone with an account, or invited to a team, goes straight in. */
+var _bpOA=0;
+function bpOAuthGate(email){
+  var p=''; try{ p=sessionStorage.getItem('bpOAuth')||''; }catch(e){}
+  if(!p||!window.BP_LIVE||_bpOA) return false;
+  _bpOA=1; try{ sessionStorage.removeItem('bpOAuth'); }catch(e){}
+  (async function(){
+    var ok=true, s=null;
+    try{
+      s=(await BP_SB.auth.getSession()).data.session; var u=s&&s.user;
+      if(u){
+        var ids=(u.identities||[]).map(function(i){return i.provider;});
+        var fresh=u.created_at&&Date.now()-Date.parse(u.created_at)<15*60e3;
+        if(fresh&&ids.indexOf('email')<0&&!(u.user_metadata&&u.user_metadata.bp_role)){
+          var a=await BP_SB.from('accounts').select('user_id').maybeSingle();
+          var t=await BP_SB.rpc('bp_team_claim');
+          if(!(a&&a.data)&&!(t&&t.data&&t.data.length)) ok=false;
+        }
+      }
+    }catch(e){}
+    if(ok){ try{ localStorage.setItem('bpLastMethod',p); if(s&&s.user&&s.user.email) localStorage.setItem('bpLastEmail',String(s.user.email).toLowerCase()); }catch(e){} bpEnterPortal(email); return; }
+    var em=(s&&s.user&&s.user.email)||'that email';
+    try{ await fetch(BP_URL+'/functions/v1/account-delete',{method:'POST',headers:{'Content-Type':'application/json',apikey:BP_ANON,Authorization:'Bearer '+s.access_token},body:JSON.stringify({confirm:'DELETE'})}); }catch(e){}
+    try{ await BP_SB.auth.signOut(); }catch(e){}
+    var L=document.getElementById('bpxLogin'); if(L) L.style.display='flex';
+    if(window.bpLgStep) bpLgStep(1);
+    var msg=document.getElementById('bpxAuthMsg'); if(msg){ msg.className='bpx-msg err'; msg.textContent='There’s no BuilderPro account for '+em+' yet. Start your free trial with that email. After that, '+(p==='apple'?'Apple':'Google')+' sign-in works too.'; }
+  })();
+  return true;
 }
 window.bpLgStep=function(n,useLast){
   var a=document.getElementById('lgStart'), f=document.getElementById('lgForm'), em=document.getElementById('bpxEmail'), pw=document.getElementById('bpxPassword');
@@ -2804,7 +2865,7 @@ function bpLgSilk(){
   if(window.bpSilk) return go();
   _bpLgSilkLoading=true; var sc=document.createElement('script'); sc.src='/site/silk.js?v=20261117a'; sc.onload=go; document.head.appendChild(sc);
 }
-document.addEventListener('DOMContentLoaded',function(){ bpLgPaint(); setTimeout(bpLgSilk,300); });
+document.addEventListener('DOMContentLoaded',function(){ bpLgPaint(); bpLgProviders().then(bpLgPaint); setTimeout(bpLgSilk,300); });
 function bpForgot(){
   var em=document.getElementById('bpxEmail'),email=em.value.trim(),msg=document.getElementById('bpxAuthMsg'),btn=document.getElementById('bpxForgot');
   var say=function(t,bad){msg.className='bpx-msg'+(bad?' err':'');msg.textContent=t;if(msg.scrollIntoView)msg.scrollIntoView({block:'nearest',behavior:'smooth'});};
@@ -15248,7 +15309,7 @@ window.bpRepCopy=function(text,btn){
 <!--/app-only-->
 </body>
 <!--app-only-->
-<link rel="stylesheet" href="portal/app.css?v=a3d613a800" data-bundle>
+<link rel="stylesheet" href="portal/app.css?v=f054b1c0af" data-bundle>
 <script src="portal/team.js?v=20261115a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261128rt"></script>
@@ -15305,11 +15366,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261125ls"></script>
 <script src="portal/website.js?v=20261124fb"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261128-lg5"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261128-lg5"></script>
-<script src="site/vendor/SplitText.min.js?v=20261128-lg5"></script>
-<script src="site/site.js?v=20261128-lg5"></script>
-<script src="site/present.js?v=20261128-lg5"></script>
+<script src="site/vendor/gsap.min.js?v=20261128-oa1"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261128-oa1"></script>
+<script src="site/vendor/SplitText.min.js?v=20261128-oa1"></script>
+<script src="site/site.js?v=20261128-oa1"></script>
+<script src="site/present.js?v=20261128-oa1"></script>
 <!--app-only-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script src="portal/ui-kit.js?v=20261118f"></script>
